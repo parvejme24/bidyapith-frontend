@@ -33,10 +33,10 @@ export function GlassDialogContent({
   return (
     <DialogContent
       showCloseButton={false}
-      overlayClassName="bg-[rgba(6,9,28,0.75)] supports-backdrop-filter:backdrop-blur-[12px]"
+      overlayClassName="fixed inset-0 z-50 bg-[rgba(6,9,28,0.75)] supports-backdrop-filter:backdrop-blur-[12px]"
       className={cn(
         glassClass({ tone: "strong" }),
-        "top-[50%] left-[50%] z-50 w-[min(640px,calc(100%-2.5rem))] max-w-[640px] max-h-[86vh] overflow-y-auto p-7 text-ink sm:max-w-[640px] bg-transparent ring-0",
+        "fixed top-1/2 left-1/2 z-50 w-[min(640px,calc(100%-2.5rem))] max-h-[min(86vh,860px)] max-w-[640px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto bg-transparent p-7 text-ink ring-0 sm:max-w-[640px]",
         className,
       )}
     >
@@ -50,7 +50,7 @@ export function GlassDialogContent({
 export function DialogRoundClose() {
   return (
     <DialogClose
-      className="grid place-items-center w-9 h-9 rounded-full border border-white/15 bg-white/5 shrink-0"
+      className="grid place-items-center w-9 h-9 rounded-full border border-white/15 bg-white/5 shrink-0 cursor-pointer"
       aria-label="Close"
     >
       <CloseIcon />

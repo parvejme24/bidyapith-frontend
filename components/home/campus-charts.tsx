@@ -170,42 +170,53 @@ export function EnrolmentDonut({
 export function RegistrationAreaChart({
   data,
   color = ORCHID,
+  className,
 }: {
   data: ChartPoint[];
   color?: string;
+  className?: string;
 }) {
   const gradId = useId().replace(/:/g, "");
 
   return (
-    <div className="h-[250px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.42} />
-              <stop offset="100%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid stroke={GRID} vertical={false} />
-          <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} />
-          <YAxis
-            tick={AXIS}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(value) => `${Number(value).toFixed(1)}k`}
-            width={42}
-          />
-          <Tooltip content={<NightTooltip suffix="k" />} cursor={{ stroke: "rgba(255,255,255,0.12)" }} />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={3}
-            fill={`url(#${gradId})`}
-            dot={{ r: 4.5, fill: "#0B1030", stroke: color, strokeWidth: 2.5 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div className={cn("relative h-[280px] w-full min-h-[280px] sm:h-[300px]", className)}>
+      <div className="absolute inset-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.42} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={GRID} vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={AXIS}
+              axisLine={false}
+              tickLine={false}
+              interval={0}
+              minTickGap={8}
+            />
+            <YAxis
+              tick={AXIS}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(value) => `${Number(value).toFixed(1)}k`}
+              width={42}
+            />
+            <Tooltip content={<NightTooltip suffix="k" />} cursor={{ stroke: "rgba(255,255,255,0.12)" }} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke={color}
+              strokeWidth={3}
+              fill={`url(#${gradId})`}
+              dot={{ r: 4.5, fill: "#0B1030", stroke: color, strokeWidth: 2.5 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

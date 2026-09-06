@@ -6,6 +6,7 @@ import { IntakeBarChart } from "@/components/home/campus-charts";
 import { Chip } from "@/components/site/chip";
 import { GlassCard } from "@/components/site/glass-card";
 import { Reveal, Rise } from "@/components/site/motion";
+import { SelectInput } from "@/components/site/select-input";
 import { useCourses, useDepartments } from "@/hooks/use-data";
 import { deptName } from "@/lib/api";
 import type { Course } from "@/lib/types";
@@ -18,7 +19,6 @@ import {
   leadClass,
   numClass,
   sectionClass,
-  selectClass,
   shellClass,
   tableClass,
   tableScrollClass,
@@ -217,8 +217,7 @@ export function CoursesPage() {
               </label>
               <label className={cn(fieldClass, "mb-0")}>
                 <span className={fieldLabelClass}>Department</span>
-                <select
-                  className={selectClass}
+                <SelectInput
                   value={dept}
                   onChange={(event) => updateParams({ dept: event.target.value, page: 1 })}
                 >
@@ -228,24 +227,22 @@ export function CoursesPage() {
                       {department.name}
                     </option>
                   ))}
-                </select>
+                </SelectInput>
               </label>
               <label className={cn(fieldClass, "mb-0")}>
                 <span className={fieldLabelClass}>Semester</span>
-                <select
-                  className={selectClass}
+                <SelectInput
                   value={sem}
                   onChange={(event) => updateParams({ sem: event.target.value, page: 1 })}
                 >
                   <option value="all">Both semesters</option>
                   <option value="Fall">Fall</option>
                   <option value="Spring">Spring</option>
-                </select>
+                </SelectInput>
               </label>
               <label className={cn(fieldClass, "mb-0")}>
                 <span className={fieldLabelClass}>Sort by</span>
-                <select
-                  className={selectClass}
+                <SelectInput
                   value={sort}
                   onChange={(event) => updateParams({ sort: event.target.value })}
                 >
@@ -253,7 +250,7 @@ export function CoursesPage() {
                   <option value="title">Title A–Z</option>
                   <option value="credits">Most credits</option>
                   <option value="seats">Most seats left</option>
-                </select>
+                </SelectInput>
               </label>
             </div>
             <p className="text-sm text-ink-faint mt-5 pt-5 border-t border-white/8">

@@ -66,7 +66,12 @@ export function NoticesPage() {
         <div className={shellClass}>
           <div className="flex flex-wrap gap-2">
             {types.map((type) => (
-              <button key={type} type="button" onClick={() => setActive(type)}>
+              <button
+                key={type}
+                type="button"
+                className="cursor-pointer"
+                onClick={() => setActive(type)}
+              >
                 <Chip tone={type === active ? "jade" : "default"}>{type}</Chip>
               </button>
             ))}

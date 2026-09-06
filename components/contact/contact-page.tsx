@@ -8,6 +8,7 @@ import { FaqAccordion } from "@/components/site/faq-accordion";
 import { GlassCard } from "@/components/site/glass-card";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal } from "@/components/site/motion";
+import { SelectInput } from "@/components/site/select-input";
 import { useFaqs } from "@/hooks/use-data";
 import { BD_PHONE, normalizePhone, toastTone } from "@/lib/form";
 import { SITE } from "@/lib/site";
@@ -21,7 +22,6 @@ import {
   fieldLabelClass,
   sectionClass,
   sectionTightClass,
-  selectClass,
   shellClass,
   textareaClass,
 } from "@/lib/styles";
@@ -179,17 +179,14 @@ export function ContactPage() {
 
                   <label className={fieldClass}>
                     <span className={fieldLabelClass}>What is this about?</span>
-                    <select
-                      className={cn(selectClass, errors.topic && fieldInvalidControlClass)}
-                      {...register("topic")}
-                    >
+                    <SelectInput invalid={Boolean(errors.topic)} {...register("topic")}>
                       <option value="">Choose a desk</option>
                       <option>Admission enquiry</option>
                       <option>Fees and scholarships</option>
                       <option>Transcripts and certificates</option>
                       <option>Campus visit</option>
                       <option>Something else</option>
-                    </select>
+                    </SelectInput>
                     <span className={cn(fieldErrorClass, errors.topic && "block")}>
                       Pick the desk that fits best so it reaches the right person.
                     </span>

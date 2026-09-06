@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/site/glass-card";
 import { PageHero } from "@/components/site/page-hero";
 import { ProgramCard } from "@/components/site/program-card";
 import { Reveal } from "@/components/site/motion";
+import { SelectInput } from "@/components/site/select-input";
 import { usePrograms } from "@/hooks/use-data";
 import type { Program } from "@/lib/types";
 import {
@@ -22,7 +23,6 @@ import {
   numClass,
   sectionClass,
   sectionTightClass,
-  selectClass,
   shellClass,
 } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -129,8 +129,7 @@ export function ProgramsPage() {
               </label>
               <label className={cn(fieldClass, "mb-0 md:w-56")}>
                 <span className={fieldLabelClass}>Level</span>
-                <select
-                  className={selectClass}
+                <SelectInput
                   value={level}
                   onChange={(event) => updateParams({ level: event.target.value })}
                 >
@@ -139,13 +138,18 @@ export function ProgramsPage() {
                       {option}
                     </option>
                   ))}
-                </select>
+                </SelectInput>
               </label>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-5">
               {schools.map((item) => (
-                <button key={item} type="button" onClick={() => updateParams({ school: item })}>
+                <button
+                  key={item}
+                  type="button"
+                  className="cursor-pointer"
+                  onClick={() => updateParams({ school: item })}
+                >
                   <Chip tone={item === school ? "jade" : "default"}>{item}</Chip>
                 </button>
               ))}

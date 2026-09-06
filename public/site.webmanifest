@@ -1,0 +1,27 @@
+{
+  "name": "Bidyapith University",
+  "short_name": "Bidyapith",
+  "description": "Admission, course registration, results and fees for Bidyapith University.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1030",
+  "theme_color": "#0B1030",
+  "icons": [
+    {
+      "src": "/brand/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

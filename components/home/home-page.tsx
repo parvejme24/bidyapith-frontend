@@ -215,15 +215,17 @@ export function HomePage() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             <Reveal className="lg:col-span-2">
-              <GlassCard className="p-6 h-full">
-                <header className="flex flex-wrap items-end justify-between gap-3 mb-5">
+              <GlassCard className="flex h-full flex-col p-6">
+                <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <h3 className={displayClass.d3}>New students admitted each year</h3>
-                    <p className="text-sm text-ink-muted mt-1">Across all six schools, 2019 to 2026</p>
+                    <p className="mt-1 text-sm text-ink-muted">Across all six schools, 2019 to 2026</p>
                   </div>
                   <Chip tone="jade">+9.7% year on year</Chip>
                 </header>
-                {intake.data ? <IntakeBarChart data={intake.data} /> : <ChartSkeleton className="h-[250px]" />}
+                <div className="mt-auto">
+                  {intake.data ? <IntakeBarChart data={intake.data} /> : <ChartSkeleton className="h-[250px]" />}
+                </div>
               </GlassCard>
             </Reveal>
 
@@ -260,19 +262,24 @@ export function HomePage() {
             </Reveal>
 
             <Reveal className="lg:col-span-2">
-              <GlassCard className="p-6 h-full">
-                <header className="flex flex-wrap items-end justify-between gap-3 mb-5">
+              <GlassCard className="flex h-full flex-col p-6">
+                <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <h3 className={displayClass.d3}>Course registrations per semester</h3>
-                    <p className="text-sm text-ink-muted mt-1">In thousands, processed through the portal</p>
+                    <p className="mt-1 text-sm text-ink-muted">In thousands, processed through the portal</p>
                   </div>
                   <Chip tone="orchid">12.4k this term</Chip>
                 </header>
-                {registrations.data ? (
-                  <RegistrationAreaChart data={registrations.data} />
-                ) : (
-                  <ChartSkeleton className="h-[250px]" />
-                )}
+                <div className="mt-auto flex min-h-[280px] w-full flex-1 flex-col justify-end sm:min-h-[300px]">
+                  {registrations.data ? (
+                    <RegistrationAreaChart
+                      data={registrations.data}
+                      className="h-full min-h-[280px] sm:min-h-[300px]"
+                    />
+                  ) : (
+                    <ChartSkeleton className="h-full min-h-[280px] sm:min-h-[300px]" />
+                  )}
+                </div>
               </GlassCard>
             </Reveal>
 

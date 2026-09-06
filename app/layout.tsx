@@ -31,6 +31,14 @@ export const metadata: Metadata = {
   title: "Bidyapith University — Admission, study and results in one place",
   description:
     "Bidyapith University runs admission, course registration, attendance, results and fees on a single system. Explore 34 programmes across six schools in Dhaka.",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/brand/app-icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    title: "Bidyapith",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

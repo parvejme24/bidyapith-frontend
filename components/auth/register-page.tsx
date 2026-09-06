@@ -6,9 +6,12 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { PasswordInput } from "@/components/auth/password-input";
+import { BrandLogo } from "@/components/site/brand-logo";
 import { Chip } from "@/components/site/chip";
 import { GlassCard } from "@/components/site/glass-card";
 import { Rise } from "@/components/site/motion";
+import { SelectInput } from "@/components/site/select-input";
 import { usePrograms } from "@/hooks/use-data";
 import {
   BD_PHONE,
@@ -32,7 +35,6 @@ import {
   meterTrackClass,
   ruleClass,
   sectionClass,
-  selectClass,
   shellClass,
 } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -168,6 +170,7 @@ export function RegisterPage() {
 
           <Rise delay={3}>
             <GlassCard strong className="p-7 md:p-9">
+              <BrandLogo variant="mark" className="mb-5" imgClassName="size-11" />
               <button
                 type="button"
                 className={cn(buttonClass({ variant: "ghost" }), "w-full mb-5")}
@@ -230,17 +233,14 @@ export function RegisterPage() {
 
                   <label className={fieldClass}>
                     <span className={fieldLabelClass}>HSC passing year</span>
-                    <select
-                      className={cn(selectClass, errors.year && fieldInvalidControlClass)}
-                      {...register("year")}
-                    >
+                    <SelectInput invalid={Boolean(errors.year)} {...register("year")}>
                       <option value="">Select a year</option>
                       <option>2026</option>
                       <option>2025</option>
                       <option>2024</option>
                       <option>2023</option>
                       <option>Earlier</option>
-                    </select>
+                    </SelectInput>
                     <span className={cn(fieldErrorClass, errors.year && "block")}>
                       Choose the year you passed HSC or an equivalent.
                     </span>
@@ -249,17 +249,14 @@ export function RegisterPage() {
 
                 <label className={fieldClass}>
                   <span className={fieldLabelClass}>First programme choice</span>
-                  <select
-                    className={cn(selectClass, errors.program && fieldInvalidControlClass)}
-                    {...register("program")}
-                  >
+                  <SelectInput invalid={Boolean(errors.program)} {...register("program")}>
                     <option value="">Choose a programme</option>
                     {programs.map((program) => (
                       <option key={program.code} value={program.name}>
                         {program.name}
                       </option>
                     ))}
-                  </select>
+                  </SelectInput>
                   <span className={cn(fieldErrorClass, errors.program && "block")}>
                     Pick a programme — you can add two more later.
                   </span>
@@ -267,9 +264,8 @@ export function RegisterPage() {
 
                 <label className={fieldClass}>
                   <span className={fieldLabelClass}>Password</span>
-                  <input
-                    className={cn(controlClass, errors.password && fieldInvalidControlClass)}
-                    type="password"
+                  <PasswordInput
+                    invalid={Boolean(errors.password)}
                     placeholder="At least 8 characters"
                     autoComplete="new-password"
                     {...register("password")}
@@ -294,9 +290,8 @@ export function RegisterPage() {
 
                 <label className={fieldClass}>
                   <span className={fieldLabelClass}>Confirm password</span>
-                  <input
-                    className={cn(controlClass, errors.confirm && fieldInvalidControlClass)}
-                    type="password"
+                  <PasswordInput
+                    invalid={Boolean(errors.confirm)}
                     placeholder="Type it again"
                     autoComplete="new-password"
                     {...register("confirm")}

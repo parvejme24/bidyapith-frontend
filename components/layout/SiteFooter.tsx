@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/site/brand-logo";
 import { GlassCard } from "@/components/site/glass-card";
 import { SITE } from "@/lib/site";
-import { bnClass, markClass, ruleClass, sectionTightClass, shellClass } from "@/lib/styles";
+import { ruleClass, sectionTightClass, shellClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 function PinIcon() {
@@ -40,17 +41,14 @@ export function SiteFooter() {
         <GlassCard className="p-7 md:p-10">
           <div className="grid gap-9 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
             <div>
-              <div className="mb-4 flex items-center gap-3">
-                <span className={cn(markClass, bnClass)} aria-hidden="true">
-                  বি
-                </span>
-                <span className="font-display text-lg">Bidyapith University</span>
-              </div>
+              <Link href="/" className="mb-4 inline-flex" aria-label="Bidyapith University home">
+                <BrandLogo variant="horizontal" imgClassName="h-11 w-auto" decorative />
+              </Link>
               <p className="max-w-[34ch] text-sm text-ink-muted">
                 One campus, one system. Admission, registration, results and fees for{" "}
                 {SITE.students.toLocaleString()} students in a single place.
               </p>
-              <p className={cn(bnClass, "mt-4 text-lg text-ink-faint")}>{SITE.bangla}</p>
+              <p className="mt-4 text-lg text-ink-faint">{SITE.name}</p>
             </div>
 
             <div>

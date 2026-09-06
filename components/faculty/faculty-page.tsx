@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/site/empty-state";
 import { FacultyCard } from "@/components/site/faculty-card";
 import { GlassCard } from "@/components/site/glass-card";
 import { Reveal, Rise } from "@/components/site/motion";
+import { SelectInput } from "@/components/site/select-input";
 import { useDepartments, useFaculty } from "@/hooks/use-data";
 import type { EnrolmentSlice, FacultyMember } from "@/lib/types";
 import {
@@ -22,7 +23,6 @@ import {
   leadClass,
   numClass,
   sectionClass,
-  selectClass,
   shellClass,
 } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -191,8 +191,7 @@ export function FacultyPage() {
               </label>
               <label className={cn(fieldClass, "mb-0 md:w-72")}>
                 <span className={fieldLabelClass}>Department</span>
-                <select
-                  className={selectClass}
+                <SelectInput
                   value={dept}
                   onChange={(event) => updateParams({ dept: event.target.value })}
                 >
@@ -202,7 +201,7 @@ export function FacultyPage() {
                       {department.name}
                     </option>
                   ))}
-                </select>
+                </SelectInput>
               </label>
             </div>
             <p className="text-sm text-ink-faint mt-5 pt-5 border-t border-white/8">

@@ -65,7 +65,7 @@ export const chipClass = cva(
 );
 
 export const buttonClass = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-[0.55rem] whitespace-nowrap rounded-full border border-transparent text-[0.94rem] font-bold transition-[transform,box-shadow,background,border-color] duration-300 active:translate-y-px active:scale-[0.99]",
+  "inline-flex cursor-pointer items-center justify-center gap-[0.55rem] whitespace-nowrap rounded-full border border-transparent text-[0.94rem] font-bold transition-[transform,box-shadow,background,border-color] duration-300 active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40",
   {
     variants: {
       variant: {
@@ -95,8 +95,7 @@ export const controlClass =
   "w-full rounded-xl border border-white/13 bg-white/[0.05] px-4 py-[0.82rem] text-[0.94rem] text-ink transition-[border-color,background,box-shadow] placeholder:text-ink-faint focus:border-jade/60 focus:bg-white/[0.08] focus:outline-none focus:shadow-[0_0_0_4px_rgba(46,211,167,0.14)]";
 export const selectClass = cn(
   controlClass,
-  "appearance-none bg-[length:16px] bg-[right_0.9rem_center] bg-no-repeat pr-10",
-  "bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 fill=%27none%27 stroke=%27%23A6B0D2%27 stroke-width=%272%27%3E%3Cpath d=%27M4 6l4 4 4-4%27/%3E%3C/svg%3E')]",
+  "cursor-pointer appearance-none bg-none pr-11",
 );
 export const textareaClass = cn(controlClass, "min-h-32 resize-y");
 export const fieldErrorClass = "mt-1.5 hidden text-[0.78rem] text-[#FFA6BA]";
@@ -106,11 +105,11 @@ export const markClass =
   "grid size-[2.4rem] place-items-center rounded-[13px] bg-[linear-gradient(140deg,var(--jade-soft),var(--jade)_60%,#12A67C)] font-bangla text-[1.15rem] font-semibold text-[#06231B] shadow-[0_10px_26px_-10px_rgba(46,211,167,0.9)]";
 
 export const navLinkClass = cva(
-  "rounded-full px-3.5 py-2 text-[0.9rem] font-semibold text-ink-muted transition-[color,background] hover:bg-white/[0.07] hover:text-ink",
+  "cursor-pointer rounded-full px-3.5 py-2 text-[0.9rem] font-semibold text-ink-muted transition-[color,background] hover:bg-white/[0.07] hover:text-ink",
   {
     variants: {
       active: {
-        true: "bg-[linear-gradient(135deg,var(--jade-soft),var(--jade))] text-[#08251C]",
+        true: "bg-[linear-gradient(135deg,var(--jade),var(--jade-deep))] text-white",
         false: "",
       },
     },

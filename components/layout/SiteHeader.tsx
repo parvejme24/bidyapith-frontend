@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/site/brand-logo";
 import { GlassCard } from "@/components/site/glass-card";
 import { NAV, isNavActive } from "@/lib/site";
-import { bnClass, buttonClass, markClass, navLinkClass, shellClass } from "@/lib/styles";
+import { buttonClass, navLinkClass, shellClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 function MenuIcon() {
@@ -70,14 +71,8 @@ export function SiteHeader() {
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-[inherit] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] opacity-55"
             />
-            <Link href="/" className="flex shrink-0 items-center gap-3">
-              <span className={cn(markClass, bnClass)} aria-hidden="true">
-                বি
-              </span>
-              <span className="leading-none">
-                <span className="block font-display text-[1.05rem] font-semibold">Bidyapith</span>
-                <span className="block text-[0.66rem] tracking-[0.16em] text-ink-faint">UNIVERSITY</span>
-              </span>
+            <Link href="/" className="flex shrink-0 items-center" aria-label="Bidyapith University home">
+              <BrandLogo variant="horizontal" priority imgClassName="h-9 w-auto sm:h-10" decorative />
             </Link>
 
             <div className="ml-auto hidden items-center gap-1 lg:flex">
@@ -96,12 +91,12 @@ export function SiteHeader() {
               <Link href="/login" className={cn(buttonClass({ variant: "ghost", size: "sm" }), "hidden sm:inline-flex")}>
                 Sign in
               </Link>
-              <Link href="/register" className={buttonClass({ variant: "primary", size: "sm" })}>
+              <Link href="/register" className={cn(buttonClass({ variant: "primary", size: "sm" }), "hidden sm:inline-flex")}>
                 Apply now
               </Link>
               <button
                 type="button"
-                className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/5 text-ink lg:hidden"
+                className="grid size-10 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/5 text-ink lg:hidden"
                 aria-label="Open menu"
                 aria-expanded={open}
                 onClick={() => setOpen(true)}
@@ -136,7 +131,7 @@ export function SiteHeader() {
             <span className="font-display text-lg">Menu</span>
             <button
               type="button"
-              className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/5"
+              className="grid size-10 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/5"
               aria-label="Close menu"
               onClick={() => setOpen(false)}
             >

@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { GoogleIcon } from "@/components/auth/google-icon";
+import { PasswordInput } from "@/components/auth/password-input";
+import { BrandLogo } from "@/components/site/brand-logo";
 import { Chip } from "@/components/site/chip";
 import { GlassCard } from "@/components/site/glass-card";
 import { Rise } from "@/components/site/motion";
@@ -114,6 +116,7 @@ export function LoginPage() {
 
           <Rise delay={3}>
             <GlassCard strong className="p-7 md:p-9">
+              <BrandLogo variant="mark" className="mb-5" imgClassName="size-11" />
               <h2 className={cn(displayClass.d3, "mb-1")}>Sign in</h2>
               <p className="text-sm text-ink-muted mb-7">Use your university email address.</p>
 
@@ -152,9 +155,8 @@ export function LoginPage() {
 
                 <label className={fieldClass}>
                   <span className={fieldLabelClass}>Password</span>
-                  <input
-                    className={cn(controlClass, errors.password && fieldInvalidControlClass)}
-                    type="password"
+                  <PasswordInput
+                    invalid={Boolean(errors.password)}
                     placeholder="At least 8 characters"
                     autoComplete="current-password"
                     {...register("password")}
@@ -173,9 +175,9 @@ export function LoginPage() {
                     />{" "}
                     Keep me signed in
                   </label>
-                  <a href="#" className="text-jade">
+                  <Link href="/forgot-password" className="text-jade font-semibold">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
 
                 <button type="submit" className={cn(buttonClass({ variant: "primary" }), "w-full")}>

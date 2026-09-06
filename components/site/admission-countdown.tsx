@@ -27,11 +27,11 @@ function split(closesAt: Date): Units | null {
 
 function UnitBox({ value, label }: { value: number; label: string }) {
   return (
-    <div className="text-center px-3 sm:px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 min-w-[68px]">
-      <div className={cn("font-display text-2xl sm:text-3xl leading-none", numClass)}>
+    <div className="grid size-[4.75rem] shrink-0 place-content-center rounded-2xl border border-white/10 bg-white/5 text-center sm:size-[5.25rem]">
+      <div className={cn("font-display text-2xl leading-none sm:text-3xl", numClass)}>
         {String(value).padStart(2, "0")}
       </div>
-      <div className="text-[0.62rem] tracking-[0.14em] text-ink-faint mt-1">{label}</div>
+      <div className="mt-1 text-[0.62rem] tracking-[0.14em] text-ink-faint">{label}</div>
     </div>
   );
 }
