@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/site/brand-logo";
 import { GlassCard } from "@/components/site/glass-card";
 import { SITE } from "@/lib/site";
@@ -32,8 +35,17 @@ function MailIcon() {
 }
 
 export function SiteFooter() {
+  const pathname = usePathname();
   const year = new Date().getFullYear();
   const phoneHref = SITE.phone.replace(/\s/g, "");
+
+  const isDashboard =
+    pathname.startsWith("/student") ||
+    pathname.startsWith("/instructor") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/profile");
+
+  if (isDashboard) return null;
 
   return (
     <footer className={cn(sectionTightClass, "mt-8")}>
