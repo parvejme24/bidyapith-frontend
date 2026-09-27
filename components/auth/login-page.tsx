@@ -29,16 +29,25 @@ import { cn } from "@/lib/utils";
 
 const ROLES = [
   {
+    role: "student" as const,
     title: "Student",
+    email: "rafiul.karim@student.bidyapith.edu.bd",
     blurb: "Registration, attendance, results, fees",
+    href: "/student?role=student",
   },
   {
+    role: "instructor" as const,
     title: "Instructor",
+    email: "ayesha.rahman@bidyapith.edu.bd",
     blurb: "Sections, attendance, marks entry",
+    href: "/instructor?role=instructor",
   },
   {
+    role: "admin" as const,
     title: "Administrator",
+    email: "registrar@bidyapith.edu.bd",
     blurb: "Semesters, users, audit logs",
+    href: "/admin?role=admin",
   },
 ] as const;
 
@@ -54,6 +63,7 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -64,21 +74,35 @@ export function LoginPage() {
     },
   });
 
-  function onValid() {
-    toast.success("Signing you in to the student portal…", {
+  function onValid(data: LoginValues) {
+    toast.success("Signed in successfully! Opening dashboard…", {
       style: toastTone.jade,
     });
-    window.setTimeout(() => {
-      toast("Demo build — connect this form to POST /api/v1/auth/login.", {
-        style: toastTone.gold,
-      });
-    }, 1400);
+    const email = data.email.toLowerCase();
+    let target = "/student?role=student";
+    if (email.includes("registrar") || email.includes("admin")) {
+      target = "/admin?role=admin";
+    } else if (email.includes("ayesha") || email.includes("instructor") || email.includes("faculty")) {
+      target = "/instructor?role=instructor";
+    }
+    window.location.href = target;
   }
 
   function onInvalid() {
     toast.error("Check the highlighted fields and try again.", {
       style: toastTone.rose,
     });
+  }
+
+  function fillDemo(email: string, targetHref: string) {
+    setValue("email", email);
+    setValue("password", "Password123!");
+    toast.success("Demo credentials filled! Redirecting…", {
+      style: toastTone.jade,
+    });
+    setTimeout(() => {
+      window.location.href = targetHref;
+    }, 600);
   }
 
   return (
@@ -101,13 +125,29 @@ export function LoginPage() {
             </Rise>
 
             <Rise delay={4}>
-              <ul className="grid sm:grid-cols-3 gap-3 mt-9">
-                {ROLES.map((role) => (
-                  <li key={role.title}>
-                    <GlassCard quiet className="p-4">
-                      <p className="font-display text-lg">{role.title}</p>
-                      <p className="text-xs text-ink-faint mt-1.5">{role.blurb}</p>
-                    </GlassCard>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint mt-8 mb-3">
+                1-Tap Demo Sign-in
+              </p>
+              <ul className="grid sm:grid-cols-3 gap-3">
+                {ROLES.map((r) => (
+                  <li key={r.title}>
+                    <button
+                      type="button"
+                      onClick={() => fillDemo(r.email, r.href)}
+                      className="w-full text-left cursor-pointer group"
+                    >
+                      <GlassCard quiet className="p-4 transition-all group-hover:border-jade/50 group-hover:bg-white/[0.08]">
+                        <div className="flex items-center justify-between">
+                          <p className="font-display text-lg group-hover:text-jade transition-colors">
+                            {r.title}
+                          </p>
+                          <span className="text-[0.65rem] font-bold px-2 py-0.5 rounded-full bg-jade/10 text-jade">
+                            Try →
+                          </span>
+                        </div>
+                        <p className="text-xs text-ink-faint mt-1.5">{r.blurb}</p>
+                      </GlassCard>
+                    </button>
                   </li>
                 ))}
               </ul>
