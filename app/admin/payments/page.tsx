@@ -11,6 +11,7 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import { useApp } from "@/lib/app-context";
 import { formatTaka, formatTimeAgo } from "@/lib/app-data";
 import type { PaymentTransaction } from "@/lib/app-types";
+import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +111,22 @@ export default function AdminPaymentsPage() {
     },
   ];
 
+  const handleExportStatement = () => {
+    const headers = ["InvoiceID", "StudentName", "StudentID", "Amount_BDT", "Method", "Status", "Timestamp", "Reference"];
+    const rows = adminPayments.map((p) => [
+      p.id,
+      p.student,
+      p.sid,
+      p.amount,
+      p.method,
+      p.status,
+      p.at,
+      p.ref,
+    ]);
+    downloadCsv("Bidyapith_Payments_Statement.csv", [headers, ...rows]);
+    toast.success("Payments statement exported as CSV");
+  };
+
   return (
     <DashboardLayout
       title="Payments Ledger"
@@ -118,10 +135,11 @@ export default function AdminPaymentsPage() {
       crumb="Admin / Operations"
       actions={
         <button
-          onClick={() => toast.success("Statement exported as CSV")}
-          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
+          type="button"
+          onClick={handleExportStatement}
+          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer hover:border-jade/40")}
         >
-          <DashboardIcon name="download" className="size-3.5" />
+          <DashboardIcon name="download" className="size-3.5 text-jade" />
           <span>Export statement</span>
         </button>
       }

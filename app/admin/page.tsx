@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { AreaTrendChart } from "@/components/dashboard/charts/area-trend-chart";
 import { CollectionsBarChart } from "@/components/dashboard/charts/collections-bar-chart";
 import { DistributionDonut } from "@/components/dashboard/charts/distribution-donut";
+import { AddInstructorModal } from "@/components/dashboard/admin/add-instructor-modal";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
@@ -15,9 +16,11 @@ import { useApp } from "@/lib/app-context";
 import { APP_DATA, formatTaka, formatTimeAgo } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
+import { Plus, UserCheck, UserPlus, Users } from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const { term, adminPayments, auditLogs, role } = useApp();
+  const { term, adminPayments, auditLogs, role, addAuditLog } = useApp();
+  const [addInstructorOpen, setAddInstructorOpen] = useState(false);
   const kpi = APP_DATA.admin.kpi;
   const pendingPayments = adminPayments.filter((p) => p.status === "pending");
 
@@ -27,13 +30,26 @@ export default function AdminDashboardPage() {
       subtitle={`${term.name} · Week ${term.week} of ${term.of}`}
       requiredRole="admin"
       actions={
-        <button
-          onClick={() => toast.success("Report queued — GET /admin/reports")}
-          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
-        >
-          <DashboardIcon name="download" className="size-3.5" />
-          <span>Export report</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAddInstructorOpen(true)}
+            className={cn(buttonClass({ variant: "primary", size: "sm" }), "text-xs rounded-md flex items-center gap-1.5")}
+          >
+            <UserPlus className="size-3.5" />
+            <span>Add Instructor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toast.success("Executive university report exported");
+            }}
+            className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer hover:border-jade/40 rounded-md")}
+          >
+            <DashboardIcon name="download" className="size-3.5 text-jade" />
+            <span>Export report</span>
+          </button>
+        </div>
       }
     >
       {/* 4 Stat Tiles */}
@@ -170,7 +186,7 @@ export default function AdminDashboardPage() {
             {pendingPayments.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-white/8 bg-white/[0.025]"
+                className="flex items-center justify-between gap-3 p-3.5 rounded-md border border-white/8 bg-white/[0.025]"
               >
                 <div>
                   <p className="font-mono text-xs font-bold text-jade">{p.id}</p>
@@ -186,6 +202,23 @@ export default function AdminDashboardPage() {
             ))}
           </div>
         </GlassCard>
+      )}
+
+      {/* Add Instructor Modal */}
+      {addInstructorOpen && (
+        <AddInstructorModal
+          isOpen={addInstructorOpen}
+          onClose={() => setAddInstructorOpen(false)}
+          onCreated={(newInst) => {
+            addAuditLog({
+              actor: "Administrator",
+              role: "admin",
+              action: "CREATE",
+              target: `Faculty (${newInst.name})`,
+              detail: `Created Instructor account for ${newInst.email} with OTP notification`,
+            });
+          }}
+        />
       )}
     </DashboardLayout>
   );

@@ -9,6 +9,7 @@ import { StatTile } from "@/components/dashboard/stat-tile";
 import { useApp } from "@/lib/app-context";
 import { formatTimeAgo } from "@/lib/app-data";
 import type { AuditRecord } from "@/lib/app-types";
+import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,20 @@ export default function AdminAuditPage() {
   const actions = Array.from(new Set(auditLogs.map((a) => a.action)));
   const staffCount = auditLogs.filter((a) => a.role !== "system").length;
   const systemCount = auditLogs.filter((a) => a.role === "system").length;
+
+  const handleExportCsv = () => {
+    const headers = ["Timestamp", "Actor", "Role", "Action", "Target", "Detail"];
+    const rows = auditLogs.map((log) => [
+      log.at,
+      log.actor,
+      log.role,
+      log.action,
+      log.target,
+      log.detail,
+    ]);
+    downloadCsv("Bidyapith_Audit_Log.csv", [headers, ...rows]);
+    toast.success("Audit log exported as CSV");
+  };
 
   const columns: ColumnDef<AuditRecord>[] = [
     {
@@ -71,10 +86,11 @@ export default function AdminAuditPage() {
       crumb="Admin / System"
       actions={
         <button
-          onClick={() => toast.success("Audit log exported as CSV")}
-          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
+          type="button"
+          onClick={handleExportCsv}
+          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer hover:border-jade/40")}
         >
-          <DashboardIcon name="download" className="size-3.5" />
+          <DashboardIcon name="download" className="size-3.5 text-jade" />
           <span>Export log</span>
         </button>
       }
