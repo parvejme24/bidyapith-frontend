@@ -30,7 +30,7 @@ export default function StudentCertificatePage() {
     <DashboardLayout
       requiredRole="student"
       title="Graduation & Degree Certificate"
-      subtitle={`${cert.programTitle} · Conferred ${cert.graduationDate}`}
+      subtitle={`${cert.programTitle} · Graduated ${cert.graduationDate}`}
       crumb="Student / Degree Certificate"
       actions={
         <div className="flex items-center p-0.5 rounded-lg border border-white/10 bg-white/[0.04] print:hidden">
