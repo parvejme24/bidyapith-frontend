@@ -38,6 +38,14 @@ export interface DegreeProgram {
   semesters: SemesterCurriculum[];
 }
 
+export interface AttachedDocument {
+  id: string;
+  name: string;
+  size: string;
+  type: string;
+  uploadedAt: string;
+}
+
 export interface AdmissionApplication {
   id: string;
   studentName: string;
@@ -47,7 +55,11 @@ export interface AdmissionApplication {
   programId: string;
   programTitle: string;
   programName?: string;
-  degreeType: "B.Sc." | "M.Sc.";
+  degreeType?: "B.Sc." | "M.Sc.";
+  applicationType?: "DEGREE_ADMISSION" | "COURSE_REGISTRATION";
+  courseCode?: string;
+  courseTitle?: string;
+  courseCredits?: number;
   previousDegree?: string;
   previousInstitute?: string;
   previousCgpa?: string;
@@ -59,6 +71,8 @@ export interface AdmissionApplication {
   admissionFee: number;
   isPaid?: boolean;
   paymentStatus?: "PAID" | "PENDING";
+  attachedDocuments?: AttachedDocument[];
+  motivationStatement?: string;
   notes?: string;
 }
 

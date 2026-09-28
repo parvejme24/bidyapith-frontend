@@ -693,15 +693,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
     saveAdmissions(updated);
     const app = admissionApplications.find((a) => a.id === appId);
+    const targetName = app?.courseCode ? `${app.courseCode}: ${app.courseTitle}` : (app?.programTitle || appId);
+
+    // Push notification to student's inbox
+    setStudentState((prev) => ({
+      ...prev,
+      notices: [
+        {
+          id: `notice-approval-${Date.now()}`,
+          t: `Academic Approval: ${app?.courseCode || "Course Registration"}`,
+          m: `Your application & academic documents for ${targetName} have been verified & approved by the Registrar. You may now complete tuition payment.`,
+          tone: "gold",
+          time: "Just now",
+          read: false,
+        },
+        ...prev.notices,
+      ],
+    }));
+
     addAuditLog({
       actor: user.name,
       role: "admin",
       action: "admission.approve",
       target: app?.studentName || appId,
-      detail: `Approved admission application ${appId} for ${app?.programTitle}`,
+      detail: `Approved registration application ${appId} for ${targetName}`,
       tone: "gold",
     });
-    toast.success(`Application ${appId} approved. Student can now pay admission fees.`);
+    toast.success(`Application ${appId} approved. Student notified & email dispatched.`);
   };
 
   const rejectAdmission = (appId: string) => {
@@ -721,11 +739,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
     saveAdmissions(updated);
 
-    // Update student user session
-    updateUser({
-      admissionStatus: "ENROLLED",
-      program: app?.programTitle || "B.Sc. in Computer Science & Engineering",
-    });
+    // If this is a course registration application, directly enroll the student in this course
+    if (app?.courseCode) {
+      const credits = app.courseCredits || 3;
+      const alreadyEnrolled = studentState.enrolled.some((c) => c.code.toLowerCase() === app.courseCode!.toLowerCase());
+      if (!alreadyEnrolled) {
+        setStudentState((prev) => ({
+          ...prev,
+          enrolled: [
+            ...prev.enrolled,
+            {
+              code: app.courseCode!,
+              title: app.courseTitle || "Course Offering",
+              section: "A",
+              credits,
+              instructor: "Faculty Member",
+              room: "AB2-401",
+              slots: ["Sun 10:00", "Tue 10:00"],
+              attendance: 100,
+              marks: 0,
+            },
+          ],
+          creditsDone: prev.creditsDone + credits,
+        }));
+      }
+      setCart((prev) => prev.filter((c) => c.code.toLowerCase() !== app.courseCode!.toLowerCase()));
+    } else {
+      // Update student user session for degree admission
+      updateUser({
+        admissionStatus: "ENROLLED",
+        program: app?.programTitle || "B.Sc. in Computer Science & Engineering",
+      });
+    }
+
+    // Add invoice as paid
+    setInvoices((prev) => [
+      {
+        id: `INV-ADM-${Math.floor(1000 + Math.random() * 9000)}`,
+        title: app?.courseCode ? `Course Tuition: ${app.courseCode}` : `Degree Admission: ${app?.programTitle}`,
+        amount: app?.admissionFee || 15000,
+        due: new Date().toISOString().slice(0, 10),
+        status: "paid",
+        method,
+        paid: new Date().toISOString().slice(0, 10),
+      },
+      ...prev,
+    ]);
 
     // Add payment transaction
     const newTxn: PaymentTransaction = {
@@ -744,12 +803,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       actor: user.name,
       role: "student",
       action: "admission.fee_paid",
-      target: app?.programTitle || "Degree Admission",
-      detail: `Paid admission fee ${app?.admissionFee || 15000} via ${method}`,
+      target: app?.courseCode || app?.programTitle || "Course Registration",
+      detail: `Paid fee ${app?.admissionFee || 15000} via ${method}`,
       tone: "orchid",
     });
 
-    toast.success("Admission fee confirmed! You are now officially enrolled in the degree program.");
+    toast.success(
+      app?.courseCode
+        ? `Tuition payment confirmed via ${method}! You are officially enrolled in ${app.courseCode}.`
+        : "Admission fee confirmed! You are now officially enrolled in the degree program."
+    );
   };
 
   const unlockSemester = (semesterNum: number, method: string) => {
