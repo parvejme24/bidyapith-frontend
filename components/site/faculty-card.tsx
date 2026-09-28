@@ -43,7 +43,15 @@ export function FacultyCard({
       }}
     >
       <div className="flex items-center gap-4 mb-4">
-        <span className={cn(avatarClass({ tone }), "size-14 text-lg")}>{initials(faculty.name)}</span>
+        {faculty.avatar ? (
+          <img
+            src={faculty.avatar}
+            alt={faculty.name}
+            className="size-14 rounded-full object-cover shrink-0 ring-1 ring-white/10 shadow-md"
+          />
+        ) : (
+          <span className={cn(avatarClass({ tone }), "size-14 text-lg")}>{initials(faculty.name)}</span>
+        )}
         <div className="min-w-0">
           <h3 className="font-display text-[1.05rem] leading-tight truncate">{faculty.name}</h3>
           <p className="text-xs text-ink-faint mt-1">{faculty.role}</p>

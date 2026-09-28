@@ -21,7 +21,15 @@ export function FacultyDialog({
     <GlassDialogContent title={faculty.name} description={faculty.bio}>
       <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex items-center gap-4">
-          <span className={cn(avatarClass({ tone }), "size-16 text-xl")}>{initials(faculty.name)}</span>
+          {faculty.avatar ? (
+            <img
+              src={faculty.avatar}
+              alt={faculty.name}
+              className="size-16 rounded-full object-cover shrink-0 ring-1 ring-white/10 shadow-md"
+            />
+          ) : (
+            <span className={cn(avatarClass({ tone }), "size-16 text-xl")}>{initials(faculty.name)}</span>
+          )}
           <div>
             <h3 className={displayClass.d3}>{faculty.name}</h3>
             <p className="text-sm text-ink-faint mt-1">
