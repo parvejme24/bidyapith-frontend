@@ -61,7 +61,7 @@ export function StudentAttendanceView() {
           <button
             type="button"
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-jade" />
             <span>Download Attendance Slip</span>

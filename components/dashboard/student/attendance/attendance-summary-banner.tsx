@@ -109,7 +109,7 @@ export function AttendanceSummaryBanner({
               {record.months.map((m) => (
                 <div
                   key={m.monthIndex}
-                  className={`p-2.5 rounded-xl border transition-colors ${
+                  className={`p-2.5 rounded-md border transition-colors ${
                     m.totalHeld === 0
                       ? "bg-white/[0.02] border-white/5 opacity-60"
                       : "bg-white/[0.04] border-white/10"

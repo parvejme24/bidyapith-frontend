@@ -205,7 +205,7 @@ export function MonthlyCourseAttendanceTable({
                           e.stopPropagation();
                           onSelectCourse(course);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-ink hover:text-white border border-white/10 transition-all"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 hover:bg-white/10 text-xs font-semibold text-ink hover:text-white border border-white/10 transition-all"
                       >
                         <span>Daily Log</span>
                         <ExternalLink className="w-3 h-3 text-jade" />

@@ -43,9 +43,9 @@ export function SemesterSelectorTabs({
               key={sem.semesterNumber}
               type="button"
               onClick={() => onSelectSemester(sem.semesterNumber)}
-              className={`relative flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-200 group ${
+              className={`relative flex flex-col items-start p-2.5 rounded-md border text-left transition-all duration-200 group ${
                 isSelected
-                  ? "bg-jade/[0.14] border-jade shadow-[0_0_18px_rgba(46,211,167,0.22)] ring-1 ring-jade"
+                  ? "bg-jade/[0.14] border-jade shadow-[0_0_14px_rgba(46,211,167,0.18)] ring-1 ring-jade"
                   : "bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20"
               }`}
             >

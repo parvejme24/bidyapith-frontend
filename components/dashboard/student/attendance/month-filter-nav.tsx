@@ -18,12 +18,12 @@ export function MonthFilterNav({
   isLockedSemester,
 }: MonthFilterNavProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 p-1.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+    <div className="flex flex-wrap items-center gap-2 p-1.5 bg-white/[0.03] border border-white/10 rounded-lg">
       {/* All Months Option */}
       <button
         type="button"
         onClick={() => onSelectMonth(0)}
-        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+        className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold transition-all duration-200 ${
           selectedMonthIndex === 0
             ? "bg-jade text-ink-base shadow-sm font-bold"
             : "text-ink hover:text-white hover:bg-white/[0.05]"
@@ -42,7 +42,7 @@ export function MonthFilterNav({
             key={m.monthIndex}
             type="button"
             onClick={() => onSelectMonth(m.monthIndex)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs transition-all duration-200 ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-xs transition-all duration-200 ${
               isSelected
                 ? "bg-white/15 text-white border border-white/20 font-bold shadow-sm"
                 : "text-ink-faint hover:text-ink hover:bg-white/[0.04]"
