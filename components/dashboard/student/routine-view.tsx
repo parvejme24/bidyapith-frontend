@@ -29,7 +29,7 @@ export function RoutineView({ enrolled }: RoutineViewProps) {
           {DAYS.map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-bold uppercase tracking-wider text-ink-faint py-1.5 rounded-lg bg-white/[0.02]"
+              className="text-center text-xs font-bold uppercase tracking-wider text-ink-faint py-1.5 rounded-md bg-white/[0.02]"
             >
               {day}
             </div>
@@ -51,7 +51,7 @@ export function RoutineView({ enrolled }: RoutineViewProps) {
                   return (
                     <div
                       key={day}
-                      className="min-h-[64px] rounded-xl border border-dashed border-white/8 bg-white/[0.01]"
+                      className="min-h-[64px] rounded-md border border-dashed border-white/8 bg-white/[0.01]"
                     />
                   );
                 }
@@ -63,7 +63,7 @@ export function RoutineView({ enrolled }: RoutineViewProps) {
                   <div
                     key={day}
                     className={cn(
-                      "min-h-[64px] p-2.5 rounded-xl border flex flex-col justify-between transition-all duration-200 hover:scale-[1.02]",
+                      "min-h-[64px] p-2.5 rounded-md border flex flex-col justify-between transition-all duration-200 hover:scale-[1.02]",
                       isLab
                         ? "bg-marigold/10 border-marigold/30 text-[#FFD9A6]"
                         : isMath
