@@ -131,13 +131,25 @@ export function MonthFilterNav({
             onClick={() => handleItemClick(0)}
             className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-md text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 select-none ${
               selectedMonthIndex === 0
-                ? "bg-jade text-ink-base shadow-sm font-bold"
-                : "text-ink hover:text-white hover:bg-white/[0.05]"
+                ? "bg-jade text-[#06121E] shadow-md font-extrabold ring-1 ring-white/20"
+                : "text-ink-faint hover:text-white hover:bg-white/[0.05]"
             }`}
           >
-            <Layers className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
-            <span>All Months</span>
-            <span className="hidden md:inline font-normal opacity-80">(Full Term)</span>
+            <Layers
+              className={`w-3.5 h-3.5 shrink-0 pointer-events-none ${
+                selectedMonthIndex === 0 ? "text-[#06121E]" : "text-ink-faint"
+              }`}
+            />
+            <span className={selectedMonthIndex === 0 ? "text-[#06121E] font-bold" : ""}>
+              All Months
+            </span>
+            <span
+              className={`hidden md:inline text-[11px] ${
+                selectedMonthIndex === 0 ? "text-[#06121E]/80 font-semibold" : "text-ink-faint/70 font-normal"
+              }`}
+            >
+              (Full Term)
+            </span>
           </button>
 
           {/* Individual Month Pills */}
