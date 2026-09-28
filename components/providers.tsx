@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider } from "@/lib/app-context";
+import { ReduxProvider } from "@/lib/redux/provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -16,14 +17,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem={false}
       disableTransitionOnChange
     >
-      <QueryClientProvider client={queryClient}>
-        <Suspense fallback={<div className="min-h-screen bg-night-900" />}>
-          <AppProvider>
-            {children}
-            <Toaster position="bottom-right" richColors />
-          </AppProvider>
-        </Suspense>
-      </QueryClientProvider>
+      <ReduxProvider>
+        <QueryClientProvider client={queryClient}>
+          <Suspense fallback={<div className="min-h-screen bg-night-900" />}>
+            <AppProvider>
+              {children}
+              <Toaster position="bottom-right" richColors />
+            </AppProvider>
+          </Suspense>
+        </QueryClientProvider>
+      </ReduxProvider>
     </ThemeProvider>
   );
 }
