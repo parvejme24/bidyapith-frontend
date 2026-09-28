@@ -77,7 +77,7 @@ export function PaymentModal({ invoice, isOpen, onClose, onPay }: PaymentModalPr
               key={m.id}
               onClick={() => setSelectedMethod(m.id)}
               className={cn(
-                "p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between gap-3",
+                "p-3.5 rounded-xl sm:rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between gap-3",
                 selectedMethod === m.id
                   ? "border-jade/60 bg-jade/10 shadow-sm"
                   : "border-white/8 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
