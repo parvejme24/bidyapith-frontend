@@ -6,12 +6,18 @@ import { CheckoutView } from "@/components/dashboard/student/checkout/checkout-v
 import { RefreshCw } from "lucide-react";
 
 export default function StudentCheckoutPage() {
+  const [isSuccess, setIsSuccess] = React.useState(false);
+
   return (
     <DashboardLayout
       requiredRole="student"
-      title="Tuition Checkout & Payment"
-      subtitle="Secure Payment Gateway · SSLCommerz & Stripe"
-      crumb="Student / Checkout"
+      title={isSuccess ? "Tuition Payment Receipt" : "Tuition Checkout & Payment"}
+      subtitle={
+        isSuccess
+          ? "Official Verification & Course Unlock Confirmation"
+          : "Secure Payment Gateway · SSLCommerz & Stripe"
+      }
+      crumb={isSuccess ? "Student / Payment Receipt" : "Student / Checkout"}
     >
       <Suspense
         fallback={
@@ -21,8 +27,9 @@ export default function StudentCheckoutPage() {
           </div>
         }
       >
-        <CheckoutView />
+        <CheckoutView onPaymentSuccess={() => setIsSuccess(true)} />
       </Suspense>
     </DashboardLayout>
   );
 }
+

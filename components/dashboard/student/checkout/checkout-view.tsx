@@ -34,10 +34,15 @@ import { cn } from "@/lib/utils";
 type PaymentGatewayType = "SSLCOMMERZ" | "STRIPE";
 type SslChannel = "BKASH" | "NAGAD" | "ROCKET" | "CARDS" | "NET_BANKING";
 
-export function CheckoutView() {
+interface CheckoutViewProps {
+  onPaymentSuccess?: () => void;
+}
+
+export function CheckoutView(props: CheckoutViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentProgram, user, unlockSemester, addAuditLog, term } = useApp();
+
 
   // URL search params
   const semesterParam = searchParams.get("semester");
@@ -105,6 +110,7 @@ export function CheckoutView() {
     setTimeout(() => {
       setIsProcessing(false);
       setPaymentCompleted(true);
+      props.onPaymentSuccess?.();
       unlockSemester(semesterNum, selectedGateway);
 
       addAuditLog({
@@ -243,24 +249,26 @@ export function CheckoutView() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Top Breadcrumb & Status Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/8">
-        <button
-          type="button"
-          onClick={() => router.push("/student/courses?role=student")}
-          className="flex items-center gap-2 text-xs font-semibold text-ink-muted hover:text-ink transition-colors cursor-pointer group w-fit"
-        >
-          <ArrowLeft className="size-4 text-jade group-hover:-translate-x-0.5 transition-transform" />
-          <span>Back to Degree Curriculum</span>
-        </button>
+      {/* Top Breadcrumb & Status Navigation (Only on Checkout, Hidden on Success) */}
+      {!paymentCompleted && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/8">
+          <button
+            type="button"
+            onClick={() => router.push("/student/courses?role=student")}
+            className="flex items-center gap-2 text-xs font-semibold text-ink-muted hover:text-ink transition-colors cursor-pointer group w-fit"
+          >
+            <ArrowLeft className="size-4 text-jade group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Degree Curriculum</span>
+          </button>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-[0.72rem] text-jade font-mono bg-jade/10 px-3 py-1 rounded-full border border-jade/30 shadow-xs">
-            <ShieldCheck className="size-3.5" />
-            <span>256-Bit SSL Encrypted & PCI-DSS Compliant</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-[0.72rem] text-jade font-mono bg-jade/10 px-3 py-1 rounded-full border border-jade/30 shadow-xs">
+              <ShieldCheck className="size-3.5" />
+              <span>256-Bit SSL Encrypted & PCI-DSS Compliant</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {paymentCompleted ? (
         /* ========================================================================= */
