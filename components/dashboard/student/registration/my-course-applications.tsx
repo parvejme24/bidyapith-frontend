@@ -20,6 +20,7 @@ import {
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
+import { useGetAdmissionsQuery } from "@/lib/redux/api/admissionsApi";
 import { formatTaka } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -28,14 +29,20 @@ import type { AdmissionApplication, AttachedDocument } from "@/lib/app-types";
 export function MyCourseApplications() {
   const router = useRouter();
   const { user, admissionApplications, payAdmissionFee } = useApp();
+  const { data: dbAdmissionsRes } = useGetAdmissionsQuery();
 
   const [selectedAppForPay, setSelectedAppForPay] = useState<AdmissionApplication | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string>("bKash");
   const [isPaying, setIsPaying] = useState(false);
   const [viewDocsApp, setViewDocsApp] = useState<AdmissionApplication | null>(null);
 
+  const applicationsList: AdmissionApplication[] =
+    dbAdmissionsRes?.data && dbAdmissionsRes.data.length > 0
+      ? dbAdmissionsRes.data
+      : admissionApplications;
+
   // Filter applications belonging to this student (or all if simulated single student)
-  const myApps = admissionApplications.filter(
+  const myApps = applicationsList.filter(
     (a) =>
       !a.email ||
       !user.email ||

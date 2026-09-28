@@ -22,6 +22,11 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
+import {
+  useGetAdmissionsQuery,
+  useApproveAdmissionMutation,
+  useRejectAdmissionMutation,
+} from "@/lib/redux/api/admissionsApi";
 import { formatTaka } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -29,11 +34,20 @@ import type { AdmissionApplication, AttachedDocument } from "@/lib/app-types";
 
 export function AdmissionReviewTable() {
   const { admissionApplications, approveAdmission, rejectAdmission } = useApp();
+  const { data: dbAdmissionsRes } = useGetAdmissionsQuery();
+  const [approveAdmissionApi] = useApproveAdmissionMutation();
+  const [rejectAdmissionApi] = useRejectAdmissionMutation();
+
   const [selectedAppForDocs, setSelectedAppForDocs] = useState<AdmissionApplication | null>(null);
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING_REVIEW" | "APPROVED" | "ENROLLED" | "REJECTED">("ALL");
   const [typeFilter, setTypeFilter] = useState<"ALL" | "COURSE_REGISTRATION" | "DEGREE_ADMISSION">("ALL");
 
-  const filteredApps = admissionApplications.filter((a) => {
+  const applicationsList: AdmissionApplication[] =
+    dbAdmissionsRes?.data && dbAdmissionsRes.data.length > 0
+      ? dbAdmissionsRes.data
+      : admissionApplications;
+
+  const filteredApps = applicationsList.filter((a) => {
     const matchesStatus = statusFilter === "ALL" || a.status === statusFilter;
     const matchesType =
       typeFilter === "ALL" ||
@@ -42,13 +56,18 @@ export function AdmissionReviewTable() {
     return matchesStatus && matchesType;
   });
 
-  const pendingCount = admissionApplications.filter((a) => a.status === "PENDING_REVIEW").length;
-  const approvedCount = admissionApplications.filter((a) => a.status === "APPROVED").length;
-  const enrolledCount = admissionApplications.filter((a) => a.status === "ENROLLED").length;
-  const courseAppsCount = admissionApplications.filter((a) => a.applicationType === "COURSE_REGISTRATION" || Boolean(a.courseCode)).length;
+  const pendingCount = applicationsList.filter((a) => a.status === "PENDING_REVIEW").length;
+  const approvedCount = applicationsList.filter((a) => a.status === "APPROVED").length;
+  const enrolledCount = applicationsList.filter((a) => a.status === "ENROLLED").length;
+  const courseAppsCount = applicationsList.filter((a) => a.applicationType === "COURSE_REGISTRATION" || Boolean(a.courseCode)).length;
 
-  const handleApprove = (app: AdmissionApplication) => {
-    approveAdmission(app.id);
+  const handleApprove = async (app: AdmissionApplication) => {
+    try {
+      await approveAdmissionApi(app.id).unwrap();
+    } catch {
+      approveAdmission(app.id);
+    }
+
     const targetName = app.courseCode || app.programTitle || "Course";
     const studentEmail = app.email || app.studentEmail || "student@bidyapith.edu.bd";
 
@@ -63,8 +82,12 @@ export function AdmissionReviewTable() {
     );
   };
 
-  const handleReject = (app: AdmissionApplication) => {
-    rejectAdmission(app.id);
+  const handleReject = async (app: AdmissionApplication) => {
+    try {
+      await rejectAdmissionApi(app.id).unwrap();
+    } catch {
+      rejectAdmission(app.id);
+    }
     toast.error(`Application #${app.id} marked as Rejected.`);
   };
 

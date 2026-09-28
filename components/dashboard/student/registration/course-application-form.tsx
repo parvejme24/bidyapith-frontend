@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
+import { useSubmitAdmissionMutation } from "@/lib/redux/api/admissionsApi";
 import { formatTaka } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -98,7 +99,9 @@ export function CourseApplicationForm({ courseCode }: CourseApplicationFormProps
     toast.info("Document attachment removed.");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitAdmissionApi, { isLoading: isSubmittingApi }] = useSubmitAdmissionMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (attachedDocs.length === 0) {
@@ -113,36 +116,41 @@ export function CourseApplicationForm({ courseCode }: CourseApplicationFormProps
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      submitAdmissionApplication({
-        studentName,
-        studentEmail: email,
-        email,
-        phone,
-        programId: course.code,
-        programTitle: `${course.code}: ${course.title}`,
-        degreeType: "B.Sc.",
-        applicationType: "COURSE_REGISTRATION",
-        courseCode: course.code,
-        courseTitle: course.title,
-        courseCredits: course.credits,
-        previousCgpa: cgpa,
-        previousDegree: `Completed ${creditsDone} credits at Bidyapith University`,
-        previousInstitute: "Bidyapith University Campus",
-        admissionFee: course.tuitionFee,
-        attachedDocuments: attachedDocs,
-        motivationStatement: motivation,
-        notes: `Section ${course.room} · Instructor: ${course.instructor}`,
-      });
+    const payload = {
+      studentName,
+      studentEmail: email,
+      email,
+      phone,
+      programId: course.code,
+      programTitle: `${course.code}: ${course.title}`,
+      degreeType: "B.Sc." as const,
+      applicationType: "COURSE_REGISTRATION" as const,
+      courseCode: course.code,
+      courseTitle: course.title,
+      courseCredits: course.credits,
+      previousCgpa: cgpa,
+      previousDegree: `Completed ${creditsDone} credits at Bidyapith University`,
+      previousInstitute: "Bidyapith University Campus",
+      admissionFee: course.tuitionFee,
+      attachedDocuments: attachedDocs,
+      motivationStatement: motivation,
+      notes: `Section ${course.room} · Instructor: ${course.instructor}`,
+    };
 
-      setIsSubmitting(false);
-      toast.success(
-        `Course registration request for ${course.code} submitted! The Admin & Registrar committee will verify your academic documents.`,
-        { duration: 5000 }
-      );
+    try {
+      await submitAdmissionApi(payload).unwrap();
+    } catch {
+      // Also sync context fallback
+      submitAdmissionApplication(payload);
+    }
 
-      router.push("/student/registration?tab=my-applications");
-    }, 600);
+    setIsSubmitting(false);
+    toast.success(
+      `Course registration request for ${course.code} submitted! The Admin & Registrar committee will verify your academic documents.`,
+      { duration: 5000 }
+    );
+
+    router.push("/student/registration?tab=my-applications");
   };
 
   return (

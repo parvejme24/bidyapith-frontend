@@ -14,14 +14,23 @@ import {
   Sparkles,
   Layers,
   FileCheck,
+  RefreshCw,
 } from "lucide-react";
 import { Meter } from "@/components/dashboard/meter";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
-import { DB } from "@/lib/data";
 import { formatTaka } from "@/lib/app-data";
 import { useApp } from "@/lib/app-context";
 import { cn } from "@/lib/utils";
+import {
+  useGetCoursesQuery,
+} from "@/lib/redux/api/coursesApi";
+import {
+  useGetOfferingsQuery,
+} from "@/lib/redux/api/offeringsApi";
+import {
+  useGetAdmissionsQuery,
+} from "@/lib/redux/api/admissionsApi";
 import {
   PUBLIC_COURSE_CATALOG,
   getCoursePublicDetails,
@@ -34,9 +43,14 @@ interface CourseCatalogCardsProps {
 
 export function CourseCatalogCards({ onOpenDetails }: CourseCatalogCardsProps) {
   const router = useRouter();
-  const { student, admissionApplications } = useApp();
+  const { student } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState<string>("ALL");
+
+  // RTK Query hooks for live DB data
+  const { data: dbCoursesRes, isLoading: coursesLoading } = useGetCoursesQuery();
+  const { data: dbOfferingsRes, isLoading: offeringsLoading } = useGetOfferingsQuery();
+  const { data: dbAdmissionsRes } = useGetAdmissionsQuery();
 
   const enrolledCodes = useMemo(
     () => new Set(student.enrolled.map((c) => c.code.toLowerCase())),
@@ -45,30 +59,78 @@ export function CourseCatalogCards({ onOpenDetails }: CourseCatalogCardsProps) {
 
   const appliedMap = useMemo(() => {
     const map = new Map<string, string>();
-    admissionApplications.forEach((app) => {
+    const applications = dbAdmissionsRes?.data || [];
+    applications.forEach((app: any) => {
       if (app.courseCode) {
         map.set(app.courseCode.toLowerCase(), app.status);
       }
     });
     return map;
-  }, [admissionApplications]);
+  }, [dbAdmissionsRes]);
 
-  // Merge DB courses with Public Course Catalog to provide a full listing
+  // Merge live API courses with rich catalog details
   const allCourses: PublicCourseDetails[] = useMemo(() => {
     const map = new Map<string, PublicCourseDetails>();
 
-    // Add preset detailed courses first
+    // 1. Preset rich catalog items
     PUBLIC_COURSE_CATALOG.forEach((c) => map.set(c.code.toLowerCase(), c));
 
-    // Fill with remaining DB courses
-    DB.courses.forEach((dbc) => {
-      if (!map.has(dbc.code.toLowerCase())) {
-        map.set(dbc.code.toLowerCase(), getCoursePublicDetails(dbc.code));
-      }
-    });
+    // 2. Real DB Offerings from live API
+    if (dbOfferingsRes?.data && Array.isArray(dbOfferingsRes.data)) {
+      dbOfferingsRes.data.forEach((offering: any) => {
+        const c = offering.course;
+        if (c?.code) {
+          const codeKey = c.code.toLowerCase();
+          const existing = map.get(codeKey);
+          const instructorName = offering.instructor?.user
+            ? `Prof. ${offering.instructor.user.firstName} ${offering.instructor.user.lastName}`
+            : existing?.instructor || "Faculty Member";
+
+          const schedules = offering.schedules || [];
+          const scheduleStr =
+            schedules.length > 0
+              ? schedules.map((s: any) => `${s.dayOfWeek.slice(0, 3)} ${s.startTime}`).join(", ")
+              : existing?.schedule || "Sun 10:00, Tue 10:00";
+
+          map.set(codeKey, {
+            code: c.code,
+            title: c.title || existing?.title || "Academic Course",
+            department: c.department?.name || existing?.department || "Computer Science & Engineering",
+            credits: Number(c.credits || existing?.credits || 3),
+            type: c.type === "CORE" ? "Core" : c.type === "ELECTIVE" ? "Elective" : "General",
+            instructor: instructorName,
+            room: offering.room || existing?.room || "AB2-401",
+            schedule: scheduleStr,
+            tuitionFee: Number(c.credits || 3) * 5000,
+            prereq: c.prerequisites?.[0]?.prerequisiteCourse?.code || existing?.prereq,
+            seats: offering.capacity || existing?.seats || 45,
+            taken: offering.enrolledCount || existing?.taken || 30,
+            description: c.description || existing?.description || `Detailed syllabus for ${c.title}`,
+            learningOutcomes: existing?.learningOutcomes || [
+              `Master core theoretical principles of ${c.title}.`,
+              "Complete practical laboratory and real-world system implementations.",
+            ],
+            modules: existing?.modules || [
+              { week: "Week 1–6", topic: "Theoretical Foundations", details: "Core lectures & algorithmic frameworks." },
+              { week: "Week 7–12", topic: "Applied Laboratory", details: "Project implementation & examination." },
+            ],
+          });
+        }
+      });
+    }
+
+    // 3. Real DB Courses from live API
+    if (dbCoursesRes?.data && Array.isArray(dbCoursesRes.data)) {
+      dbCoursesRes.data.forEach((c: any) => {
+        const codeKey = c.code.toLowerCase();
+        if (!map.has(codeKey)) {
+          map.set(codeKey, getCoursePublicDetails(c.code));
+        }
+      });
+    }
 
     return Array.from(map.values());
-  }, []);
+  }, [dbCoursesRes, dbOfferingsRes]);
 
   const departments = [
     { id: "ALL", label: "All Departments" },
@@ -141,6 +203,14 @@ export function CourseCatalogCards({ onOpenDetails }: CourseCatalogCardsProps) {
           ))}
         </div>
       </div>
+
+      {/* Loading Indicator */}
+      {(coursesLoading || offeringsLoading) && (
+        <div className="flex items-center gap-2 text-xs text-jade font-mono p-3 rounded-xl bg-jade/10 border border-jade/20">
+          <RefreshCw className="size-3.5 animate-spin" />
+          <span>Synchronizing live course offerings from PostgreSQL Database...</span>
+        </div>
+      )}
 
       {/* Courses Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
