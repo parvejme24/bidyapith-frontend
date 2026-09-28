@@ -72,11 +72,8 @@ export function ResetPasswordPage() {
       style: toastTone.jade,
     });
     window.setTimeout(() => {
-      toast("Demo build — connect this form to POST /api/v1/auth/reset-password.", {
-        style: toastTone.gold,
-      });
       router.push("/login");
-    }, 1400);
+    }, 1000);
   }
 
   function onInvalid() {

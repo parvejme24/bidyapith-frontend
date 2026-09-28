@@ -2,13 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { Meter } from "@/components/dashboard/meter";
 import { BrandLogo } from "@/components/site/brand-logo";
 import { GlassCard } from "@/components/site/glass-card";
+import { removeStoredToken } from "@/lib/api-client";
 import { useApp } from "@/lib/app-context";
-import { ROLE_LABELS } from "@/lib/app-data";
+import { getInitials, ROLE_LABELS } from "@/lib/app-data";
 import type { Role } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
 
@@ -22,14 +24,15 @@ interface NavItem {
 
 const DASHBOARD_NAV: Record<Role, NavItem[]> = {
   student: [
-    { group: "Study", href: "", label: "", icon: "" },
+    { group: "Academic Journey", href: "", label: "", icon: "" },
     { href: "/student", label: "Overview", icon: "home" },
+    { href: "/student/courses", label: "Degree & Curriculum", icon: "book" },
     { href: "/student/registration", label: "Registration", icon: "cart", tag: "Open" },
-    { href: "/student/courses", label: "My courses", icon: "book" },
-    { href: "/student/attendance", label: "Attendance", icon: "check" },
-    { href: "/student/results", label: "Results", icon: "award" },
-    { group: "Account", href: "", label: "", icon: "" },
-    { href: "/student/fees", label: "Fees & payments", icon: "card", tag: "Due" },
+    { href: "/student/attendance", label: "Attendance Record", icon: "check" },
+    { href: "/student/results", label: "Results & Transcript", icon: "award" },
+    { href: "/student/certificate", label: "Degree Certificate", icon: "award", tag: "Conferred" },
+    { group: "Finance & Profile", href: "", label: "", icon: "" },
+    { href: "/student/fees", label: "Fees & Payments", icon: "card", tag: "Due" },
     { href: "/profile", label: "Profile", icon: "user" },
   ],
   instructor: [
@@ -41,13 +44,17 @@ const DASHBOARD_NAV: Record<Role, NavItem[]> = {
     { href: "/profile", label: "Profile", icon: "user" },
   ],
   admin: [
-    { group: "Operations", href: "", label: "", icon: "" },
+    { group: "Academic Management", href: "", label: "", icon: "" },
     { href: "/admin", label: "Overview", icon: "home" },
-    { href: "/admin/users", label: "Users & roles", icon: "users" },
-    { href: "/admin/courses", label: "Courses & sections", icon: "layers" },
-    { href: "/admin/payments", label: "Payments", icon: "card" },
+    { href: "/admin/instructors", label: "Manage Faculty", icon: "user", tag: "Live" },
+    { href: "/admin/students", label: "Manage Students", icon: "users" },
+    { href: "/admin/courses", label: "Courses & Sections", icon: "layers" },
+    { group: "Operations & Admin", href: "", label: "", icon: "" },
+    { href: "/admin/users", label: "Users & Roles", icon: "users" },
+    { href: "/admin/payments", label: "Payments Hub", icon: "card" },
+    { href: "/admin/academic", label: "Term & Deadlines", icon: "calendar" },
     { group: "System", href: "", label: "", icon: "" },
-    { href: "/admin/audit", label: "Audit log", icon: "activity" },
+    { href: "/admin/audit", label: "Audit Log", icon: "activity" },
     { href: "/profile", label: "Profile", icon: "user" },
   ],
 };
@@ -59,7 +66,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ mobileOpen, onCloseMobile }: AppSidebarProps) {
   const pathname = usePathname();
-  const { role, term } = useApp();
+  const router = useRouter();
+  const { role, user, term } = useApp();
   const navItems = DASHBOARD_NAV[role] || DASHBOARD_NAV.student;
 
   const isActive = (href: string) => {
@@ -164,28 +172,68 @@ export function AppSidebar({ mobileOpen, onCloseMobile }: AppSidebarProps) {
           </nav>
         </div>
 
-        {/* Footer info & Logout */}
-        <div className="space-y-3 pt-4 border-t border-white/8">
-          <GlassCard className="p-3 bg-white/[0.035] shadow-none border-white/8">
-            <p className="text-[0.7rem] text-ink-faint">{term.name}</p>
+        {/* Footer info, User profile badge & Logout */}
+        <div className="space-y-2.5 pt-3 border-t border-white/8">
+          {/* User profile card with live avatar */}
+          <Link
+            href={`/profile?role=${role}`}
+            onClick={onCloseMobile}
+            className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/8 hover:border-jade/30 transition-all flex items-center gap-2.5 group"
+          >
+            {user.avatar && (user.avatar.startsWith("http") || user.avatar.startsWith("data:") || user.avatar.startsWith("blob:") || user.avatar.startsWith("/")) ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="size-8 rounded-full object-cover shrink-0 shadow-sm ring-1 ring-white/10 group-hover:ring-jade/50 transition-all"
+              />
+            ) : (
+              <span
+                className={cn(
+                  "size-8 rounded-full flex items-center justify-center font-display font-bold text-xs shrink-0 shadow-sm",
+                  user.avatar === "gold"
+                    ? "bg-gradient-to-br from-[#FFD9A6] to-[#FFB454] text-[#33230A]"
+                    : user.avatar === "orchid"
+                    ? "bg-gradient-to-br from-[#D3CBFF] to-[#9B8CFF] text-[#171141]"
+                    : "bg-gradient-to-br from-[#7CE9CB] to-[#2ED3A7] text-[#052620]"
+                )}
+              >
+                {getInitials(user.name)}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-ink group-hover:text-jade transition-colors truncate">
+                {user.name}
+              </p>
+              <p className="text-[0.65rem] text-ink-faint font-mono truncate">{user.id}</p>
+            </div>
+          </Link>
+
+          <GlassCard className="p-2.5 bg-white/[0.035] shadow-none border-white/8">
+            <p className="text-[0.68rem] text-ink-faint">{term.name}</p>
             <p className="text-xs font-semibold text-ink mt-0.5">
               Week {term.week} of {term.of}
             </p>
             <Meter
               value={term.week}
               max={term.of}
-              className="mt-2 h-1.5"
+              className="mt-1.5 h-1.5"
               tone="jade"
             />
           </GlassCard>
 
-          <Link
-            href="/login"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-ink-muted hover:text-rose hover:bg-rose/10 transition-colors"
+          <button
+            type="button"
+            onClick={() => {
+              removeStoredToken();
+              toast.success("Signed out successfully");
+              onCloseMobile();
+              router.push("/login");
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-ink-muted hover:text-rose hover:bg-rose/10 transition-colors cursor-pointer text-left"
           >
             <DashboardIcon name="out" className="size-4" />
             <span>Sign out</span>
-          </Link>
+          </button>
         </div>
       </aside>
     </>

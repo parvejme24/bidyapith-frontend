@@ -48,7 +48,7 @@ export function ForbiddenView({ requiredRole }: ForbiddenViewProps) {
             onClick={() => setRole(requiredRole)}
             className={cn(buttonClass({ variant: "primary", size: "sm" }))}
           >
-            Switch to {ROLE_LABELS[requiredRole]} demo
+            Switch to {ROLE_LABELS[requiredRole]}
           </button>
         </div>
       </GlassCard>

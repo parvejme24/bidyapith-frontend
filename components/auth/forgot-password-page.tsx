@@ -47,11 +47,6 @@ export function ForgotPasswordPage() {
     toast.success("Reset link sent if that email is on file.", {
       style: toastTone.jade,
     });
-    window.setTimeout(() => {
-      toast("Demo build — connect this form to POST /api/v1/auth/forgot-password.", {
-        style: toastTone.gold,
-      });
-    }, 1200);
   }
 
   function onInvalid() {

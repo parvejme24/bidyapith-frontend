@@ -1,8 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Search } from "lucide-react";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { GlassCard } from "@/components/site/glass-card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export interface ColumnDef<T> {
@@ -141,23 +148,65 @@ export function DataTable<T extends Record<string, any>>({
             />
           </label>
 
-          {filters.map((f) => (
-            <select
-              key={f.id}
-              value={filterValues[f.id] || "all"}
-              onChange={(e) => handleFilterChange(f.id, e.target.value)}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-semibold text-ink-muted outline-none hover:bg-white/[0.08] focus:border-jade/50 cursor-pointer"
-            >
-              <option value="all" className="bg-night-800 text-ink">
-                {f.label}
-              </option>
-              {f.options.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-night-800 text-ink">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          ))}
+          {filters.map((f) => {
+            const currentVal = filterValues[f.id] || "all";
+            const selectedLabel =
+              currentVal === "all"
+                ? f.label
+                : f.options.find((o) => o.value === currentVal)?.label || f.label;
+            const isFiltered = currentVal !== "all";
+
+            return (
+              <DropdownMenu key={f.id}>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all outline-none cursor-pointer select-none",
+                    isFiltered
+                      ? "border-jade/40 bg-jade/12 text-jade shadow-sm ring-1 ring-jade/30"
+                      : "border-white/10 bg-white/[0.04] text-ink-muted hover:bg-white/[0.08] hover:text-ink hover:border-white/20"
+                  )}
+                >
+                  <span>{selectedLabel}</span>
+                  <ChevronDown className="size-3 text-ink-faint opacity-80 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-48 rounded-lg border border-white/15 bg-night-900/98 p-1.5 shadow-2xl backdrop-blur-2xl text-ink z-50 animate-in fade-in zoom-in-95 duration-100"
+                >
+                  <DropdownMenuItem
+                    onClick={() => handleFilterChange(f.id, "all")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 rounded-md text-xs cursor-pointer font-medium transition-colors",
+                      currentVal === "all"
+                        ? "bg-jade/15 text-jade font-semibold"
+                        : "text-ink-muted hover:bg-white/[0.08] hover:text-ink"
+                    )}
+                  >
+                    <span>{f.label}</span>
+                    {currentVal === "all" && <Check className="size-3.5 text-jade shrink-0" />}
+                  </DropdownMenuItem>
+                  {f.options.map((opt) => {
+                    const isSelected = currentVal === opt.value;
+                    return (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => handleFilterChange(f.id, opt.value)}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2 rounded-md text-xs cursor-pointer font-medium transition-colors",
+                          isSelected
+                            ? "bg-jade/15 text-jade font-semibold"
+                            : "text-ink-muted hover:bg-white/[0.08] hover:text-ink"
+                        )}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="size-3.5 text-jade shrink-0" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          })}
         </div>
 
         {actions && <div className="flex items-center gap-2">{actions}</div>}

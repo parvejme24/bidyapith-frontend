@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { AppTopbar } from "@/components/dashboard/app-topbar";
 import { ForbiddenView } from "@/components/dashboard/forbidden-view";
+import { getStoredToken } from "@/lib/api-client";
 import { useApp } from "@/lib/app-context";
 import type { Role } from "@/lib/app-types";
 
@@ -24,8 +27,33 @@ export function DashboardLayout({
   requiredRole,
   actions,
 }: DashboardLayoutProps) {
+  const router = useRouter();
   const { role } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Secure Dashboard Access: Ensure user is logged in
+  useEffect(() => {
+    const token = getStoredToken();
+    if (!token) {
+      setIsAuthenticated(false);
+      router.replace("/login");
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [router]);
+
+  // Prevent flash of protected dashboard if not authenticated
+  if (isAuthenticated === null || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-night-900 flex items-center justify-center p-6 text-ink">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-7 text-jade animate-spin" />
+          <p className="text-xs text-ink-muted font-medium">Securing university session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isForbidden = requiredRole && requiredRole !== role;
 

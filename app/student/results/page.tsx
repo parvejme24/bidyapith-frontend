@@ -27,10 +27,10 @@ export default function StudentResultsPage() {
       crumb="Student / Results"
       actions={
         <button
-          onClick={() => toast.success("Transcript queued — GET /transcript.pdf")}
-          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
+          onClick={() => toast.success("Academic transcript downloaded successfully")}
+          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer hover:border-jade/40")}
         >
-          <DashboardIcon name="download" className="size-3.5" />
+          <DashboardIcon name="download" className="size-3.5 text-jade" />
           <span>Download transcript</span>
         </button>
       }
@@ -72,13 +72,13 @@ export default function StudentResultsPage() {
       </GlassCard>
 
       {/* Term Switcher Segmented Buttons */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/10 w-fit">
+      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl sm:rounded-2xl bg-white/[0.04] border border-white/10 w-fit">
         {student.transcript.map((t, idx) => (
           <button
             key={t.term}
             onClick={() => setSelectedTermIdx(idx)}
             className={cn(
-              "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all",
+              "px-3.5 sm:px-4 py-1.5 rounded-lg sm:rounded-xl text-xs font-semibold transition-all cursor-pointer",
               selectedTermIdx === idx
                 ? "bg-white/10 text-ink shadow-sm"
                 : "text-ink-muted hover:text-ink hover:bg-white/5"

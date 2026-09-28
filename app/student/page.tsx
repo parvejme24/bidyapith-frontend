@@ -8,13 +8,14 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
+import { AdmissionStatusCard } from "@/components/dashboard/student/admission/admission-status-card";
 import { useApp } from "@/lib/app-context";
 import { formatTaka } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 export default function StudentDashboardPage() {
-  const { student, user, term, role } = useApp();
+  const { student, user, term, role, isLiveSynced } = useApp();
 
   const dueInvoice = student.invoices.find((i) => i.status === "due");
   const completionPct = Math.round((student.creditsDone / student.creditsNeeded) * 100);
@@ -24,6 +25,7 @@ export default function StudentDashboardPage() {
       title={`Welcome back, ${user.name.split(" ")[0]}`}
       subtitle={`${user.program} · ${user.batch} · ${term.name}`}
       requiredRole="student"
+      crumb={isLiveSynced ? "Student Dashboard · Live Neon DB Connected" : "Student Dashboard"}
       actions={
         <div className="flex items-center gap-2">
           <Link
@@ -33,15 +35,19 @@ export default function StudentDashboardPage() {
             Results
           </Link>
           <Link
-            href={`/student/registration?role=${role}`}
+            href={`/student/courses?role=${role}`}
             className={cn(buttonClass({ variant: "primary", size: "sm" }), "text-xs")}
           >
-            Register courses
+            Curriculum & Routine
           </Link>
         </div>
       }
     >
+      {/* Admission / Degree Application Banner */}
+      <AdmissionStatusCard />
+
       {/* 4 Stat Tiles */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile
           label="CGPA"
@@ -124,7 +130,7 @@ export default function StudentDashboardPage() {
             {student.enrolled.map((c) => (
               <div
                 key={c.code}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-white/8 bg-white/[0.025] hover:border-white/15 transition-all"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl sm:rounded-2xl border border-white/8 bg-white/[0.025] hover:border-white/15 transition-all"
               >
                 <div>
                   <p className="font-mono text-xs font-bold text-jade">

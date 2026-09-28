@@ -10,7 +10,6 @@ import "./globals.css";
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
-  axes: ["opsz", "SOFT", "WONK"],
   display: "swap",
 });
 
@@ -21,7 +20,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 const hindSiliguri = Hind_Siliguri({
-  subsets: ["latin", "bengali"],
+  subsets: ["latin"],
   weight: ["400", "600"],
   variable: "--font-hind-siliguri",
   display: "swap",
