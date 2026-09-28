@@ -1,18 +1,23 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { toast } from "sonner";
 import { AreaTrendChart } from "@/components/dashboard/charts/area-trend-chart";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
 import { SemesterResultsTabs } from "./semester-results-tabs";
 import { SemesterGradeSheetTable } from "./semester-grade-sheet-table";
+import { TranscriptModal } from "./transcript-modal";
 import { generateAllSemesterResults, computeGpaTrend } from "./results-generator";
-import { Download, Sparkles, Award, TrendingUp } from "lucide-react";
+import {
+  exportTranscriptAsPdf,
+  exportTranscriptAsPng,
+  type OfficialTranscriptData,
+} from "./transcript-exporter";
+import { Download, Sparkles, Image as ImageIcon, TrendingUp, Award } from "lucide-react";
 
 export function StudentResultsView() {
-  const { student, currentProgram, programs } = useApp();
+  const { student, currentProgram, programs, user } = useApp();
 
   const program = currentProgram || programs[0];
 
@@ -28,6 +33,7 @@ export function StudentResultsView() {
     1;
 
   const [selectedSemesterNum, setSelectedSemesterNum] = useState<number>(initialSemNum);
+  const [showTranscriptModal, setShowTranscriptModal] = useState<boolean>(false);
 
   // Active record
   const activeRecord = useMemo(() => {
@@ -51,10 +57,27 @@ export function StudentResultsView() {
     return computeGpaTrend(semesterResults);
   }, [semesterResults]);
 
-  const handleDownloadTranscript = () => {
-    toast.success("Official Academic Transcript PDF downloaded successfully!");
-    window.print();
-  };
+  // Construct official transcript data
+  const transcriptData: OfficialTranscriptData = useMemo(() => {
+    return {
+      transcriptNumber: `TRN-2026-${user.id.replace(/[^0-9]/g, "").slice(-4) || "1001"}-88`,
+      studentName: user.name || "Rafiul Karim",
+      studentId: user.id || "2024-BSC-CSE-1001",
+      studentEmail: user.email || "student001@bidyapith.edu",
+      programTitle: program.title,
+      department: program.department || "Computer Science & Engineering",
+      degreeType: program.degreeType || "B.Sc.",
+      mediumOfInstruction: "English",
+      dateOfAdmission: "January 15, 2024",
+      issueDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+      cgpa: cumulativeCgpa,
+      creditsCompleted: totalCompletedCredits || student.creditsDone,
+      totalDegreeCredits: program.totalCredits || 140,
+      academicStanding: cumulativeCgpa >= 3.75 ? "First Class with Distinction (Honors)" : "First Class Regular",
+      terms: semesterResults,
+      verificationHash: `0x${Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("").toUpperCase()}`,
+    };
+  }, [cumulativeCgpa, program, semesterResults, student.creditsDone, totalCompletedCredits, user]);
 
   return (
     <div className="space-y-6">
@@ -87,7 +110,7 @@ export function StudentResultsView() {
 
       {/* GPA Progression Trend Chart */}
       <GlassCard className="p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h3 className="text-base font-bold text-ink flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-marigold" />
@@ -98,14 +121,37 @@ export function StudentResultsView() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleDownloadTranscript}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5 text-jade" />
-            <span>Official Transcript</span>
-          </button>
+          {/* Transcript Export Actions */}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setShowTranscriptModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-jade/[0.15] hover:bg-jade/[0.22] text-jade border border-jade/30 text-xs font-bold transition-all shadow-sm group"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-jade group-hover:scale-110 transition-transform" />
+              <span>Official Transcript</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => exportTranscriptAsPdf(transcriptData)}
+              title="Download PDF directly"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5 text-jade" />
+              <span>PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => exportTranscriptAsPng(transcriptData)}
+              title="Download PNG directly"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+              <span>PNG</span>
+            </button>
+          </div>
         </div>
 
         <AreaTrendChart data={gpaTrend} color="#FFB454" />
@@ -122,6 +168,14 @@ export function StudentResultsView() {
 
       {/* 2. Selected Semester Grade Sheet Table */}
       <SemesterGradeSheetTable record={activeRecord} />
+
+      {/* 3. Official Academic Transcript Modal Preview */}
+      {showTranscriptModal && (
+        <TranscriptModal
+          data={transcriptData}
+          onClose={() => setShowTranscriptModal(false)}
+        />
+      )}
     </div>
   );
 }
