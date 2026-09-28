@@ -90,51 +90,44 @@ export function AdmissionPaymentModal({
 
           {/* Payment Method Selector */}
           <div className="space-y-1.5">
-            <span className="text-xs font-semibold text-ink-faint">Select Payment Method:</span>
-            <div className="grid grid-cols-3 gap-2">
+            <span className="text-xs font-semibold text-ink-faint">Select Payment Gateway:</span>
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setMethod("bkash")}
                 className={cn(
-                  "p-2.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-1",
+                  "p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between",
                   method === "bkash"
                     ? "border-jade bg-jade/15 text-jade font-bold shadow-sm"
                     : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink"
                 )}
               >
-                <Smartphone className="size-4" />
-                <span className="text-xs">bKash</span>
+                <div className="flex items-center gap-1.5 font-display text-xs">
+                  <Smartphone className="size-3.5 text-jade" />
+                  <span>SSLCommerz</span>
+                </div>
+                <span className="text-[0.65rem] text-ink-faint mt-1">bKash, Nagad, Rocket, Cards</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setMethod("card")}
                 className={cn(
-                  "p-2.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-1",
+                  "p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between",
                   method === "card"
                     ? "border-jade bg-jade/15 text-jade font-bold shadow-sm"
                     : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink"
                 )}
               >
-                <CreditCard className="size-4" />
-                <span className="text-xs">Card / Visa</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMethod("bank")}
-                className={cn(
-                  "p-2.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-1",
-                  method === "bank"
-                    ? "border-jade bg-jade/15 text-jade font-bold shadow-sm"
-                    : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink"
-                )}
-              >
-                <Building2 className="size-4" />
-                <span className="text-xs">Bank Transfer</span>
+                <div className="flex items-center gap-1.5 font-display text-xs">
+                  <CreditCard className="size-3.5 text-jade" />
+                  <span>Stripe Gateway</span>
+                </div>
+                <span className="text-[0.65rem] text-ink-faint mt-1">Visa, Mastercard, Apple Pay</span>
               </button>
             </div>
           </div>
+
 
           {method === "bkash" ? (
             <div className="space-y-3 p-3.5 rounded-lg bg-white/[0.03] border border-white/8">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { GlassCard } from "@/components/site/glass-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { formatTaka } from "@/lib/app-data";
@@ -29,6 +30,7 @@ interface SemesterAccordionProps {
 }
 
 export function SemesterAccordion(props: SemesterAccordionProps) {
+  const router = useRouter();
   const { currentProgram: ctxProgram, unlockSemester: ctxUnlockSemester } = useApp();
   const program = props.program || ctxProgram;
   const onUnlockSemester = props.onUnlockSemester || ctxUnlockSemester;
@@ -43,6 +45,7 @@ export function SemesterAccordion(props: SemesterAccordionProps) {
   if (!program) {
     return null;
   }
+
 
 
   const toggleSemester = (semNum: number) => {
@@ -163,11 +166,13 @@ export function SemesterAccordion(props: SemesterAccordionProps) {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setPaySemester(sem);
+                        router.push(
+                          `/student/checkout?semester=${sem.semesterNumber}&amount=${sem.tuitionFee}&title=${encodeURIComponent(sem.title)}`
+                        );
                       }}
                       className={cn(
                         buttonClass({ variant: "primary", size: "sm" }),
-                        "text-xs px-3.5 flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        "text-xs px-3.5 flex items-center gap-1.5 shadow-sm cursor-pointer bg-jade text-night-900 font-bold hover:bg-jade/90"
                       )}
                     >
                       <Unlock className="size-3.5" />
