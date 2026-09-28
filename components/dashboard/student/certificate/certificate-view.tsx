@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Download,
   GraduationCap,
-  Printer,
   QrCode,
   ShieldCheck,
   Sparkles,
@@ -24,12 +23,260 @@ interface CertificateViewProps {
 export function CertificateView({ certificate }: CertificateViewProps) {
   const certRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleDownload = () => {
-    toast.success("High-resolution Degree Certificate (PDF) generated with cryptographic signature verification!");
+    try {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        toast.error("Please allow popups to download the official PDF certificate");
+        return;
+      }
+
+      const certificateHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Bidyapith_Certificate_${certificate.studentId}_${certificate.studentName.replace(/\s+/g, "_")}</title>
+          <meta charset="utf-8" />
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 40px;
+              background-color: #0A0F24;
+              color: #F8FAFC;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .cert-card {
+              position: relative;
+              width: 100%;
+              max-width: 960px;
+              padding: 48px;
+              border: 4px solid rgba(255, 217, 166, 0.6);
+              border-radius: 20px;
+              background: linear-gradient(135deg, #121936 0%, #0E152E 50%, #0A0F24 100%);
+              text-align: center;
+              box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+              box-sizing: border-box;
+            }
+            .corner {
+              position: absolute;
+              width: 40px;
+              height: 40px;
+              border-color: #FFD9A6;
+            }
+            .tl { top: 12px; left: 12px; border-top: 3px solid; border-left: 3px solid; border-top-left-radius: 8px; }
+            .tr { top: 12px; right: 12px; border-top: 3px solid; border-right: 3px solid; border-top-right-radius: 8px; }
+            .bl { bottom: 12px; left: 12px; border-bottom: 3px solid; border-left: 3px solid; border-bottom-left-radius: 8px; }
+            .br { bottom: 12px; right: 12px; border-bottom: 3px solid; border-right: 3px solid; border-bottom-right-radius: 8px; }
+            .uni-crest {
+              width: 64px;
+              height: 64px;
+              margin: 0 auto 12px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #FFD9A6, #FFB454, #C98A2C);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #0A0F24;
+              font-size: 28px;
+              font-weight: bold;
+            }
+            h1 {
+              font-size: 28px;
+              margin: 0 0 4px 0;
+              letter-spacing: 2px;
+              text-transform: uppercase;
+              color: #F8FAFC;
+            }
+            .location {
+              font-size: 11px;
+              letter-spacing: 3px;
+              text-transform: uppercase;
+              color: #FFD9A6;
+              margin: 0 0 16px 0;
+            }
+            .rule {
+              width: 120px;
+              height: 2px;
+              background: linear-gradient(to right, transparent, #FFD9A6, transparent);
+              margin: 0 auto 24px;
+            }
+            .subtext {
+              font-size: 12px;
+              color: #94A3B8;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              margin: 8px 0;
+            }
+            .student-name {
+              font-size: 36px;
+              font-weight: 800;
+              color: #2ED3A7;
+              margin: 12px 0 4px 0;
+              letter-spacing: 1px;
+            }
+            .student-id {
+              font-family: monospace;
+              font-size: 13px;
+              color: #94A3B8;
+              margin-bottom: 16px;
+            }
+            .degree-title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #FFD9A6;
+              margin: 8px 0 4px 0;
+            }
+            .honors {
+              font-size: 13px;
+              color: #2ED3A7;
+              font-weight: 600;
+              margin-bottom: 16px;
+            }
+            .desc {
+              font-size: 12px;
+              color: #94A3B8;
+              max-width: 600px;
+              margin: 0 auto 28px;
+              line-height: 1.6;
+            }
+            .footer-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 16px;
+              align-items: flex-end;
+              border-top: 1px solid rgba(255, 255, 255, 0.1);
+              padding-top: 24px;
+              margin-top: 16px;
+            }
+            .sig-name {
+              font-style: italic;
+              font-size: 16px;
+              color: #E2E8F0;
+              margin-bottom: 4px;
+            }
+            .sig-line {
+              width: 120px;
+              height: 1px;
+              background: rgba(255, 255, 255, 0.3);
+              margin: 0 auto 6px;
+            }
+            .sig-title {
+              font-size: 10px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #64748B;
+            }
+            .seal-box {
+              width: 68px;
+              height: 68px;
+              margin: 0 auto 4px;
+              border-radius: 50%;
+              border: 2px solid #FFD9A6;
+              background: rgba(255, 217, 166, 0.1);
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              color: #FFD9A6;
+              font-size: 8px;
+              font-weight: bold;
+            }
+            .verify-strip {
+              margin-top: 20px;
+              padding-top: 12px;
+              border-top: 1px solid rgba(255, 255, 255, 0.08);
+              display: flex;
+              justify-content: space-between;
+              font-family: monospace;
+              font-size: 9px;
+              color: #64748B;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="cert-card">
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+
+            <div class="uni-crest">🎓</div>
+            <h1>Bidyapith University</h1>
+            <div class="location">Dhaka, Bangladesh · Established 1998</div>
+            <div class="rule"></div>
+
+            <div class="subtext">On the recommendation of the Academic Council and by the authority of the Board of Trustees,</div>
+            <div style="font-size: 11px; color: #64748B; margin: 4px 0;">is pleased to confer upon</div>
+
+            <div class="student-name">${certificate.studentName}</div>
+            <div class="student-id">Student ID: ${certificate.studentId}</div>
+
+            <div style="font-size: 11px; color: #64748B;">the degree of</div>
+            <div class="degree-title">${certificate.programTitle}</div>
+            <div class="honors">with ${certificate.honors} (Cumulative CGPA: ${certificate.cgpa.toFixed(2)})</div>
+
+            <div class="desc">
+              Having successfully completed all prescribed curricula, laboratory practica, examinations, and academic requirements comprising ${certificate.creditsCompleted} semester credits.
+            </div>
+
+            <div class="footer-grid">
+              <div>
+                <div class="sig-name">${certificate.registrarName}</div>
+                <div class="sig-line"></div>
+                <div class="sig-title">Registrar</div>
+              </div>
+
+              <div>
+                <div class="seal-box">
+                  <span style="font-size: 14px;">🛡️</span>
+                  <span>OFFICIAL SEAL</span>
+                </div>
+                <div style="font-size: 9px; color: #64748B; font-family: monospace;">
+                  Conferred: ${certificate.graduationDate}
+                </div>
+              </div>
+
+              <div>
+                <div class="sig-name">${certificate.chancellorName}</div>
+                <div class="sig-line"></div>
+                <div class="sig-title">Vice Chancellor</div>
+              </div>
+            </div>
+
+            <div class="verify-strip">
+              <span>Certificate No: ${certificate.certificateNumber}</span>
+              <span>Digital Signature: ${certificate.verificationHash.slice(0, 28)}...</span>
+              <span>Verify: bidyapith.edu/verify/${certificate.certificateNumber}</span>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.open();
+      printWindow.document.write(certificateHtml);
+      printWindow.document.close();
+      toast.success("Generating Official Degree Certificate PDF...");
+    } catch (err) {
+      toast.error("Failed to generate PDF certificate. Please try again.");
+    }
   };
 
   return (
@@ -56,28 +303,18 @@ export function CertificateView({ certificate }: CertificateViewProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handlePrint}
-            className={cn(
-              buttonClass({ variant: "ghost", size: "sm" }),
-              "text-xs flex items-center gap-1.5 cursor-pointer border border-white/15 hover:border-jade/40"
-            )}
-          >
-            <Printer className="size-3.5 text-jade" />
-            <span>Print Certificate</span>
-          </button>
-          <button
-            type="button"
             onClick={handleDownload}
             className={cn(
               buttonClass({ variant: "primary", size: "sm" }),
-              "text-xs px-4 flex items-center gap-1.5 shadow-md cursor-pointer"
+              "text-xs px-4 flex items-center gap-1.5 shadow-md cursor-pointer bg-jade text-night-900 font-bold hover:bg-jade/90"
             )}
           >
             <Download className="size-3.5" />
-            <span>Download Official PDF</span>
+            <span>Download Official PDF Certificate</span>
           </button>
         </div>
       </div>
+
 
       {/* Official Certificate Paper Document */}
       <div
