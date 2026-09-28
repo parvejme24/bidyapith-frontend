@@ -39,7 +39,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
     semesters: [
       {
         semesterNumber: 1,
-        title: "Semester 1 (Freshman Fall)",
+        title: "Semester 1",
         termName: "Fall 2024",
         status: "completed",
         feeStatus: "paid",
@@ -54,7 +54,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 2,
-        title: "Semester 2 (Freshman Spring)",
+        title: "Semester 2",
         termName: "Spring 2025",
         status: "completed",
         feeStatus: "paid",
@@ -69,7 +69,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 3,
-        title: "Semester 3 (Sophomore Fall)",
+        title: "Semester 3",
         termName: "Fall 2025",
         status: "completed",
         feeStatus: "paid",
@@ -83,7 +83,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 4,
-        title: "Semester 4 (Sophomore Spring)",
+        title: "Semester 4",
         termName: "Spring 2026",
         status: "completed",
         feeStatus: "paid",
@@ -97,7 +97,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 5,
-        title: "Semester 5 (Junior Fall - Current)",
+        title: "Semester 5",
         termName: "Fall 2026",
         status: "current",
         feeStatus: "paid",
@@ -111,7 +111,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 6,
-        title: "Semester 6 (Junior Spring)",
+        title: "Semester 6",
         termName: "Spring 2027",
         status: "locked",
         feeStatus: "due",
@@ -125,7 +125,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 7,
-        title: "Semester 7 (Senior Fall)",
+        title: "Semester 7",
         termName: "Fall 2027",
         status: "locked",
         feeStatus: "due",
@@ -139,7 +139,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 8,
-        title: "Semester 8 (Senior Spring - Final)",
+        title: "Semester 8",
         termName: "Spring 2028",
         status: "locked",
         feeStatus: "due",
@@ -166,7 +166,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
     semesters: [
       {
         semesterNumber: 1,
-        title: "Semester 1 (Advanced Foundations)",
+        title: "Semester 1",
         termName: "Fall 2025",
         status: "completed",
         feeStatus: "paid",
@@ -179,7 +179,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 2,
-        title: "Semester 2 (Deep Learning & NLP)",
+        title: "Semester 2",
         termName: "Spring 2026",
         status: "completed",
         feeStatus: "paid",
@@ -192,7 +192,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 3,
-        title: "Semester 3 (Autonomous Agents & Research)",
+        title: "Semester 3",
         termName: "Fall 2026",
         status: "current",
         feeStatus: "paid",
@@ -205,7 +205,7 @@ export const DEGREE_PROGRAMS: DegreeProgram[] = [
       },
       {
         semesterNumber: 4,
-        title: "Semester 4 (Master Thesis & Defense)",
+        title: "Semester 4",
         termName: "Spring 2027",
         status: "locked",
         feeStatus: "due",

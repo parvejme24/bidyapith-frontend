@@ -332,9 +332,12 @@ export function generateSemesterAttendanceData(
   const overallPct = totalHeld > 0 ? Math.round(((totalPresent + totalLate * 0.5) / totalHeld) * 100) : (isLocked ? 0 : 92);
   const atRiskCount = coursesData.filter((c) => !c.isEligible).length;
 
+  const rawTitle = semester?.title || `Semester ${selectedSemesterNum}`;
+  const semesterTitle = rawTitle.replace(/\s*\(.*?\)\s*/g, "").trim() || `Semester ${selectedSemesterNum}`;
+
   return {
     semesterNumber: selectedSemesterNum,
-    semesterTitle: semester?.title || `Semester ${selectedSemesterNum}`,
+    semesterTitle,
     termName,
     status: (semester?.status || "completed") as "completed" | "current" | "locked",
     months,
