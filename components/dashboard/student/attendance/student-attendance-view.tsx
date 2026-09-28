@@ -7,13 +7,18 @@ import { MonthFilterNav } from "./month-filter-nav";
 import { AttendanceSummaryBanner } from "./attendance-summary-banner";
 import { MonthlyCourseAttendanceTable } from "./monthly-course-attendance-table";
 import { LectureHistoryModal } from "./lecture-history-modal";
+import { AttendanceSlipModal } from "./attendance-slip-modal";
 import { generateSemesterAttendanceData } from "./attendance-generator";
 import type { CourseSemesterAttendance } from "./attendance-types";
-import { Download, Printer, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
+import {
+  exportAttendanceSlipAsPdf,
+  exportAttendanceSlipAsPng,
+  type AttendanceSlipData,
+} from "./attendance-slip-exporter";
+import { Download, FileText, Image as ImageIcon, Sparkles } from "lucide-react";
 
 export function StudentAttendanceView() {
-  const { currentProgram, programs, student } = useApp();
+  const { currentProgram, programs, user } = useApp();
 
   // Selected degree program
   const program = currentProgram || programs[0];
@@ -27,21 +32,59 @@ export function StudentAttendanceView() {
   const [selectedSemesterNum, setSelectedSemesterNum] = useState<number>(initialSemNum);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0); // 0 = all months
   const [activeLectureCourse, setActiveLectureCourse] = useState<CourseSemesterAttendance | null>(null);
+  const [showSlipModal, setShowSlipModal] = useState<boolean>(false);
 
   // Generate attendance data for the selected semester
   const semesterRecord = useMemo(() => {
     return generateSemesterAttendanceData(program, selectedSemesterNum);
   }, [program, selectedSemesterNum]);
 
+  // Construct official slip data object
+  const slipData: AttendanceSlipData = useMemo(() => {
+    return {
+      slipNumber: `ATT-2026-SEM${selectedSemesterNum}-${user.id.replace(/[^0-9]/g, "").slice(-4) || "1001"}`,
+      studentName: user.name || "Rafiul Karim",
+      studentId: user.id || "2024-BSC-CSE-1001",
+      studentEmail: user.email || "student001@bidyapith.edu",
+      programTitle: program.title,
+      department: program.department || "Computer Science & Engineering",
+      semesterTitle: semesterRecord.semesterTitle,
+      termName: semesterRecord.termName,
+      issueDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      totalHeld: semesterRecord.totalHeld,
+      totalPresent: semesterRecord.totalPresent,
+      totalLate: semesterRecord.totalLate,
+      totalAbsent: semesterRecord.totalAbsent,
+      overallPct: semesterRecord.overallPct,
+      isFullyEligible: semesterRecord.isFullyEligible,
+      courses: semesterRecord.courses.map((c) => ({
+        code: c.code,
+        title: c.title,
+        type: c.type,
+        credits: c.credits,
+        instructor: c.instructor,
+        room: c.room,
+        held: c.totalHeld,
+        present: c.totalPresent,
+        late: c.totalLate,
+        absent: c.totalAbsent,
+        pct: c.pct,
+        isEligible: c.isEligible,
+        monthlyBreakdown: c.monthlyBreakdown.map((m) => ({
+          monthName: m.monthName,
+          pct: m.pct,
+          held: m.held,
+          present: m.present,
+        })),
+      })),
+      verificationHash: `0x${Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("").toUpperCase()}`,
+    };
+  }, [program, selectedSemesterNum, semesterRecord, user]);
+
   // When switching semesters, reset month filter to 0 (All Months)
   const handleSelectSemester = (semNum: number) => {
     setSelectedSemesterNum(semNum);
     setSelectedMonthIndex(0);
-  };
-
-  const handleExportPDF = () => {
-    toast.success(`Exporting Official Attendance Sheet for ${semesterRecord.semesterTitle}...`);
-    window.print();
   };
 
   return (
@@ -57,14 +100,35 @@ export function StudentAttendanceView() {
           </p>
         </div>
 
+        {/* Dual Export Actions */}
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleExportPDF}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            onClick={() => setShowSlipModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-jade/[0.15] hover:bg-jade/[0.22] text-jade border border-jade/30 text-xs font-bold transition-all shadow-sm group"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-jade group-hover:scale-110 transition-transform" />
+            <span>Official Attendance Slip</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => exportAttendanceSlipAsPdf(slipData)}
+            title="Download PDF directly"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-jade" />
-            <span>Download Attendance Slip</span>
+            <span>PDF</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => exportAttendanceSlipAsPng(slipData)}
+            title="Download PNG directly"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+            <span>PNG</span>
           </button>
         </div>
       </div>
@@ -114,6 +178,14 @@ export function StudentAttendanceView() {
           course={activeLectureCourse}
           semesterTitle={semesterRecord.semesterTitle}
           onClose={() => setActiveLectureCourse(null)}
+        />
+      )}
+
+      {/* 6. Official Attendance Slip Modal Preview */}
+      {showSlipModal && (
+        <AttendanceSlipModal
+          data={slipData}
+          onClose={() => setShowSlipModal(false)}
         />
       )}
     </div>
