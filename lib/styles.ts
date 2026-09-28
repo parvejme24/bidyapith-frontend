@@ -20,13 +20,13 @@ export const bnClass = "font-bangla";
 export const numClass = "tabular-nums";
 
 export const gradJadeClass =
-  "bg-[linear-gradient(120deg,#fff,#9cf0d8_55%,#6fd8ff)] bg-clip-text text-transparent";
+  "bg-[linear-gradient(120deg,#cbe8df,#9cf0d8_55%,#6fd8ff)] bg-clip-text text-transparent";
 
 export const ruleClass =
   "m-0 h-px border-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent)]";
 
 export const glassClass = cva(
-  "relative rounded-[26px] border border-white/13 shadow-[0_24px_60px_-24px_rgba(4,8,30,0.85)] backdrop-blur-[20px] backdrop-saturate-150",
+  "relative rounded-xl sm:rounded-2xl lg:rounded-[24px] border border-white/13 shadow-[0_24px_60px_-24px_rgba(4,8,30,0.85)] backdrop-blur-[20px] backdrop-saturate-150",
   {
     variants: {
       tone: {
@@ -49,7 +49,7 @@ export const glassClass = cva(
 export type GlassVariants = VariantProps<typeof glassClass>;
 
 export const chipClass = cva(
-  "inline-flex items-center gap-2 rounded-full border px-[0.85rem] py-[0.36rem] text-[0.78rem] font-semibold backdrop-blur-[10px]",
+  "inline-flex items-center gap-2 rounded-lg sm:rounded-full border px-[0.85rem] py-[0.36rem] text-[0.78rem] font-semibold backdrop-blur-[10px]",
   {
     variants: {
       tone: {
@@ -65,7 +65,7 @@ export const chipClass = cva(
 );
 
 export const buttonClass = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-[0.55rem] whitespace-nowrap rounded-full border border-transparent text-[0.94rem] font-bold transition-[transform,box-shadow,background,border-color] duration-300 active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40",
+  "inline-flex cursor-pointer items-center justify-center gap-[0.55rem] whitespace-nowrap rounded-xl sm:rounded-full border border-transparent text-[0.94rem] font-bold transition-[transform,box-shadow,background,border-color] duration-300 active:translate-y-px active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40",
   {
     variants: {
       variant: {
@@ -92,7 +92,7 @@ export type ButtonVariants = VariantProps<typeof buttonClass>;
 export const fieldClass = "mb-4 block";
 export const fieldLabelClass = "mb-1.5 block text-[0.82rem] font-semibold text-ink-muted";
 export const controlClass =
-  "w-full rounded-xl border border-white/13 bg-white/[0.05] px-4 py-[0.82rem] text-[0.94rem] text-ink transition-[border-color,background,box-shadow] placeholder:text-ink-faint focus:border-jade/60 focus:bg-white/[0.08] focus:outline-none focus:shadow-[0_0_0_4px_rgba(46,211,167,0.14)]";
+  "w-full rounded-lg sm:rounded-xl border border-white/13 bg-white/[0.05] px-4 py-[0.82rem] text-[0.94rem] text-ink transition-[border-color,background,box-shadow] placeholder:text-ink-faint focus:border-jade/60 focus:bg-white/[0.08] focus:outline-none focus:shadow-[0_0_0_4px_rgba(46,211,167,0.14)]";
 export const selectClass = cn(
   controlClass,
   "cursor-pointer appearance-none bg-none pr-11",
@@ -105,11 +105,11 @@ export const markClass =
   "grid size-[2.4rem] place-items-center rounded-[13px] bg-[linear-gradient(140deg,var(--jade-soft),var(--jade)_60%,#12A67C)] font-bangla text-[1.15rem] font-semibold text-[#06231B] shadow-[0_10px_26px_-10px_rgba(46,211,167,0.9)]";
 
 export const navLinkClass = cva(
-  "cursor-pointer rounded-full px-3.5 py-2 text-[0.9rem] font-semibold text-ink-muted transition-[color,background] hover:bg-white/[0.07] hover:text-ink",
+  "cursor-pointer rounded-full px-3.5 py-2 text-[0.9rem] font-semibold text-ink-muted transition-all hover:bg-white/[0.07] hover:text-ink",
   {
     variants: {
       active: {
-        true: "bg-[linear-gradient(135deg,var(--jade),var(--jade-deep))] text-white",
+        true: "bg-jade/15 text-jade border border-jade/30 font-bold shadow-sm",
         false: "",
       },
     },

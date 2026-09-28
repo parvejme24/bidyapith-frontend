@@ -85,6 +85,7 @@ export type FacultyMember = {
   since: number;
   papers: number;
   bio: string;
+  avatar?: string;
 };
 
 export type Notice = {

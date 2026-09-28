@@ -1,4 +1,83 @@
 export type Role = "student" | "instructor" | "admin";
+export type AdmissionStatus = "PENDING_REVIEW" | "APPROVED" | "PAYMENT_PENDING" | "ENROLLED" | "GRADUATED" | "REJECTED";
+
+export interface CurriculumCourse {
+  code: string;
+  title: string;
+  credits: number;
+  prereq?: string;
+  instructor?: string;
+  type: "Core" | "Lab" | "General" | "Elective" | "Thesis";
+  room?: string;
+  schedule?: string;
+}
+
+export interface SemesterCurriculum {
+  semesterNumber: number;
+  title: string;
+  termName?: string;
+  status: "completed" | "current" | "locked";
+  feeStatus: "paid" | "due" | "unlocked";
+  tuitionFee: number;
+  courses: CurriculumCourse[];
+}
+
+export interface DegreeProgram {
+  id: string;
+  code: string;
+  title: string;
+  name?: string;
+  degreeType: "B.Sc." | "M.Sc." | "BBA" | "MBA";
+  totalCredits: number;
+  totalSemesters: number;
+  durationSemesters?: number;
+  admissionFee: number;
+  semesterTuition: number;
+  department: string;
+  description: string;
+  semesters: SemesterCurriculum[];
+}
+
+export interface AdmissionApplication {
+  id: string;
+  studentName: string;
+  email?: string;
+  studentEmail?: string;
+  phone: string;
+  programId: string;
+  programTitle: string;
+  programName?: string;
+  degreeType: "B.Sc." | "M.Sc.";
+  previousDegree?: string;
+  previousInstitute?: string;
+  previousCgpa?: string;
+  hscGpa?: string;
+  bachelorGpa?: string;
+  status: AdmissionStatus;
+  submittedAt: string;
+  reviewedAt?: string;
+  admissionFee: number;
+  isPaid?: boolean;
+  paymentStatus?: "PAID" | "PENDING";
+  notes?: string;
+}
+
+
+export interface GraduationCertificate {
+  certificateNumber: string;
+  studentName: string;
+  studentId: string;
+  programTitle: string;
+  degreeType: string;
+  cgpa: number;
+  creditsCompleted: number;
+  honors: string;
+  graduationDate: string;
+  issueDate: string;
+  chancellorName: string;
+  registrarName: string;
+  verificationHash: string;
+}
 
 export interface UserSession {
   role: Role;
@@ -7,12 +86,18 @@ export interface UserSession {
   email: string;
   dept?: string;
   program?: string;
+  programId?: string;
+  degreeType?: "B.Sc." | "M.Sc.";
+  admissionStatus?: AdmissionStatus;
+  currentSemester?: number;
   batch?: string;
   advisor?: string;
   office?: string;
   phone: string;
   admitted?: string;
   avatar?: string;
+  altEmail?: string;
+  address?: string;
 }
 
 export interface StudentCourse {
@@ -63,9 +148,13 @@ export interface Invoice {
 }
 
 export interface NoticeItem {
+  id?: string;
   t: string;
   m: string;
   tone?: "gold" | "rose" | "orchid" | "";
+  time?: string;
+  link?: string;
+  read?: boolean;
 }
 
 export interface InstructorSection {
@@ -89,6 +178,7 @@ export interface RosterStudent {
   assign: number;
   final: number | null;
   att: number;
+  avatar?: string;
 }
 
 export interface ScheduleItem {
@@ -107,6 +197,7 @@ export interface AdminUser {
   dept?: string;
   status: "active" | "suspended" | "graduated" | "on leave";
   joined: string;
+  avatar?: string;
 }
 
 export interface PaymentTransaction {
