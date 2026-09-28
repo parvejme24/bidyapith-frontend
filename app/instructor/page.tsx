@@ -122,7 +122,7 @@ export default function InstructorDashboardPage() {
             {instructorSections.map((s) => (
               <div
                 key={s.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-white/8 bg-white/[0.025] hover:border-white/15 transition-all"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl sm:rounded-2xl border border-white/8 bg-white/[0.025] hover:border-white/15 transition-all"
               >
                 <div className="space-y-1">
                   <span className="font-mono text-xs font-bold text-jade">

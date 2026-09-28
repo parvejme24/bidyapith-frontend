@@ -18,7 +18,6 @@ export default function InstructorAttendancePage() {
       <AttendanceRoster
         sections={instructorSections}
         roster={roster}
-        onSave={saveAttendance}
       />
     </DashboardLayout>
   );

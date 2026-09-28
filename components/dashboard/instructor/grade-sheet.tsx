@@ -1,13 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { computeGrade, getInitials } from "@/lib/app-data";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
+import { AlertTriangle, BookOpen, Check, ChevronDown, Lock, Save, Send, Unlock } from "lucide-react";
+
+interface GradeRecord {
+  mid: number | null;
+  assign: number | null;
+  final: number | null;
+}
 
 interface GradeSheetProps {
   sections: InstructorSection[];
@@ -17,122 +41,288 @@ interface GradeSheetProps {
 
 export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
   const [selectedSec, setSelectedSec] = useState<string>(sections[0]?.id || "S1");
-  const [finalMarks, setFinalMarks] = useState<Record<string, number | null>>({
-    "2022-1-60-041": 42,
-    "2022-1-60-044": 46,
-    "2022-1-60-052": 38,
-    "2022-1-60-058": 44,
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+
+  // Load persistent marks store from localStorage
+  const [marksStore, setMarksStore] = useState<Record<string, Record<string, GradeRecord>>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("bidyapith_grade_marks_store");
+        if (stored) return JSON.parse(stored);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {};
   });
 
-  const [isLocked, setIsLocked] = useState(false);
+  // Current section marks
+  const [currentMarks, setCurrentMarks] = useState<Record<string, GradeRecord>>({});
+
   const currentSection = sections.find((s) => s.id === selectedSec) || sections[0];
 
-  const handleFinalChange = (id: string, valStr: string) => {
+  // Sync marks when section changes or store updates
+  useEffect(() => {
+    const saved = marksStore[selectedSec];
+    if (saved && Object.keys(saved).length > 0) {
+      setCurrentMarks(saved);
+    } else {
+      // Default from roster
+      const initial: Record<string, GradeRecord> = {};
+      roster.forEach((st) => {
+        initial[st.id] = {
+          mid: st.mid ?? 24,
+          assign: st.assign ?? 18,
+          final: st.id.endsWith("1") ? 42 : st.id.endsWith("4") ? 46 : null,
+        };
+      });
+      setCurrentMarks(initial);
+    }
+  }, [selectedSec, marksStore, roster]);
+
+  const handleMarkChange = (
+    studentId: string,
+    field: "mid" | "assign" | "final",
+    valStr: string,
+    maxVal: number
+  ) => {
     if (valStr === "") {
-      setFinalMarks((prev) => ({ ...prev, [id]: null }));
+      setCurrentMarks((prev) => ({
+        ...prev,
+        [studentId]: { ...(prev[studentId] || { mid: null, assign: null, final: null }), [field]: null },
+      }));
       return;
     }
     const val = Number(valStr);
-    if (!isNaN(val) && val >= 0 && val <= 50) {
-      setFinalMarks((prev) => ({ ...prev, [id]: val }));
+    if (!isNaN(val) && val >= 0 && val <= maxVal) {
+      setCurrentMarks((prev) => ({
+        ...prev,
+        [studentId]: { ...(prev[studentId] || { mid: null, assign: null, final: null }), [field]: val },
+      }));
     }
   };
 
-  const enteredCount = Object.values(finalMarks).filter((v) => v !== null).length;
+  const handleSaveDraft = () => {
+    const updated = { ...marksStore, [selectedSec]: currentMarks };
+    setMarksStore(updated);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("bidyapith_grade_marks_store", JSON.stringify(updated));
+      } catch (e) {
+        // ignore
+      }
+    }
+    toast.success(`Grades saved as draft for ${currentSection.code} (${currentSection.section})`);
+  };
 
-  const handleSubmit = () => {
+  const handleConfirmSubmit = () => {
+    handleSaveDraft();
     setIsLocked(true);
+    setConfirmModalOpen(false);
     onSubmit(selectedSec);
   };
+
+  const enteredCount = Object.values(currentMarks).filter(
+    (m) => m.mid !== null && m.assign !== null && m.final !== null
+  ).length;
 
   return (
     <div className="space-y-4">
       {/* Control Bar */}
       <GlassCard className="p-4 md:p-5 flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-3 grow">
-          <label className="block grow sm:grow-0 min-w-[240px]">
+          <div className="grow sm:grow-0 min-w-[260px]">
             <span className="block text-xs font-semibold text-ink-muted mb-1.5">
               Course & Section
             </span>
-            <select
-              value={selectedSec}
-              onChange={(e) => setSelectedSec(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade cursor-pointer"
-            >
-              {sections.map((s) => (
-                <option key={s.id} value={s.id} className="bg-night-800 text-ink">
-                  {s.code} — Section {s.section} ({s.enrolled} enrolled)
-                </option>
-              ))}
-            </select>
-          </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="flex items-center justify-between gap-3 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-sm font-semibold text-ink hover:border-jade/50 hover:bg-white/[0.09] transition-all cursor-pointer outline-none shadow-sm"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <BookOpen className="size-4 text-jade shrink-0" />
+                  <span className="font-bold text-jade">
+                    {currentSection?.code || "Course"}
+                  </span>
+                  <span className="text-ink-muted">· Section {currentSection?.section}</span>
+                  <span className="text-xs text-ink-faint">({currentSection?.enrolled} enrolled)</span>
+                </div>
+                <ChevronDown className="size-4 text-ink-muted shrink-0" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-[320px] rounded-xl border border-white/15 bg-night-900/95 p-1.5 shadow-2xl backdrop-blur-xl z-50"
+              >
+                {sections.map((s) => {
+                  const isSelected = selectedSec === s.id;
+                  return (
+                    <DropdownMenuItem
+                      key={s.id}
+                      onClick={() => setSelectedSec(s.id)}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold cursor-pointer transition-colors",
+                        isSelected
+                          ? "bg-jade/15 text-jade"
+                          : "text-ink hover:bg-white/[0.08] hover:text-ink"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={cn("font-bold text-sm", isSelected ? "text-jade" : "text-ink")}>
+                          {s.code}
+                        </span>
+                        <span className="text-ink-muted">Section {s.section}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[0.72rem] text-ink-faint">
+                          {s.enrolled} enrolled
+                        </span>
+                        {isSelected && <Check className="size-3.5 text-jade shrink-0" />}
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           <p className="text-xs text-ink-faint max-w-sm pb-1">
             Midterm (30) · Assignments (20) · Final Exam (50). Total out of 100 with dynamic letter grade mapping.
           </p>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLocked || enteredCount === 0}
-            className={cn(buttonClass({ variant: "primary", size: "sm" }), "text-xs")}
-          >
-            {isLocked ? "Grades Submitted" : "Submit Grade Sheet"}
-          </button>
+          {!isLocked ? (
+            <>
+              <button
+                type="button"
+                onClick={handleSaveDraft}
+                className={cn(
+                  buttonClass({ variant: "ghost", size: "sm" }),
+                  "text-xs flex items-center gap-1.5 cursor-pointer hover:border-jade/40"
+                )}
+              >
+                <Save className="size-3.5 text-jade" />
+                <span>Save Grades</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setConfirmModalOpen(true)}
+                disabled={enteredCount === 0}
+                className={cn(
+                  buttonClass({ variant: "primary", size: "sm" }),
+                  "text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                )}
+              >
+                <Send className="size-3.5" />
+                <span>Submit Grade Sheet</span>
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-jade/15 text-jade border border-jade/30">
+                <Lock className="size-3.5" /> Grades Locked & Submitted
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsLocked(false)}
+                className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs text-ink-muted hover:text-ink")}
+              >
+                <Unlock className="size-3.5" /> Unlock
+              </button>
+            </div>
+          )}
         </div>
       </GlassCard>
 
       {/* Grade Table */}
       <GlassCard className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[650px]">
+          <table className="w-full text-left text-sm border-collapse min-w-[700px]">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02] text-[0.72rem] font-bold uppercase tracking-wider text-ink-faint">
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Mid /30</th>
-                <th className="px-4 py-3">Assign /20</th>
-                <th className="px-4 py-3">Final /50</th>
-                <th className="px-4 py-3">Total /100</th>
+                <th className="px-4 py-3 text-center">Mid /30</th>
+                <th className="px-4 py-3 text-center">Assign /20</th>
+                <th className="px-4 py-3 text-center">Final /50</th>
+                <th className="px-4 py-3 text-center">Total /100</th>
                 <th className="px-4 py-3 text-right">Letter Grade</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 font-mono text-xs">
               {roster.map((st) => {
-                const finalVal = finalMarks[st.id] ?? null;
-                const total = finalVal !== null ? st.mid + st.assign + finalVal : null;
+                const marks = currentMarks[st.id] || { mid: null, assign: null, final: null };
+                const midVal = marks.mid;
+                const assignVal = marks.assign;
+                const finalVal = marks.final;
+
+                const hasAllMarks = midVal !== null && assignVal !== null && finalVal !== null;
+                const total = hasAllMarks ? (midVal ?? 0) + (assignVal ?? 0) + (finalVal ?? 0) : null;
                 const [grade, point] = total !== null ? computeGrade(total) : ["—", 0];
 
                 return (
                   <tr key={st.id} className="hover:bg-white/[0.035] transition-colors">
                     <td className="px-4 py-3 font-sans">
                       <div className="flex items-center gap-2.5">
-                        <span className="size-6 rounded-full flex items-center justify-center bg-gradient-to-br from-[#7CE9CB] to-[#2ED3A7] text-[#052620] font-display text-[0.65rem] font-bold">
+                        <span className="size-6 rounded-full flex items-center justify-center bg-gradient-to-br from-[#7CE9CB] to-[#2ED3A7] text-[#052620] font-display text-[0.65rem] font-bold shrink-0">
                           {getInitials(st.name)}
                         </span>
                         <span className="font-semibold text-ink">{st.name}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-ink-faint">{st.id}</td>
-                    <td className="px-4 py-3 text-ink">{st.mid}</td>
-                    <td className="px-4 py-3 text-ink">{st.assign}</td>
-                    <td className="px-4 py-3">
+
+                    {/* Midterm Input (/30) */}
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        disabled={isLocked}
+                        value={midVal ?? ""}
+                        onChange={(e) => handleMarkChange(st.id, "mid", e.target.value, 30)}
+                        placeholder="—"
+                        className="w-14 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1 text-center font-bold text-ink outline-none focus:border-jade disabled:opacity-50"
+                      />
+                    </td>
+
+                    {/* Assignment Input (/20) */}
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="20"
+                        disabled={isLocked}
+                        value={assignVal ?? ""}
+                        onChange={(e) => handleMarkChange(st.id, "assign", e.target.value, 20)}
+                        placeholder="—"
+                        className="w-14 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1 text-center font-bold text-ink outline-none focus:border-jade disabled:opacity-50"
+                      />
+                    </td>
+
+                    {/* Final Exam Input (/50) */}
+                    <td className="px-4 py-3 text-center">
                       <input
                         type="number"
                         min="0"
                         max="50"
                         disabled={isLocked}
                         value={finalVal ?? ""}
-                        onChange={(e) => handleFinalChange(st.id, e.target.value)}
+                        onChange={(e) => handleMarkChange(st.id, "final", e.target.value, 50)}
                         placeholder="—"
-                        className="w-16 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1 text-center font-bold text-ink outline-none focus:border-jade disabled:opacity-50"
+                        className="w-14 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1 text-center font-bold text-ink outline-none focus:border-jade disabled:opacity-50"
                       />
                     </td>
-                    <td className="px-4 py-3 font-bold text-ink">
+
+                    {/* Total (/100) */}
+                    <td className="px-4 py-3 text-center font-bold text-ink text-sm">
                       {total !== null ? total : "—"}
                     </td>
+
+                    {/* Letter Grade */}
                     <td className="px-4 py-3 text-right">
                       {total !== null ? (
                         <StatusPill
@@ -162,11 +352,51 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
         {/* Footer info */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-white/8 text-xs text-ink-faint">
           <span>
-            {enteredCount} of {roster.length} grades entered
+            {enteredCount} of {roster.length} complete student grades entered
           </span>
-          <span>Sheet is locked once submitted to the registrar</span>
+          <span>
+            {isLocked
+              ? "Grade sheet is locked and submitted to the registrar"
+              : "Grades can be saved as draft anytime before submission"}
+          </span>
         </div>
       </GlassCard>
+
+      {/* Submission Confirmation Dialog */}
+      <AlertDialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
+        <AlertDialogContent className="border border-white/20 bg-night-900/98 p-6 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-2xl max-w-md">
+          <AlertDialogHeader>
+            <div className="size-12 rounded-full bg-jade/15 text-jade flex items-center justify-center mb-3">
+              <AlertTriangle className="size-6 text-jade" />
+            </div>
+            <AlertDialogTitle className="font-display text-lg font-bold text-ink">
+              Submit Grade Sheet to Registrar?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-ink-muted leading-relaxed mt-2">
+              Are you sure you want to finalize and submit the grade sheet for{" "}
+              <b className="text-ink font-semibold">{currentSection.code} (Section {currentSection.section})</b>?
+              <br /><br />
+              Once submitted, all calculated letter grades will be officially recorded and published to student portals.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="mt-5 flex gap-2 justify-end">
+            <AlertDialogCancel
+              onClick={() => setConfirmModalOpen(false)}
+              className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer")}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmSubmit}
+              className={cn(buttonClass({ variant: "primary", size: "sm" }), "text-xs cursor-pointer shadow-md")}
+            >
+              Confirm & Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+

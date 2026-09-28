@@ -6,11 +6,44 @@ import { DashboardIcon } from "@/components/dashboard/icons";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { GradeSheet } from "@/components/dashboard/instructor/grade-sheet";
 import { useApp } from "@/lib/app-context";
+import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 export default function InstructorGradesPage() {
   const { instructorSections, roster, submitGradeSheet } = useApp();
+
+  const handleDownloadTemplate = () => {
+    const currentSection = instructorSections[0];
+    const sectionCode = currentSection ? `${currentSection.code}-Sec${currentSection.section}` : "CSE-2201-SecA";
+
+    const headers = [
+      "StudentID",
+      "StudentName",
+      "CourseCode",
+      "Section",
+      "Midterm_30",
+      "Assignments_20",
+      "FinalExam_50",
+      "Total_100",
+      "LetterGrade",
+    ];
+
+    const rows = roster.map((st) => [
+      st.id,
+      st.name,
+      currentSection?.code || "CSE-2201",
+      currentSection?.section || "A",
+      st.mid,
+      st.assign,
+      "", // Placeholder for final exam input
+      "", // Placeholder for total
+      "", // Placeholder for letter grade
+    ]);
+
+    downloadCsv(`Grade_Template_${sectionCode}.csv`, [headers, ...rows]);
+    toast.success(`Downloaded CSV grade template for ${sectionCode}`);
+  };
 
   return (
     <DashboardLayout
@@ -21,10 +54,10 @@ export default function InstructorGradesPage() {
       actions={
         <button
           type="button"
-          onClick={() => toast.success("CSV grade template downloaded")}
-          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
+          onClick={handleDownloadTemplate}
+          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer hover:border-jade/40")}
         >
-          <DashboardIcon name="download" className="size-3.5" />
+          <DashboardIcon name="download" className="size-3.5 text-jade" />
           <span>CSV template</span>
         </button>
       }
