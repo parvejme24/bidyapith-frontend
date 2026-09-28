@@ -40,7 +40,7 @@ export function AttendanceSlipModal({ data, onClose }: AttendanceSlipModalProps)
                 Official Semester Attendance Record Slip
               </h2>
               <p className="text-xs text-ink-faint font-mono">
-                Ref: {data.slipNumber} · {data.semesterTitle} ({data.termName})
+                Ref: {data.slipNumber} · {data.semesterTitle}
               </p>
             </div>
           </div>
@@ -143,9 +143,9 @@ export function AttendanceSlipModal({ data, onClose }: AttendanceSlipModalProps)
                   Academic Term Audit
                 </span>
                 <div className="flex justify-between">
-                  <span className="text-ink-faint">Term:</span>
+                  <span className="text-ink-faint">Academic Level:</span>
                   <span className="text-white font-semibold">
-                    {data.semesterTitle} ({data.termName})
+                    {data.semesterTitle}
                   </span>
                 </div>
                 <div className="flex justify-between font-mono">

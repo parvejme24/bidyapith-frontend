@@ -10,10 +10,10 @@ export default function StudentAttendancePage() {
 
   return (
     <DashboardLayout
-      title="Semester Class Attendance"
-      subtitle={`${currentProgram?.title || "Degree Program"} · Semester & Monthly Lecture History`}
+      title="Attendance Record"
+      subtitle="Monthly & Course Lecture History"
       requiredRole="student"
-      crumb="Student / Attendance Records"
+      crumb="Student / Attendance"
     >
       <StudentAttendanceView />
     </DashboardLayout>

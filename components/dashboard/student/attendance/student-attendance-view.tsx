@@ -49,7 +49,7 @@ export function StudentAttendanceView() {
       programTitle: program.title,
       department: program.department || "Computer Science & Engineering",
       semesterTitle: semesterRecord.semesterTitle,
-      termName: semesterRecord.termName,
+      termName: "",
       issueDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       totalHeld: semesterRecord.totalHeld,
       totalPresent: semesterRecord.totalPresent,
@@ -88,66 +88,64 @@ export function StudentAttendanceView() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-white/10">
-        <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">
-            Academic Class Attendance & Lecture Records
-          </h2>
-          <p className="text-xs text-ink-faint mt-1">
-            Program: <span className="text-jade font-semibold">{program.title}</span> ({program.code})
-          </p>
+    <div className="space-y-5">
+      {/* 1. Semester Selector Tabs with Export Actions Header */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase font-bold tracking-wider text-ink-faint">
+              Academic Semesters
+            </span>
+            <span className="text-[11px] text-ink-faint/80 font-mono">
+              ({program.semesters.length} Semesters Total)
+            </span>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowSlipModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-jade/[0.15] hover:bg-jade/[0.22] text-jade border border-jade/30 text-xs font-bold transition-all shadow-sm group"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-jade group-hover:scale-110 transition-transform" />
+              <span>Attendance Slip</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => exportAttendanceSlipAsPdf(slipData)}
+              title="Download PDF directly"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5 text-jade" />
+              <span>PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => exportAttendanceSlipAsPng(slipData)}
+              title="Download PNG directly"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
+              <span>PNG</span>
+            </button>
+          </div>
         </div>
 
-        {/* Dual Export Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowSlipModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-jade/[0.15] hover:bg-jade/[0.22] text-jade border border-jade/30 text-xs font-bold transition-all shadow-sm group"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-jade group-hover:scale-110 transition-transform" />
-            <span>Official Attendance Slip</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => exportAttendanceSlipAsPdf(slipData)}
-            title="Download PDF directly"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5 text-jade" />
-            <span>PDF</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => exportAttendanceSlipAsPng(slipData)}
-            title="Download PNG directly"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-ink hover:text-white transition-all shadow-sm"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-cyan-400" />
-            <span>PNG</span>
-          </button>
-        </div>
+        <SemesterSelectorTabs
+          semesters={program.semesters}
+          selectedSemesterNum={selectedSemesterNum}
+          onSelectSemester={handleSelectSemester}
+        />
       </div>
 
-      {/* 1. Semester Selector Tabs */}
-      <SemesterSelectorTabs
-        semesters={program.semesters}
-        selectedSemesterNum={selectedSemesterNum}
-        onSelectSemester={handleSelectSemester}
-      />
-
       {/* 2. Month-by-Month Filter Navigation */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2">
           <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-ink">
             {semesterRecord.semesterTitle}
-          </span>
-          <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-ink-faint font-mono">
-            {semesterRecord.termName}
           </span>
         </div>
 

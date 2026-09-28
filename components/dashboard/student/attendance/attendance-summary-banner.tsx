@@ -97,7 +97,6 @@ export function AttendanceSummaryBanner({
                 <span className="text-xs font-bold uppercase tracking-wider text-ink">
                   {record.semesterTitle} · Attendance Progression
                 </span>
-                <span className="text-xs text-ink-faint font-mono">({record.termName})</span>
               </div>
               <p className="text-xs text-ink-faint">
                 Month-by-month attendance progression across all registered courses.

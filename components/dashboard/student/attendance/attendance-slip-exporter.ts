@@ -258,8 +258,7 @@ export function exportAttendanceSlipAsPdf(data: AttendanceSlipData) {
           </div>
           <div class="info-card">
             <h4>Attendance Audit Details</h4>
-            <div class="info-item"><span>Academic Term:</span> <span>${data.termName}</span></div>
-            <div class="info-item"><span>Semester:</span> <span>${data.semesterTitle}</span></div>
+            <div class="info-item"><span>Academic Level:</span> <span>${data.semesterTitle}</span></div>
             <div class="info-item"><span>Issued On:</span> <span>${data.issueDate}</span></div>
             <div class="info-item"><span>Verification Hash:</span> <span style="font-family: monospace; font-size: 10px;">${data.verificationHash}</span></div>
           </div>
@@ -407,7 +406,7 @@ export function exportAttendanceSlipAsPng(data: AttendanceSlipData) {
     ctx.font = "bold 16px sans-serif";
     ctx.fillText(`Student: ${data.studentName} (${data.studentId})`, 85, 270);
     ctx.fillText(`Program: ${data.programTitle}`, 85, 305);
-    ctx.fillText(`Term: ${data.semesterTitle} (${data.termName})`, 85, 338);
+    ctx.fillText(`Academic Level: ${data.semesterTitle}`, 85, 338);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
     ctx.font = "14px monospace";
