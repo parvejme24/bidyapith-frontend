@@ -153,8 +153,16 @@ export function generateSemesterAttendanceData(
   const isLocked = semester?.status === "locked";
 
   const termName = semester?.termName || `Semester ${selectedSemesterNum}`;
+  const yearMatch = termName.match(/\d{4}/);
+  const year = yearMatch ? yearMatch[0] : "2026";
   const isSpring = termName.toLowerCase().includes("spring");
-  const monthNames = isSpring ? MONTH_NAMES_SPRING : MONTH_NAMES_FALL;
+  const isSummer = termName.toLowerCase().includes("summer");
+
+  const monthNames = isSpring
+    ? [`Jan ${year}`, `Feb ${year}`, `Mar ${year}`, `Apr ${year}`]
+    : isSummer
+    ? [`May ${year}`, `Jun ${year}`, `Jul ${year}`, `Aug ${year}`]
+    : [`Sep ${year}`, `Oct ${year}`, `Nov ${year}`, `Dec ${year}`];
 
   const coursesData: CourseSemesterAttendance[] = (semester?.courses || []).map((course, cIdx) => {
     const topics = getTopicsForCourse(course.code);

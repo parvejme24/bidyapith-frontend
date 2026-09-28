@@ -17,7 +17,7 @@ export function SemesterSelectorTabs({
 }: SemesterSelectorTabsProps) {
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs uppercase font-bold tracking-wider text-ink-faint">
             Academic Semesters
@@ -27,7 +27,7 @@ export function SemesterSelectorTabs({
           </span>
         </div>
         <span className="text-[11px] text-jade/90 font-mono flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-jade" /> Select any semester to view monthly logs
+          <Sparkles className="w-3 h-3 text-jade shrink-0" /> Select any semester to view monthly logs
         </span>
       </div>
 

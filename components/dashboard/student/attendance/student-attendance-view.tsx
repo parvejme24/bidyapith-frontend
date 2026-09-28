@@ -77,13 +77,13 @@ export function StudentAttendanceView() {
       />
 
       {/* 2. Month-by-Month Filter Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-ink">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-ink">
             {semesterRecord.semesterTitle}
           </span>
-          <span className="text-xs text-ink-faint font-mono">
-            · {semesterRecord.termName}
+          <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-ink-faint font-mono">
+            {semesterRecord.termName}
           </span>
         </div>
 
