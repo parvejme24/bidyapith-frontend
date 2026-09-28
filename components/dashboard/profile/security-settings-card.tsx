@@ -1,0 +1,121 @@
+"use client";
+
+import React, { useState } from "react";
+import { toast } from "sonner";
+import { GlassCard } from "@/components/site/glass-card";
+import { buttonClass } from "@/lib/styles";
+import { cn } from "@/lib/utils";
+import { Laptop, ShieldCheck } from "lucide-react";
+
+export function SecuritySettingsCard() {
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPw || !newPw) {
+      toast.error("Please fill in current and new password");
+      return;
+    }
+    if (newPw !== confirmPw) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    setCurrentPw("");
+    setNewPw("");
+    setConfirmPw("");
+    toast.success("Password updated successfully");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Security / Password */}
+      <GlassCard className="p-6 md:p-7">
+        <h3 className="font-display text-lg font-semibold text-ink mb-4 flex items-center gap-2.5">
+          <ShieldCheck className="size-5 text-jade shrink-0" />
+          <span>Security & Password</span>
+        </h3>
+        <form onSubmit={handleUpdatePassword} className="space-y-3.5">
+          <label className="block">
+            <span className="block text-xs font-semibold text-ink-muted mb-1">
+              Current Password
+            </span>
+            <input
+              type="password"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
+            />
+          </label>
+
+          <label className="block">
+            <span className="block text-xs font-semibold text-ink-muted mb-1">
+              New Password
+            </span>
+            <input
+              type="password"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
+            />
+          </label>
+
+          <label className="block">
+            <span className="block text-xs font-semibold text-ink-muted mb-1">
+              Confirm New Password
+            </span>
+            <input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
+            />
+          </label>
+
+          <button
+            type="submit"
+            className={cn(buttonClass({ variant: "ghost", size: "sm" }), "w-full mt-2 cursor-pointer hover:border-jade/40")}
+          >
+            Update Password
+          </button>
+        </form>
+      </GlassCard>
+
+      {/* Active Sessions */}
+      <GlassCard className="p-6 md:p-7">
+        <h3 className="font-display text-lg font-semibold text-ink mb-4 flex items-center gap-2.5">
+          <Laptop className="size-5 text-jade shrink-0" />
+          <span>Active Sessions</span>
+        </h3>
+        <div className="space-y-3 text-xs">
+          <div className="flex gap-3 pb-3 border-b border-white/8">
+            <span className="size-2 rounded-full bg-jade mt-1.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-ink">macOS / Chrome · Dhaka, BD</p>
+              <p className="text-ink-faint mt-0.5">Current device · Active now</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <span className="size-2 rounded-full bg-orchid mt-1.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-ink">Android Mobile App · Dhaka, BD</p>
+              <p className="text-ink-faint mt-0.5">Last active 2 days ago</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => toast.success("All other active sessions have been signed out")}
+          className={cn(buttonClass({ variant: "ghost", size: "sm" }), "w-full mt-5 text-xs text-ink-muted cursor-pointer")}
+        >
+          Sign out all other sessions
+        </button>
+      </GlassCard>
+    </div>
+  );
+}
