@@ -146,19 +146,21 @@ bidyapith_frontend/
 
 ---
 
-## 📸 Screenshots & Preview
+## 📸 Screenshots & UI Preview
 
 <div align="center">
 
-| Public Landing & Hero | Modern Role-Based Dashboard |
+| Public Landing & Hero Section | Admissions Application Workflow |
 |:---:|:---:|
-| ![Landing Page Preview](https://raw.githubusercontent.com/parvejme24/bidyapith-frontend/main/public/preview-landing.png) | ![Dashboard Overview](https://raw.githubusercontent.com/parvejme24/bidyapith-frontend/main/public/preview-dashboard.png) |
+| ![Landing Page Preview](public/screenshots/preview-landing.png) | ![Admissions Page Preview](public/screenshots/preview-admissions.png) |
 
-| Course Registration & Catalog | Academic Certificate & Transcript |
+| Interactive Course Catalog | Faculty & Department Showcase |
 |:---:|:---:|
-| ![Course Registration](https://raw.githubusercontent.com/parvejme24/bidyapith-frontend/main/public/preview-courses.png) | ![Certificate View](https://raw.githubusercontent.com/parvejme24/bidyapith-frontend/main/public/preview-certificate.png) |
+| ![Course Catalog Preview](public/screenshots/preview-courses.png) | ![Faculty Directory Preview](public/screenshots/preview-faculty.png) |
 
-*(Screenshots reflect production builds hosted on Vercel)*
+| Institutional About & Overview | Secure Role-Based Authentication |
+|:---:|:---:|
+| ![About Page Preview](public/screenshots/preview-about.png) | ![Login Portal Preview](public/screenshots/preview-login.png) |
 
 </div>
 
