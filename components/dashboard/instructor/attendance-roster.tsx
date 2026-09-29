@@ -91,7 +91,9 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   }, [roster, currentSection, monthDays, attendanceStore]);
 
   const handleMarkDaily = (studentId: string, status: "P" | "L" | "A") => {
-    setDailyAttendance((prev) => ({ ...prev, [studentId]: status }));
+    const updated = { ...dailyAttendance, [studentId]: status };
+    setDailyAttendance(updated);
+    saveAttendance(selectedSec, dateKey, updated);
   };
 
   const handleMarkAllDaily = (status: "P" | "L" | "A") => {
@@ -100,6 +102,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
       next[st.id] = status;
     });
     setDailyAttendance(next);
+    saveAttendance(selectedSec, dateKey, next);
   };
 
   const handleSaveDailyAttendance = () => {
@@ -116,10 +119,21 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   ) => {
     const compositeKey = `${selectedSec}_${targetDateKey}`;
     const existingDayRecords = attendanceStore[compositeKey] || {};
-    const updatedRecords = {
-      ...existingDayRecords,
-      [studentId]: newMark,
-    };
+    const targetDay = monthDays.find((d) => d.dateKey === targetDateKey);
+
+    const updatedRecords: Record<string, "P" | "L" | "A"> = { ...existingDayRecords };
+
+    roster.forEach((st) => {
+      if (st.id === studentId) {
+        updatedRecords[st.id] = newMark;
+      } else if (!updatedRecords[st.id] && targetDay) {
+        const currentMark = resolveStudentMark(st, currentSection, targetDay, attendanceStore);
+        if (currentMark === "P" || currentMark === "L" || currentMark === "A") {
+          updatedRecords[st.id] = currentMark;
+        }
+      }
+    });
+
     saveAttendance(selectedSec, targetDateKey, updatedRecords);
   };
 

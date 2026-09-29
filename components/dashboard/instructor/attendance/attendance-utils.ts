@@ -125,12 +125,12 @@ export function calculateStudentAttendanceStats(
   monthDays: MonthDayInfo[],
   attendanceStore: Record<string, Record<string, "P" | "L" | "A">>
 ): AttendanceStats {
-  const validHeldDays = monthDays.filter((d) => d.isClassDay && !d.isFuture);
   let p = 0;
   let l = 0;
   let a = 0;
 
-  validHeldDays.forEach((day) => {
+  monthDays.forEach((day) => {
+    if (!day.isClassDay) return;
     const mark = resolveStudentMark(student, section, day, attendanceStore);
     if (mark === "P") p++;
     else if (mark === "L") l++;

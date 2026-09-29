@@ -691,7 +691,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
 
     const count = Object.keys(records).length;
-    toast.success(`Attendance records saved for ${count} students`);
+    toast.success(`Attendance updated for ${count} student${count === 1 ? "" : "s"} (${dateKey})`, {
+      id: "attendance-save-toast",
+    });
   };
 
   const addAuditLog = (record: Omit<AuditRecord, "at">) => {
