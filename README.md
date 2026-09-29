@@ -52,24 +52,23 @@ Modern educational institutions often struggle with fragmented software for admi
 
 ## 🛠️ Tech Stack
 
-### Core Technologies
-* **Framework:** [Next.js 16 (App Router)](https://nextjs.org/)
-* **Library:** [React 19](https://react.dev/)
-* **Language:** [TypeScript (Strict Mode)](https://www.typescriptlang.org/)
-* **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) & [tw-animate-css](https://www.npmjs.com/package/tw-animate-css)
-* **UI Primitives:** [shadcn/ui](https://ui.shadcn.com/) & [@base-ui/react](https://base-ui.com/)
-* **Iconography:** [Lucide React](https://lucide.dev/)
-
-### State Management & Data Fetching
-* **Global State:** [Redux Toolkit (RTK)](https://redux-toolkit.js.org/) & [React-Redux](https://react-redux.js.org/)
-* **Server Cache & Async Queries:** [TanStack React Query v5](https://tanstack.com/query)
-* **HTTP Client:** [Axios](https://axios-http.com/) with centralized interceptors & token refresh logic
-
-### Data Tables, Forms & Charts
-* **Data Grids:** [TanStack Table v9](https://tanstack.com/table) (Sorting, filtering, virtualized pagination)
-* **Forms & Validation:** [React Hook Form](https://react-hook-form.com/) with [Zod v3](https://zod.dev/)
-* **Data Visualization:** [Recharts](https://recharts.org/) (Institutional metrics, revenue, student intake)
-* **Animations:** [Framer Motion](https://www.framer.com/motion/)
+| Category | Technology | Version | Purpose / Use Case |
+|---|---|---|---|
+| **Core Framework** | [Next.js (App Router)](https://nextjs.org/) | `16.3.4` | Server & Client Components, Route Handlers, SEO optimization |
+| **UI Library** | [React](https://react.dev/) | `19.2.8` | Component architecture, concurrency, and modern hooks |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) | `5.x` | Strict type safety and schema contracts across codebase |
+| **Styling & CSS** | [Tailwind CSS](https://tailwindcss.com/) | `v4.x` | High-performance CSS framework with `@tailwindcss/postcss` |
+| **UI Component Primitives** | [shadcn/ui](https://ui.shadcn.com/) / [@base-ui/react](https://base-ui.com/) | `4.21.0` | Accessible WAI-ARIA compliant design system primitives |
+| **State Management** | [Redux Toolkit (RTK)](https://redux-toolkit.js.org/) | `2.12.0` | Centralized global application and auth session state |
+| **Server Cache & Async Queries** | [TanStack React Query](https://tanstack.com/query) | `5.102.8` | Optimistic mutations, background caching, and auto-refetch |
+| **Data Grids & Tables** | [TanStack Table](https://tanstack.com/table) | `9.2.4` | Virtualized sorting, filtering, and high-density pagination |
+| **Form Handling & Validation** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) | `7.87` / `3.25` | Schema-driven form validation and type inference |
+| **Data Visualization** | [Recharts](https://recharts.org/) | `3.10.1` | Institutional analytics, enrollment charts, and revenue metrics |
+| **Micro-Animations** | [Framer Motion](https://www.framer.com/motion/) | `13.2.0` | Fluid page transitions, modal dialogs, and interactive widgets |
+| **Theme System** | [next-themes](https://github.com/pacocoursey/next-themes) | `0.4.6` | Dynamic Dark / Light / System theme switching with CSS variables |
+| **HTTP Client** | [Axios](https://axios-http.com/) | `1.20.0` | REST communication with token refresh interceptors |
+| **Icons & Design** | [Lucide React](https://lucide.dev/) | `1.41.0` | Modern, clean UI iconography |
+| **Notifications & Toast** | [Sonner](https://sonner.emilkowal.ski/) | `2.0.8` | Opinionated, elegant toast notifications |
 
 ---
 
