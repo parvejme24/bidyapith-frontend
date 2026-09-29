@@ -5,8 +5,14 @@ import { GlassCard } from "@/components/site/glass-card";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
-import { Eye } from "lucide-react";
-import type { AttendanceStats } from "./attendance-types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AlertCircle, Calendar, Check, ChevronDown, Eye, Sparkles, Sun, Umbrella, X } from "lucide-react";
+import type { AttendanceStats, DayOverrideInfo } from "./attendance-types";
 import { formatDateDMY } from "./attendance-utils";
 
 interface DailyRosterViewProps {
@@ -15,7 +21,9 @@ interface DailyRosterViewProps {
   selectedDate?: Date;
   dailyAttendance: Record<string, "P" | "L" | "A">;
   studentStatsMap: Record<string, AttendanceStats>;
+  scheduleOverrides?: Record<string, DayOverrideInfo>;
   onMarkDaily: (studentId: string, status: "P" | "L" | "A") => void;
+  onSetDaySchedule?: (dateKey: string, type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY", reason?: string) => void;
   onSelectStudentForModal: (student: RosterStudent) => void;
 }
 
@@ -25,9 +33,21 @@ export function DailyRosterView({
   selectedDate,
   dailyAttendance,
   studentStatsMap,
+  scheduleOverrides = {},
   onMarkDaily,
+  onSetDaySchedule,
   onSelectStudentForModal,
 }: DailyRosterViewProps) {
+  const dateKey = selectedDate
+    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`
+    : "2026-09-27";
+
+  const dayIndex = selectedDate ? selectedDate.getDay() : 0;
+  const isWeekend = dayIndex === 5 || dayIndex === 6;
+  const currentOverride = scheduleOverrides[dateKey];
+  const isSpecialClass = currentOverride?.type === "SPECIAL_CLASS";
+  const isHoliday = currentOverride?.type === "HOLIDAY";
+
   const presentCount = Object.values(dailyAttendance).filter((v) => v === "P").length;
   const lateCount = Object.values(dailyAttendance).filter((v) => v === "L").length;
   const absentCount = Object.values(dailyAttendance).filter((v) => v === "A").length;
@@ -35,6 +55,43 @@ export function DailyRosterView({
 
   return (
     <GlassCard className="p-3.5 sm:p-5 rounded-xl space-y-3.5">
+      {/* Schedule Override Banner */}
+      {isSpecialClass ? (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-lg bg-jade/15 border border-jade/30 text-xs">
+          <div className="flex items-center gap-2 text-jade">
+            <Sparkles className="size-4 shrink-0" />
+            <span className="font-bold">Special / Makeup Class Scheduled</span>
+            <span className="text-ink-muted">· Attendance recording enabled for this weekend/date</span>
+          </div>
+          {onSetDaySchedule && (
+            <button
+              type="button"
+              onClick={() => onSetDaySchedule(dateKey, "REGULAR")}
+              className="text-xs text-ink-muted hover:text-ink underline cursor-pointer"
+            >
+              Reset to regular schedule
+            </button>
+          )}
+        </div>
+      ) : isHoliday ? (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-lg bg-marigold/15 border border-marigold/30 text-xs">
+          <div className="flex items-center gap-2 text-marigold">
+            <Umbrella className="size-4 shrink-0" />
+            <span className="font-bold">Holiday / No Class Declared ({currentOverride?.reason || "Campus Occasion"})</span>
+            <span className="text-ink-muted">· Class excused & not counted against student attendance</span>
+          </div>
+          {onSetDaySchedule && (
+            <button
+              type="button"
+              onClick={() => onSetDaySchedule(dateKey, "REGULAR")}
+              className="text-xs text-ink-muted hover:text-ink underline cursor-pointer"
+            >
+              Resume class
+            </button>
+          )}
+        </div>
+      ) : null}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/8">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -44,6 +101,11 @@ export function DailyRosterView({
             <span className="text-[0.68rem] px-2 py-0.5 rounded-md bg-jade/15 text-jade font-semibold">
               Session: {selectedDate ? formatDateDMY(selectedDate) : "Today"}
             </span>
+            {isWeekend && !isSpecialClass && !isHoliday && (
+              <span className="text-[0.68rem] px-2 py-0.5 rounded-md bg-white/10 text-ink-muted font-semibold">
+                Academic Weekend
+              </span>
+            )}
           </div>
           <p className="text-[0.72rem] text-ink-faint mt-0.5">
             {currentSection.code} · Section {currentSection.section} · {currentSection.room} ·
@@ -52,20 +114,62 @@ export function DailyRosterView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          {unmarkedCount > 0 && (
-            <span className="text-ink-muted bg-white/5 px-2 py-0.5 rounded-md border border-white/10 font-sans text-[0.7rem]">
-              {unmarkedCount} Unmarked
-            </span>
+          {onSetDaySchedule && !isHoliday && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/15 bg-white/[0.04] text-[0.7rem] font-sans font-semibold text-ink-muted hover:text-ink hover:border-jade/40 transition-colors cursor-pointer">
+                <span>Schedule Options</span>
+                <ChevronDown className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[230px] rounded-lg border border-white/15 bg-night-900/98 p-1 shadow-2xl backdrop-blur-xl z-50 text-xs">
+                {isWeekend && !isSpecialClass && (
+                  <DropdownMenuItem
+                    onClick={() => onSetDaySchedule(dateKey, "SPECIAL_CLASS", "Makeup Lecture")}
+                    className="flex items-center gap-2 px-2.5 py-1.5 text-jade font-semibold cursor-pointer"
+                  >
+                    <Sparkles className="size-3.5" />
+                    <span>Arrange Makeup Class</span>
+                  </DropdownMenuItem>
+                )}
+                {!isHoliday && (
+                  <DropdownMenuItem
+                    onClick={() => onSetDaySchedule(dateKey, "HOLIDAY", "Govt/University Holiday")}
+                    className="flex items-center gap-2 px-2.5 py-1.5 text-marigold font-semibold cursor-pointer"
+                  >
+                    <Umbrella className="size-3.5" />
+                    <span>Declare Holiday / No Class</span>
+                  </DropdownMenuItem>
+                )}
+                {(isSpecialClass || isHoliday) && (
+                  <DropdownMenuItem
+                    onClick={() => onSetDaySchedule(dateKey, "REGULAR")}
+                    className="flex items-center gap-2 px-2.5 py-1.5 text-ink-muted cursor-pointer"
+                  >
+                    <Calendar className="size-3.5" />
+                    <span>Reset to Regular</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-          <span className="text-jade font-semibold bg-jade/10 px-2 py-0.5 rounded-md border border-jade/20 text-[0.7rem]">
-            {presentCount} P
-          </span>
-          <span className="text-marigold font-semibold bg-marigold/10 px-2 py-0.5 rounded-md border border-marigold/20 text-[0.7rem]">
-            {lateCount} L
-          </span>
-          <span className="text-rose font-semibold bg-rose/10 px-2 py-0.5 rounded-md border border-rose/20 text-[0.7rem]">
-            {absentCount} A
-          </span>
+
+          {!isHoliday && (
+            <>
+              {unmarkedCount > 0 && (
+                <span className="text-ink-muted bg-white/5 px-2 py-0.5 rounded-md border border-white/10 font-sans text-[0.7rem]">
+                  {unmarkedCount} Unmarked
+                </span>
+              )}
+              <span className="text-jade font-semibold bg-jade/10 px-2 py-0.5 rounded-md border border-jade/20 text-[0.7rem]">
+                {presentCount} P
+              </span>
+              <span className="text-marigold font-semibold bg-marigold/10 px-2 py-0.5 rounded-md border border-marigold/20 text-[0.7rem]">
+                {lateCount} L
+              </span>
+              <span className="text-rose font-semibold bg-rose/10 px-2 py-0.5 rounded-md border border-rose/20 text-[0.7rem]">
+                {absentCount} A
+              </span>
+            </>
+          )}
         </div>
       </div>
 

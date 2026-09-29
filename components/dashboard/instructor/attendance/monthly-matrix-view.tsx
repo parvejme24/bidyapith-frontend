@@ -7,23 +7,31 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
+  Calendar,
   CalendarDays,
+  CalendarPlus,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
   MoveHorizontal,
+  RotateCcw,
   Search,
+  Sparkles,
+  Umbrella,
   Users,
   XCircle,
 } from "lucide-react";
-import type { AttendanceStats, MonthDayInfo } from "./attendance-types";
+import type { AttendanceStats, DayOverrideInfo, MonthDayInfo } from "./attendance-types";
 import { MONTH_NAMES, resolveStudentMark } from "./attendance-utils";
 
 interface MonthlyMatrixViewProps {
@@ -34,7 +42,9 @@ interface MonthlyMatrixViewProps {
   activeYear: number;
   studentStatsMap: Record<string, AttendanceStats>;
   attendanceStore: Record<string, Record<string, "P" | "L" | "A">>;
+  scheduleOverrides?: Record<string, DayOverrideInfo>;
   onToggleDayMark: (studentId: string, dateKey: string, mark: "P" | "L" | "A") => void;
+  onSetDaySchedule?: (dateKey: string, type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY", reason?: string) => void;
   onSelectStudentForModal: (student: RosterStudent) => void;
 }
 
@@ -46,7 +56,9 @@ export function MonthlyMatrixView({
   activeYear,
   studentStatsMap,
   attendanceStore,
+  scheduleOverrides = {},
   onToggleDayMark,
+  onSetDaySchedule,
   onSelectStudentForModal,
 }: MonthlyMatrixViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -266,7 +278,7 @@ export function MonthlyMatrixView({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-[0.68rem] text-ink-muted">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[0.68rem] text-ink-muted">
           <span className="flex items-center gap-1">
             <span className="size-2 rounded-full bg-jade inline-block" /> P (1.0)
           </span>
@@ -275,6 +287,12 @@ export function MonthlyMatrixView({
           </span>
           <span className="flex items-center gap-1">
             <span className="size-2 rounded-full bg-rose inline-block" /> A (0)
+          </span>
+          <span className="flex items-center gap-1 text-amber-400 font-medium">
+            <Sparkles className="size-3 text-amber-400" /> Makeup
+          </span>
+          <span className="flex items-center gap-1 text-purple-300 font-medium">
+            <Umbrella className="size-3 text-purple-300" /> Holiday (Excused)
           </span>
           <span className="flex items-center gap-1 text-ink-faint">
             <span className="size-2 rounded-full bg-white/20 inline-block" /> Off
@@ -287,7 +305,7 @@ export function MonthlyMatrixView({
         <div className="flex items-center gap-2 text-ink-muted">
           <MoveHorizontal className="size-3.5 text-jade shrink-0" />
           <span className="font-semibold text-ink text-[0.72rem]">Horizontal Pan:</span>
-          <span className="text-[0.68rem] text-ink-faint hidden sm:inline">Drag with mouse/touch</span>
+          <span className="text-[0.68rem] text-ink-faint hidden sm:inline">Drag or click day headers to adjust schedule (Special Class / Holiday)</span>
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-1.5">
@@ -328,7 +346,7 @@ export function MonthlyMatrixView({
         onScroll={handleTopScroll}
         className="overflow-x-auto overflow-y-hidden h-2 rounded bg-white/[0.04] border border-white/8 mx-1 scrollbar-thin scrollbar-thumb-jade/40 scrollbar-track-transparent cursor-ew-resize"
       >
-        <div style={{ width: `${170 + monthDays.length * 36 + 230}px`, height: "1px" }} />
+        <div style={{ width: `${170 + monthDays.length * 38 + 230}px`, height: "1px" }} />
       </div>
 
       {/* Draggable Matrix Table */}
@@ -354,28 +372,125 @@ export function MonthlyMatrixView({
                   Student ({filteredRoster.length})
                 </th>
 
-                {monthDays.map((day) => (
-                  <th
-                    key={day.dayNumber}
-                    className={cn(
-                      "px-1 py-1.5 text-center min-w-[32px] border-r border-white/5 transition-colors select-none",
-                      day.isToday && "bg-jade/15 border-jade/30",
-                      day.isWeekend && "bg-white/[0.015] text-ink-faint opacity-60"
-                    )}
-                  >
-                    <span className="block font-mono text-[0.7rem] sm:text-xs font-bold text-ink">
-                      {String(day.dayNumber).padStart(2, "0")}
-                    </span>
-                    <span
+                {monthDays.map((day) => {
+                  const hasOverride = !!scheduleOverrides[day.dateKey];
+
+                  return (
+                    <th
+                      key={day.dayNumber}
                       className={cn(
-                        "block text-[0.62rem] uppercase font-mono mt-0.5",
-                        day.isClassDay ? "text-jade font-bold" : "text-ink-faint"
+                        "px-1 py-1.5 text-center min-w-[34px] border-r border-white/5 transition-colors select-none relative group/th",
+                        day.isToday && "bg-jade/15 border-jade/30",
+                        day.isHoliday && "bg-purple-950/40 border-purple-800/40",
+                        day.isSpecialClass && "bg-amber-950/40 border-amber-800/40",
+                        !day.isClassDay && !day.isHoliday && day.isWeekend && "bg-white/[0.015] text-ink-faint opacity-60"
                       )}
                     >
-                      {day.weekday}
-                    </span>
-                  </th>
-                ))}
+                      {onSetDaySchedule ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            className="w-full flex flex-col items-center justify-center p-0.5 rounded hover:bg-white/10 transition-colors cursor-pointer group outline-none"
+                            title={`${day.dateKey} (${day.weekdayFull}): Click to manage schedule`}
+                          >
+                            <div className="flex items-center justify-center gap-0.5">
+                              <span
+                                className={cn(
+                                  "font-mono text-[0.7rem] sm:text-xs font-bold",
+                                  day.isSpecialClass ? "text-amber-300" : day.isHoliday ? "text-purple-300" : "text-ink"
+                                )}
+                              >
+                                {String(day.dayNumber).padStart(2, "0")}
+                              </span>
+                              {day.isSpecialClass && <Sparkles className="size-2.5 text-amber-400 shrink-0" />}
+                              {day.isHoliday && <Umbrella className="size-2.5 text-purple-300 shrink-0" />}
+                            </div>
+
+                            <span
+                              className={cn(
+                                "text-[0.6rem] uppercase font-mono mt-0.5",
+                                day.isHoliday
+                                  ? "text-purple-300 font-bold"
+                                  : day.isSpecialClass
+                                  ? "text-amber-300 font-bold"
+                                  : day.isClassDay
+                                  ? "text-jade font-bold"
+                                  : "text-ink-faint"
+                              )}
+                            >
+                              {day.weekday}
+                            </span>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent
+                            align="center"
+                            className="w-56 rounded-xl border border-white/15 bg-night-900/98 p-1.5 shadow-2xl backdrop-blur-2xl z-50 text-xs"
+                          >
+                            <DropdownMenuLabel className="px-2 py-1 text-[0.68rem] text-ink-faint border-b border-white/10">
+                              <span className="font-bold text-ink block">{day.weekdayFull}, {day.dayNumber} {MONTH_NAMES[activeMonth]}</span>
+                              <span className="text-[0.62rem] text-ink-muted">
+                                {day.isHoliday ? `🏖️ Holiday (${day.holidayReason || "Campus Occasion"})` : day.isSpecialClass ? "⚡ Special / Makeup Class" : day.isClassDay ? "Regular Class Day" : "Weekend / Off Day"}
+                              </span>
+                            </DropdownMenuLabel>
+
+                            <DropdownMenuItem
+                              onClick={() => onSetDaySchedule(day.dateKey, "SPECIAL_CLASS", "Special Makeup Lecture")}
+                              className="flex items-center gap-2 px-2.5 py-1.5 text-amber-300 hover:bg-amber-500/15 rounded-lg cursor-pointer font-medium text-xs mt-1"
+                            >
+                              <Sparkles className="size-3.5 text-amber-400 shrink-0" />
+                              <div className="text-left">
+                                <p className="font-bold">Arrange Makeup Class</p>
+                                <p className="text-[0.62rem] text-ink-muted">Take attendance on this day</p>
+                              </div>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const reason = window.prompt("Enter Holiday Reason (e.g. Govt Holiday, Campus Occasion, Strike):", "Govt Holiday");
+                                if (reason !== null) {
+                                  onSetDaySchedule(day.dateKey, "HOLIDAY", reason.trim() || "Govt Holiday");
+                                }
+                              }}
+                              className="flex items-center gap-2 px-2.5 py-1.5 text-purple-300 hover:bg-purple-500/15 rounded-lg cursor-pointer font-medium text-xs"
+                            >
+                              <Umbrella className="size-3.5 text-purple-300 shrink-0" />
+                              <div className="text-left">
+                                <p className="font-bold">Declare Holiday / Occasion</p>
+                                <p className="text-[0.62rem] text-ink-muted">Excuse all students from class</p>
+                              </div>
+                            </DropdownMenuItem>
+
+                            {hasOverride && (
+                              <>
+                                <DropdownMenuSeparator className="bg-white/10 my-1" />
+                                <DropdownMenuItem
+                                  onClick={() => onSetDaySchedule(day.dateKey, "REGULAR")}
+                                  className="flex items-center gap-2 px-2.5 py-1.5 text-ink-muted hover:text-ink hover:bg-white/10 rounded-lg cursor-pointer font-medium text-xs"
+                                >
+                                  <RotateCcw className="size-3.5 shrink-0" />
+                                  <span>Reset to Default Schedule</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <>
+                          <span className="block font-mono text-[0.7rem] sm:text-xs font-bold text-ink">
+                            {String(day.dayNumber).padStart(2, "0")}
+                          </span>
+                          <span
+                            className={cn(
+                              "block text-[0.62rem] uppercase font-mono mt-0.5",
+                              day.isClassDay ? "text-jade font-bold" : "text-ink-faint"
+                            )}
+                          >
+                            {day.weekday}
+                          </span>
+                        </>
+                      )}
+                    </th>
+                  );
+                })}
 
                 <th className="px-2 py-2 text-center min-w-[34px] text-jade font-bold border-l border-white/10 bg-night-900/90 text-[0.7rem] whitespace-nowrap">
                   P
@@ -427,6 +542,20 @@ export function MonthlyMatrixView({
                     {monthDays.map((day) => {
                       const mark = resolveStudentMark(st, currentSection, day, attendanceStore);
 
+                      if (mark === "HOLIDAY" || day.isHoliday) {
+                        return (
+                          <td
+                            key={day.dayNumber}
+                            className="px-0.5 py-1 text-center border-r border-white/5 bg-purple-950/20"
+                            title={`Declared Holiday: ${day.holidayReason || "Campus Occasion"} (Excused)`}
+                          >
+                            <span className="inline-flex items-center justify-center size-5 sm:size-6 rounded text-[0.65rem] text-purple-300 font-bold bg-purple-500/15 border border-purple-500/30">
+                              🏖️
+                            </span>
+                          </td>
+                        );
+                      }
+
                       if (mark === "OFF") {
                         return (
                           <td
@@ -442,12 +571,21 @@ export function MonthlyMatrixView({
                         return (
                           <td
                             key={day.dayNumber}
-                            className={cn("px-0.5 py-1 text-center border-r border-white/5", day.isToday && "bg-jade/5")}
+                            className={cn(
+                              "px-0.5 py-1 text-center border-r border-white/5",
+                              day.isToday && "bg-jade/5",
+                              day.isSpecialClass && "bg-amber-950/20"
+                            )}
                           >
                             <DropdownMenu>
                               <DropdownMenuTrigger
-                                className="size-5 sm:size-6 rounded font-bold text-[0.68rem] text-ink-muted/60 border border-dashed border-white/20 hover:border-jade/60 hover:text-jade hover:bg-jade/10 flex items-center justify-center mx-auto transition-all cursor-pointer"
-                                title={`Click to add attendance mark for ${day.dateKey} (${day.weekday})`}
+                                className={cn(
+                                  "size-5 sm:size-6 rounded font-bold text-[0.68rem] flex items-center justify-center mx-auto transition-all cursor-pointer",
+                                  day.isSpecialClass
+                                    ? "border border-dashed border-amber-400/50 text-amber-300/80 hover:border-amber-400 hover:bg-amber-400/15"
+                                    : "border border-dashed border-white/20 text-ink-muted/60 hover:border-jade/60 hover:text-jade hover:bg-jade/10"
+                                )}
+                                title={`Click to add attendance mark for ${day.dateKey} (${day.weekday})${day.isSpecialClass ? " - Special Class" : ""}`}
                               >
                                 -
                               </DropdownMenuTrigger>
@@ -457,6 +595,7 @@ export function MonthlyMatrixView({
                               >
                                 <div className="px-2 py-1 text-[0.68rem] text-ink-faint border-b border-white/10 mb-1">
                                   {day.dayNumber} {MONTH_NAMES[activeMonth]} ({day.weekday})
+                                  {day.isSpecialClass && <span className="block text-amber-400 font-bold">Special Class</span>}
                                 </div>
                                 <DropdownMenuItem
                                   onClick={() => onToggleDayMark(st.id, day.dateKey, "P")}
@@ -488,7 +627,11 @@ export function MonthlyMatrixView({
                       return (
                         <td
                           key={day.dayNumber}
-                          className={cn("px-0.5 py-1 text-center border-r border-white/5", day.isToday && "bg-jade/5")}
+                          className={cn(
+                            "px-0.5 py-1 text-center border-r border-white/5",
+                            day.isToday && "bg-jade/5",
+                            day.isSpecialClass && "bg-amber-950/20"
+                          )}
                         >
                           <DropdownMenu>
                             <DropdownMenuTrigger
@@ -498,7 +641,7 @@ export function MonthlyMatrixView({
                                 mark === "L" && "bg-marigold/20 text-marigold hover:bg-marigold/30 border border-marigold/30",
                                 mark === "A" && "bg-rose/20 text-rose hover:bg-rose/30 border border-rose/30"
                               )}
-                              title={`${day.dateKey} (${day.weekday}): ${mark}`}
+                              title={`${day.dateKey} (${day.weekday}): ${mark}${day.isSpecialClass ? " (Special Class)" : ""}`}
                             >
                               {mark}
                             </DropdownMenuTrigger>
@@ -508,6 +651,7 @@ export function MonthlyMatrixView({
                             >
                               <div className="px-2 py-1 text-[0.68rem] text-ink-faint border-b border-white/10 mb-1">
                                 {day.dayNumber} {MONTH_NAMES[activeMonth]} ({day.weekday})
+                                {day.isSpecialClass && <span className="block text-amber-400 font-bold">Special Class</span>}
                               </div>
                               <DropdownMenuItem
                                 onClick={() => onToggleDayMark(st.id, day.dateKey, "P")}

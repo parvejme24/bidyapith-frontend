@@ -37,7 +37,8 @@ export function formatDateDMY(d: Date): string {
 export function getDaysInMonth(
   year: number,
   month: number,
-  referenceDate: Date = new Date(2026, 8, 27)
+  referenceDate: Date = new Date(2026, 8, 27),
+  scheduleOverrides: Record<string, { type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY"; reason?: string }> = {}
 ): MonthDayInfo[] {
   const daysCount = new Date(year, month + 1, 0).getDate();
   const result: MonthDayInfo[] = [];
@@ -49,13 +50,17 @@ export function getDaysInMonth(
     const dayIndex = current.getDay();
     // Friday (5) and Saturday (6) are academic weekends
     const isWeekend = dayIndex === 5 || dayIndex === 6;
-    // Scheduled class days: Sun (0), Tue (2), Thu (4) or all non-weekend days
-    const isClassDay = !isWeekend;
 
     const yStr = current.getFullYear();
     const mStr = String(current.getMonth() + 1).padStart(2, "0");
     const dStr = String(current.getDate()).padStart(2, "0");
     const dateKey = `${yStr}-${mStr}-${dStr}`;
+
+    const override = scheduleOverrides[dateKey];
+    const isHoliday = override?.type === "HOLIDAY";
+    const isSpecialClass = override?.type === "SPECIAL_CLASS";
+    // Class day: If Holiday -> false, If Special Class -> true (even on weekend), Else -> not weekend
+    const isClassDay = isHoliday ? false : (isSpecialClass ? true : !isWeekend);
 
     const currentDayOnly = new Date(current.getFullYear(), current.getMonth(), current.getDate());
     const isToday = currentDayOnly.getTime() === refDayOnly.getTime();
@@ -70,6 +75,9 @@ export function getDaysInMonth(
       weekdayIndex: dayIndex,
       isWeekend,
       isClassDay,
+      isSpecialClass,
+      isHoliday,
+      holidayReason: override?.reason,
       isToday,
       isFuture,
     });
@@ -83,8 +91,12 @@ export function resolveStudentMark(
   section: InstructorSection,
   dayInfo: MonthDayInfo,
   attendanceStore: Record<string, Record<string, "P" | "L" | "A">>
-): "P" | "L" | "A" | "OFF" | "UNMARKED" {
-  if (dayInfo.isWeekend || !dayInfo.isClassDay) {
+): "P" | "L" | "A" | "OFF" | "UNMARKED" | "HOLIDAY" {
+  if (dayInfo.isHoliday) {
+    return "HOLIDAY";
+  }
+
+  if (!dayInfo.isClassDay) {
     return "OFF";
   }
 
@@ -96,6 +108,11 @@ export function resolveStudentMark(
   }
 
   if (dayInfo.isFuture) {
+    return "UNMARKED";
+  }
+
+  // Special makeup classes start unmarked if not yet recorded
+  if (dayInfo.isSpecialClass) {
     return "UNMARKED";
   }
 
@@ -130,7 +147,7 @@ export function calculateStudentAttendanceStats(
   let a = 0;
 
   monthDays.forEach((day) => {
-    if (!day.isClassDay) return;
+    if (!day.isClassDay || day.isHoliday) return;
     const mark = resolveStudentMark(student, section, day, attendanceStore);
     if (mark === "P") p++;
     else if (mark === "L") l++;

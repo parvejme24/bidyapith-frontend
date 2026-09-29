@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Clock,
   Download,
+  Sparkles,
+  Umbrella,
   XCircle,
 } from "lucide-react";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -244,6 +246,10 @@ export function StudentMonthlyModalBody({
                 "flex items-center justify-between gap-2.5 px-3 py-2 sm:py-2.5 rounded-md border transition-all",
                 day.isToday
                   ? "border-jade/50 bg-jade/[0.08] shadow-sm ring-1 ring-jade/30"
+                  : day.isHoliday
+                  ? "border-purple-500/30 bg-purple-950/20"
+                  : day.isSpecialClass
+                  ? "border-amber-500/30 bg-amber-950/20"
                   : day.isClassDay
                   ? "border-white/10 bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.04]"
                   : "border-white/5 bg-white/[0.01] opacity-60"
@@ -253,7 +259,7 @@ export function StudentMonthlyModalBody({
                 <span
                   className={cn(
                     "font-mono text-xs sm:text-sm font-bold w-5 sm:w-6 shrink-0",
-                    day.isToday ? "text-jade" : "text-ink"
+                    day.isToday ? "text-jade" : day.isHoliday ? "text-purple-300" : day.isSpecialClass ? "text-amber-300" : "text-ink"
                   )}
                 >
                   {String(day.dayNumber).padStart(2, "0")}
@@ -266,10 +272,24 @@ export function StudentMonthlyModalBody({
                         Today
                       </span>
                     )}
+                    {day.isSpecialClass && (
+                      <span className="text-[0.6rem] sm:text-[0.62rem] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold uppercase tracking-wider inline-flex items-center gap-0.5 shrink-0">
+                        <Sparkles className="size-2.5" /> Makeup
+                      </span>
+                    )}
+                    {day.isHoliday && (
+                      <span className="text-[0.6rem] sm:text-[0.62rem] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold uppercase tracking-wider inline-flex items-center gap-0.5 shrink-0">
+                        <Umbrella className="size-2.5" /> Holiday
+                      </span>
+                    )}
                   </p>
                   <p className="text-[0.65rem] sm:text-[0.68rem] text-ink-faint font-mono mt-0.5 truncate">
                     {day.dateKey} ·{" "}
-                    {day.isClassDay ? (
+                    {day.isHoliday ? (
+                      <span className="text-purple-300 font-semibold">{day.holidayReason || "Campus Occasion"} (Excused)</span>
+                    ) : day.isSpecialClass ? (
+                      <span className="text-amber-300 font-semibold">Special Scheduled Lecture</span>
+                    ) : day.isClassDay ? (
                       <span className="text-jade font-semibold">Scheduled Class</span>
                     ) : day.isWeekend ? (
                       "Weekend"
@@ -281,7 +301,11 @@ export function StudentMonthlyModalBody({
               </div>
 
               {/* Day Status / Interactive Mark Buttons */}
-              {day.isClassDay ? (
+              {day.isHoliday ? (
+                <span className="text-[0.65rem] sm:text-[0.7rem] text-purple-300 font-mono px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/30 shrink-0 font-bold">
+                  🏖️ Excused
+                </span>
+              ) : day.isClassDay ? (
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"

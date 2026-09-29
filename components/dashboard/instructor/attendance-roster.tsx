@@ -29,7 +29,7 @@ import {
   Download,
   Table as TableIcon,
 } from "lucide-react";
-import type { AttendanceStats } from "./attendance/attendance-types";
+import type { AttendanceStats, DayOverrideInfo } from "./attendance/attendance-types";
 import {
   formatDateDMY,
   getDaysInMonth,
@@ -61,6 +61,41 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   // Selected student for detailed monthly modal
   const [selectedStudentForModal, setSelectedStudentForModal] = useState<RosterStudent | null>(null);
 
+  // Section schedule overrides (special makeup class on Friday/Saturday or Holidays)
+  const [scheduleOverrides, setScheduleOverrides] = useState<Record<string, Record<string, DayOverrideInfo>>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("bidyapith_schedule_overrides");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return {};
+  });
+
+  const currentSectionOverrides = scheduleOverrides[selectedSec] || {};
+
+  const handleSetDaySchedule = (
+    dateKey: string,
+    type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY",
+    reason?: string
+  ) => {
+    const sectionMap = { ...(scheduleOverrides[selectedSec] || {}) };
+    if (type === "REGULAR") {
+      delete sectionMap[dateKey];
+    } else {
+      sectionMap[dateKey] = { type, reason };
+    }
+
+    const next = { ...scheduleOverrides, [selectedSec]: sectionMap };
+    setScheduleOverrides(next);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("bidyapith_schedule_overrides", JSON.stringify(next));
+      } catch {}
+    }
+  };
+
   const dateKey = selectedDate
     ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`
     : "2026-09-27";
@@ -79,8 +114,8 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   }, [selectedSec, dateKey, attendanceStore]);
 
   const monthDays = useMemo(() => {
-    return getDaysInMonth(activeYear, activeMonth, new Date(2026, 8, 27));
-  }, [activeYear, activeMonth]);
+    return getDaysInMonth(activeYear, activeMonth, new Date(2026, 8, 27), currentSectionOverrides);
+  }, [activeYear, activeMonth, currentSectionOverrides]);
 
   const studentStatsMap = useMemo(() => {
     const map: Record<string, AttendanceStats> = {};
@@ -382,7 +417,9 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
           selectedDate={selectedDate}
           dailyAttendance={dailyAttendance}
           studentStatsMap={studentStatsMap}
+          scheduleOverrides={currentSectionOverrides}
           onMarkDaily={handleMarkDaily}
+          onSetDaySchedule={handleSetDaySchedule}
           onSelectStudentForModal={setSelectedStudentForModal}
         />
       )}
@@ -397,7 +434,9 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
           activeYear={activeYear}
           studentStatsMap={studentStatsMap}
           attendanceStore={attendanceStore}
+          scheduleOverrides={currentSectionOverrides}
           onToggleDayMark={handleToggleDayMark}
+          onSetDaySchedule={handleSetDaySchedule}
           onSelectStudentForModal={setSelectedStudentForModal}
         />
       )}

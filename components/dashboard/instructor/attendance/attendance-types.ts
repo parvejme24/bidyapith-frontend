@@ -1,5 +1,12 @@
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 
+export type DayScheduleType = "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY";
+
+export interface DayOverrideInfo {
+  type: DayScheduleType;
+  reason?: string;
+}
+
 export interface MonthDayInfo {
   date: Date;
   dayNumber: number;
@@ -9,6 +16,9 @@ export interface MonthDayInfo {
   weekdayIndex: number;
   isWeekend: boolean;
   isClassDay: boolean;
+  isSpecialClass?: boolean;
+  isHoliday?: boolean;
+  holidayReason?: string;
   isToday: boolean;
   isFuture: boolean;
 }
