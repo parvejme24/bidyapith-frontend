@@ -4,59 +4,53 @@ export interface CreateInstructorInput {
   firstName: string;
   lastName: string;
   email: string;
-  department: string;
+  departmentId: string;
   designation: string;
   phone?: string;
-  room?: string;
   specialization?: string;
-  temporaryPassword?: string;
-  otp?: string;
-  sendEmail?: boolean;
+  joiningDate?: string;
 }
 
 export const adminApi = {
   getUsers: (params?: Record<string, string>) => {
     const query = params ? `?${new URLSearchParams(params).toString()}` : "";
-    return apiRequest<unknown[]>(`/users${query}`);
+    return apiRequest<unknown[]>(`/admin/users${query}`);
   },
+  getUserById: (id: string) => apiRequest<unknown>(`/admin/users/${id}`),
   createInstructor: (body: CreateInstructorInput) =>
-    apiRequest<{ user: unknown; temporaryPassword?: string }>("/users", {
+    apiRequest<{ user: unknown; temporaryPassword?: string }>("/admin/users", {
       method: "POST",
       body: JSON.stringify({
         firstName: body.firstName,
         lastName: body.lastName,
         email: body.email,
         role: "INSTRUCTOR",
-        departmentCode: body.department,
+        departmentId: body.departmentId,
         designation: body.designation,
         phone: body.phone,
-        room: body.room,
         specialization: body.specialization,
-        joiningDate: new Date().toISOString(),
+        joiningDate: body.joiningDate || new Date().toISOString(),
       }),
     }),
   updateUserRole: (id: string, role: string) =>
-    apiRequest(`/users/${id}/role`, {
+    apiRequest(`/admin/users/${id}/role`, {
       method: "PATCH",
       body: JSON.stringify({ role: role.toUpperCase() }),
     }),
   updateUserStatus: (id: string, status: string) =>
-    apiRequest(`/users/${id}/status`, {
+    apiRequest(`/admin/users/${id}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status: status.toUpperCase() }),
     }),
   deleteUser: (id: string) =>
-    apiRequest(`/users/${id}`, { method: "DELETE" }),
-  getAuditLogs: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params).toString()}` : "";
-    return apiRequest<unknown[]>(`/audit-logs${query}`);
-  },
+    apiRequest(`/admin/users/${id}`, { method: "DELETE" }),
   getPayments: (params?: Record<string, string>) => {
     const query = params ? `?${new URLSearchParams(params).toString()}` : "";
     return apiRequest<unknown[]>(`/payments${query}`);
   },
-  verifyPayment: (id: string) =>
-    apiRequest(`/payments/${id}/verify`, { method: "POST" }),
-  refundPayment: (id: string) =>
-    apiRequest(`/payments/${id}/refund`, { method: "POST" }),
+  refundPayment: (id: string, reason = "Refund initiated by administrator") =>
+    apiRequest(`/payments/${id}/refund`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    }),
 };

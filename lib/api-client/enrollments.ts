@@ -38,6 +38,10 @@ export interface AvailableCourseOffering {
 }
 
 export const enrollmentsApi = {
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+    return apiRequest<unknown[]>(`/enrollments${query}`);
+  },
   getMyCourses: () =>
     apiRequest<MyCourseEnrollment[]>("/enrollments/my-courses"),
 
@@ -48,6 +52,11 @@ export const enrollmentsApi = {
     apiRequest("/enrollments", {
       method: "POST",
       body: JSON.stringify({ offeringId }),
+    }),
+  createAdmin: (body: { studentId: string; offeringId: string }) =>
+    apiRequest<unknown>("/enrollments/admin", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 
   drop: (enrollmentId: string) =>

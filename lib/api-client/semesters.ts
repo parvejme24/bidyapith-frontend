@@ -86,4 +86,8 @@ export const semestersApi = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+  remove: (id: string) => apiRequest<unknown>(`/semesters/${id}`, { method: "DELETE" }),
+  getResultReadiness: (id: string) => apiRequest<unknown>(`/semesters/${id}/results/readiness`),
+  publishResults: (id: string) =>
+    apiRequest<unknown>(`/semesters/${id}/publish-results`, { method: "POST" }),
 };

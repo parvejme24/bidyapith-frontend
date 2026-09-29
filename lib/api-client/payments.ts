@@ -2,8 +2,6 @@ import { apiRequest } from "./core";
 
 export interface PaymentInitiateRequest {
   invoiceId: string;
-  amount: number;
-  gateway: "STRIPE" | "SSLCOMMERZ" | "BKASH" | "NAGAD";
 }
 
 export interface PaymentInitiateResponse {
@@ -23,7 +21,7 @@ export const paymentsApi = {
   initiate: (body: PaymentInitiateRequest) =>
     apiRequest<PaymentInitiateResponse>("/payments/initiate", {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify({ invoiceId: body.invoiceId }),
     }),
   verify: (transactionRef: string) =>
     apiRequest<PaymentVerifyResponse>(`/payments/verify/${transactionRef}`),
@@ -35,6 +33,8 @@ export const paymentsApi = {
   refund: (id: string, body?: { reason?: string }) =>
     apiRequest(`/payments/${id}/refund`, {
       method: "POST",
-      body: JSON.stringify(body || {}),
+      body: JSON.stringify({ reason: body?.reason || "Refund initiated by administrator" }),
     }),
+  getById: (id: string) => apiRequest<unknown>(`/payments/${id}`),
+  expireStale: () => apiRequest<unknown>("/payments/expire-stale"),
 };

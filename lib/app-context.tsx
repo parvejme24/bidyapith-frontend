@@ -858,8 +858,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (targetInvoice) {
         await apiClient.payments.initiate({
           invoiceId,
-          amount: targetInvoice.amount,
-          gateway: (method.toUpperCase().includes("BKASH") ? "BKASH" : method.toUpperCase().includes("SSL") ? "SSLCOMMERZ" : "STRIPE") as any,
         }).catch(() => null);
       }
     } catch {}
@@ -1081,7 +1079,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const verifyPayment = async (id: string) => {
     try {
-      await apiClient.admin.verifyPayment(id).catch(() => null);
+      await apiClient.payments.getById(id).catch(() => null);
     } catch {}
 
     setAdminPayments((prev) =>

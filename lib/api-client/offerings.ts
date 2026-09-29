@@ -44,7 +44,26 @@ export const offeringsApi = {
     const query = params ? `?${new URLSearchParams(params).toString()}` : "";
     return apiRequest<unknown[]>(`/offerings${query}`);
   },
+  create: (body: Record<string, unknown>) =>
+    apiRequest<unknown>("/offerings", { method: "POST", body: JSON.stringify(body) }),
   getById: (id: string) => apiRequest<unknown>(`/offerings/${id}`),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiRequest<unknown>(`/offerings/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  assignInstructor: (id: string, instructorId: string) =>
+    apiRequest<unknown>(`/offerings/${id}/instructor`, {
+      method: "PATCH",
+      body: JSON.stringify({ instructorId }),
+    }),
+  changeStatus: (id: string, status: string) =>
+    apiRequest<unknown>(`/offerings/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  addSchedule: (id: string, body: Record<string, unknown>) =>
+    apiRequest<unknown>(`/offerings/${id}/schedules`, { method: "POST", body: JSON.stringify(body) }),
+  removeSchedule: (id: string, scheduleId: string) =>
+    apiRequest<unknown>(`/offerings/${id}/schedules/${scheduleId}`, { method: "DELETE" }),
+  remove: (id: string) => apiRequest<unknown>(`/offerings/${id}`, { method: "DELETE" }),
   getMyTeaching: () =>
     apiRequest<TeachingOffering[]>("/offerings/my-teaching"),
   getRoster: (id: string) =>

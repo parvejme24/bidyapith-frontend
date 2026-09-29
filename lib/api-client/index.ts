@@ -16,6 +16,9 @@ import { paymentsApi } from "./payments";
 import { admissionsApi } from "./admissions";
 import { adminApi } from "./admin";
 import { notificationsApi } from "./notifications";
+import { attendanceApi } from "./attendance";
+import { examsApi } from "./exams";
+import { resultsApi } from "./results";
 
 export const apiClient = {
   auth: authApi,
@@ -33,6 +36,9 @@ export const apiClient = {
   admissions: admissionsApi,
   admin: adminApi,
   notifications: notificationsApi,
+  attendance: attendanceApi,
+  exams: examsApi,
+  results: resultsApi,
 };
 
 export default apiClient;
@@ -52,3 +58,6 @@ export * from "./payments";
 export * from "./admissions";
 export * from "./admin";
 export * from "./notifications";
+export * from "./attendance";
+export * from "./exams";
+export * from "./results";
