@@ -1,31 +1,51 @@
-"use client";
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/site/glass-card";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
-import { Laptop, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Laptop, Loader2, ShieldCheck } from "lucide-react";
+import { authApi } from "@/lib/api-client/auth";
 
 export function SecuritySettingsCard() {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPw || !newPw) {
       toast.error("Please fill in current and new password");
+      return;
+    }
+    if (newPw.length < 8) {
+      toast.error("New password must be at least 8 characters long");
       return;
     }
     if (newPw !== confirmPw) {
       toast.error("New passwords do not match");
       return;
     }
-    setCurrentPw("");
-    setNewPw("");
-    setConfirmPw("");
-    toast.success("Password updated successfully");
+
+    setLoading(true);
+    try {
+      await authApi.changePassword({
+        currentPassword: currentPw,
+        newPassword: newPw,
+      });
+      setCurrentPw("");
+      setNewPw("");
+      setConfirmPw("");
+      toast.success("Password updated successfully");
+    } catch (err: any) {
+      const errorMsg = err?.message || "Failed to update password. Check your current password.";
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,50 +57,85 @@ export function SecuritySettingsCard() {
           <span>Security & Password</span>
         </h3>
         <form onSubmit={handleUpdatePassword} className="space-y-3.5">
-          <label className="block">
-            <span className="block text-xs font-semibold text-ink-muted mb-1">
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1">
               Current Password
-            </span>
-            <input
-              type="password"
-              value={currentPw}
-              onChange={(e) => setCurrentPw(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
-            />
-          </label>
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrentPw ? "text" : "password"}
+                value={currentPw}
+                onChange={(e) => setCurrentPw(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 pr-10 text-sm text-ink outline-none focus:border-jade"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPw(!showCurrentPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                aria-label={showCurrentPw ? "Hide password" : "Show password"}
+              >
+                {showCurrentPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+          </div>
 
-          <label className="block">
-            <span className="block text-xs font-semibold text-ink-muted mb-1">
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1">
               New Password
-            </span>
-            <input
-              type="password"
-              value={newPw}
-              onChange={(e) => setNewPw(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
-            />
-          </label>
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPw ? "text" : "password"}
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 pr-10 text-sm text-ink outline-none focus:border-jade"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPw(!showNewPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                aria-label={showNewPw ? "Hide password" : "Show password"}
+              >
+                {showNewPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+          </div>
 
-          <label className="block">
-            <span className="block text-xs font-semibold text-ink-muted mb-1">
+          <div>
+            <label className="block text-xs font-semibold text-ink-muted mb-1">
               Confirm New Password
-            </span>
-            <input
-              type="password"
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-ink outline-none focus:border-jade"
-            />
-          </label>
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPw ? "text" : "password"}
+                value={confirmPw}
+                onChange={(e) => setConfirmPw(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 pr-10 text-sm text-ink outline-none focus:border-jade"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPw(!showConfirmPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                aria-label={showConfirmPw ? "Hide password" : "Show password"}
+              >
+                {showConfirmPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+          </div>
 
           <button
             type="submit"
-            className={cn(buttonClass({ variant: "ghost", size: "sm" }), "w-full mt-2 cursor-pointer hover:border-jade/40")}
+            disabled={loading}
+            className={cn(
+              buttonClass({ variant: "ghost", size: "sm" }),
+              "w-full mt-2 cursor-pointer hover:border-jade/40 flex items-center justify-center gap-2"
+            )}
           >
-            Update Password
+            {loading && <Loader2 className="size-4 animate-spin text-jade" />}
+            <span>{loading ? "Updating..." : "Update Password"}</span>
           </button>
         </form>
       </GlassCard>
