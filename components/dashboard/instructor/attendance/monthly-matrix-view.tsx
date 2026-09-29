@@ -386,10 +386,10 @@ export function MonthlyMatrixView({
                 <th className="px-2 py-2 text-center min-w-[34px] text-rose font-bold bg-night-900/90 text-[0.7rem] whitespace-nowrap">
                   A
                 </th>
-                <th className="px-3 py-2 text-right min-w-[84px] font-bold text-jade bg-night-900/90 border-l border-white/10 text-[0.7rem] whitespace-nowrap">
+                <th className="px-3 py-2 text-center min-w-[84px] font-bold text-jade bg-night-900/90 border-l border-white/10 text-[0.7rem] whitespace-nowrap">
                   Month %
                 </th>
-                <th className="sticky right-0 z-20 bg-night-900/98 backdrop-blur-md px-3 py-2 text-right min-w-[80px] font-bold text-ink border-l border-white/10 text-[0.7rem] whitespace-nowrap">
+                <th className="sticky right-0 z-20 bg-night-900/98 backdrop-blur-md px-3 py-2 text-center min-w-[80px] font-bold text-ink border-l border-white/10 text-[0.7rem] whitespace-nowrap">
                   Total %
                 </th>
               </tr>
@@ -545,7 +545,7 @@ export function MonthlyMatrixView({
                     <td className="px-2 py-1.5 text-center text-rose font-bold text-[0.7rem]">
                       {stats ? stats.a : 0}
                     </td>
-                    <td className="px-3 py-1.5 text-right font-bold border-l border-white/10 text-[0.7rem] whitespace-nowrap">
+                    <td className="px-3 py-1.5 text-center font-bold border-l border-white/10 text-[0.7rem] whitespace-nowrap">
                       <span
                         className={cn(
                           "px-1.5 py-0.5 rounded text-[0.68rem] font-bold inline-block whitespace-nowrap",
@@ -559,7 +559,7 @@ export function MonthlyMatrixView({
                         {stats && stats.held > 0 ? `${stats.ratePct}%` : "—"}
                       </span>
                     </td>
-                    <td className="sticky right-0 z-10 bg-night-900/98 group-hover/row:bg-night-800/98 backdrop-blur-md px-3 py-1.5 text-right border-l border-white/10 whitespace-nowrap">
+                    <td className="sticky right-0 z-10 bg-night-900/98 group-hover/row:bg-night-800/98 backdrop-blur-md px-3 py-1.5 text-center border-l border-white/10 whitespace-nowrap">
                       <span
                         className={cn(
                           "px-1.5 py-0.5 rounded text-[0.68rem] sm:text-xs font-bold inline-block whitespace-nowrap",
