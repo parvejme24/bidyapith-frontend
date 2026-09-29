@@ -64,15 +64,15 @@ export function StudentResultsView() {
       studentName: user.name || "Rafiul Karim",
       studentId: user.id || "2024-BSC-CSE-1001",
       studentEmail: user.email || "student001@bidyapith.edu",
-      programTitle: program.title,
-      department: program.department || "Computer Science & Engineering",
-      degreeType: program.degreeType || "B.Sc.",
+      programTitle: program?.title || "Bachelor of Science in Computer Science & Engineering",
+      department: program?.department || "Computer Science & Engineering",
+      degreeType: program?.degreeType || "B.Sc.",
       mediumOfInstruction: "English",
       dateOfAdmission: "January 15, 2024",
       issueDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
       cgpa: cumulativeCgpa,
       creditsCompleted: totalCompletedCredits || student.creditsDone,
-      totalDegreeCredits: program.totalCredits || 140,
+      totalDegreeCredits: program?.totalCredits || 140,
       academicStanding: cumulativeCgpa >= 3.75 ? "First Class with Distinction (Honors)" : "First Class Regular",
       terms: semesterResults,
       verificationHash: `0x${Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("").toUpperCase()}`,
@@ -98,11 +98,11 @@ export function StudentResultsView() {
         <StatTile
           label="Credits Earned"
           value={totalCompletedCredits || student.creditsDone}
-          detail={`of ${program.totalCredits || 140} degree credits`}
+          detail={`of ${program?.totalCredits || 140} degree credits`}
         />
         <StatTile
           label="Semesters Completed"
-          value={`${completedTerms.length} / ${program.semesters.length}`}
+          value={`${completedTerms.length} / ${program?.semesters?.length || 8}`}
           detail={`Active in Semester ${selectedSemesterNum}`}
           tone="gold"
         />

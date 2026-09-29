@@ -7,10 +7,18 @@ import { ShieldCheck, Lock, Clock, Award } from "lucide-react";
 import type { SemesterResultRecord } from "./results-types";
 
 interface SemesterGradeSheetTableProps {
-  record: SemesterResultRecord;
+  record?: SemesterResultRecord | null;
 }
 
 export function SemesterGradeSheetTable({ record }: SemesterGradeSheetTableProps) {
+  if (!record) {
+    return (
+      <GlassCard className="p-8 text-center text-ink-faint">
+        <p className="text-sm">No semester grade record available for this selection.</p>
+      </GlassCard>
+    );
+  }
+
   const isCompleted = record.status === "completed";
   const isCurrent = record.status === "current";
   const isLocked = record.status === "locked";

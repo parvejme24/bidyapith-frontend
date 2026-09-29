@@ -36,10 +36,23 @@ const GRADE_DISTRIBUTION: Array<Array<{ grade: string; point: number; marks: num
 ];
 
 export function generateAllSemesterResults(
-  program: DegreeProgram,
-  enrolledCurrent: StudentCourse[]
+  program: DegreeProgram | null | undefined,
+  enrolledCurrent: StudentCourse[] = []
 ): SemesterResultRecord[] {
-  return program.semesters.map((sem, sIdx) => {
+  if (!program) return [];
+  const rawSemesters = Array.isArray(program.semesters) && program.semesters.length > 0
+    ? program.semesters
+    : Array.from({ length: 8 }, (_, i) => ({
+        semesterNumber: i + 1,
+        title: `Semester ${i + 1}`,
+        termName: `Term ${i + 1}`,
+        status: (i < 4 ? "completed" : i === 4 ? "current" : "locked") as any,
+        feeStatus: (i <= 4 ? "paid" : "due") as any,
+        tuitionFee: 65000,
+        courses: [],
+      }));
+
+  return rawSemesters.map((sem, sIdx) => {
     const isCompleted = sem.status === "completed";
     const isCurrent = sem.status === "current";
     const isLocked = sem.status === "locked";
