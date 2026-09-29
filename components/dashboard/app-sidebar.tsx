@@ -49,6 +49,7 @@ const DASHBOARD_NAV: Record<Role, NavItem[]> = {
     { href: "/admin/instructors", label: "Manage Faculty", icon: "user", tag: "Live" },
     { href: "/admin/students", label: "Manage Students", icon: "users" },
     { href: "/admin/courses", label: "Courses & Sections", icon: "layers" },
+    { href: "/admin/results", label: "Results & Grades", icon: "award" },
     { group: "Operations & Admin", href: "", label: "", icon: "" },
     { href: "/admin/users", label: "Users & Roles", icon: "users" },
     { href: "/admin/payments", label: "Payments Hub", icon: "card" },
