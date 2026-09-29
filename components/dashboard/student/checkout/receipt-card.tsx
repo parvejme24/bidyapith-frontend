@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { GlassCard } from "@/components/site/glass-card";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import {

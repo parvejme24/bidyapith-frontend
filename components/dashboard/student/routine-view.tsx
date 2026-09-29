@@ -2,9 +2,11 @@
 
 import React from "react";
 import { GlassCard } from "@/components/site/glass-card";
-import { DAYS, HOURS } from "@/lib/app-data";
 import type { StudentCourse } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu"];
+const HOURS = ["08:30", "10:00", "11:30", "13:00", "14:30", "16:00"];
 
 interface RoutineViewProps {
   enrolled: StudentCourse[];

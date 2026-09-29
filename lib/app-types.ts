@@ -171,6 +171,29 @@ export interface NoticeItem {
   read?: boolean;
 }
 
+export interface AcademicTermInfo {
+  name: string;
+  week: number;
+  of: number;
+  regCloses: string;
+}
+
+export interface StudentAcademicState {
+  cgpa: number;
+  creditsDone: number;
+  creditsNeeded: number;
+  attendance: number;
+  standing: string;
+  advisor: string;
+  passed?: string[];
+  gpaHistory: Array<{ term: string; gpa: number }>;
+  enrolled: StudentCourse[];
+  attendanceLog: AttendanceLogRecord[];
+  transcript: TranscriptTerm[];
+  invoices: Invoice[];
+  notices: NoticeItem[];
+}
+
 export interface InstructorSection {
   id: string;
   code: string;

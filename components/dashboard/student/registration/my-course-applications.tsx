@@ -21,7 +21,7 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
 import { useGetAdmissionsQuery } from "@/lib/redux/api/admissionsApi";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import type { AdmissionApplication, AttachedDocument } from "@/lib/app-types";

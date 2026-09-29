@@ -4,7 +4,7 @@ import React from "react";
 import { CheckCircle2, Eye, Paperclip, XCircle } from "lucide-react";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import type { AdmissionApplication } from "@/lib/app-types";

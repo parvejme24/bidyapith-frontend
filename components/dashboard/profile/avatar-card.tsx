@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { GlassCard } from "@/components/site/glass-card";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import { apiClient } from "@/lib/api-client";
-import { formatShortDate, ROLE_LABELS } from "@/lib/app-data";
+import { formatShortDate, ROLE_LABELS } from "@/lib/format";
 import { Camera, Loader2, Trash2, Upload } from "lucide-react";
 import type { Role, UserSession } from "@/lib/app-types";
 

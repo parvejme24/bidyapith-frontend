@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { GlassCard } from "@/components/site/glass-card";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import type { Invoice } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";

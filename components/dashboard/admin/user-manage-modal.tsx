@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getInitials } from "@/lib/app-data";
+import { getInitials } from "@/lib/format";
 import type { AdminUser, Role } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";

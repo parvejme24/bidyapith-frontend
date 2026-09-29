@@ -10,7 +10,7 @@ import { BrandLogo } from "@/components/site/brand-logo";
 import { GlassCard } from "@/components/site/glass-card";
 import { removeStoredToken } from "@/lib/api-client";
 import { useApp } from "@/lib/app-context";
-import { getInitials, ROLE_LABELS } from "@/lib/app-data";
+import { getInitials, ROLE_LABELS } from "@/lib/format";
 import type { Role } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
 

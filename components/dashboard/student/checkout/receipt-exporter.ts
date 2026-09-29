@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 
 export interface ReceiptData {
   receiptNumber: string;

@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useApp } from "@/lib/app-context";
-import { formatShortDate, getInitials } from "@/lib/app-data";
+import { formatShortDate, getInitials } from "@/lib/format";
 import type { AdminUser } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";

@@ -46,7 +46,7 @@ export function RegistrationView() {
   }, [searchParams]);
 
   const enrolledCodes = new Set(student.enrolled.map((c) => c.code.toLowerCase()));
-  const passedCodes = new Set(student.passed);
+  const passedCodes = new Set(student.passed || []);
 
   const totalCartCredits = cart.reduce((sum, c) => sum + (c.credits || 3), 0);
   const isOverLimit = totalCartCredits > 15;

@@ -3,7 +3,7 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
 import { GlassCard } from "@/components/site/glass-card";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import type { DegreeProgram, SemesterCurriculum } from "@/lib/app-types";
 
 interface OrderSummaryProps {

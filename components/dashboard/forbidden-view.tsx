@@ -6,7 +6,7 @@ import { DashboardIcon } from "@/components/dashboard/icons";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
-import { ROLE_LABELS } from "@/lib/app-data";
+import { ROLE_LABELS } from "@/lib/format";
 import type { Role } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";

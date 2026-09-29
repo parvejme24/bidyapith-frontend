@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { GlassCard } from "@/components/site/glass-card";
 import { buttonClass } from "@/lib/styles";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   Building2,

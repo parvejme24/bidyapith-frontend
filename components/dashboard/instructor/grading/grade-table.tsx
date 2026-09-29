@@ -3,7 +3,7 @@
 import React from "react";
 import { GlassCard } from "@/components/site/glass-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
-import { computeGrade, getInitials } from "@/lib/app-data";
+import { computeGrade, getInitials } from "@/lib/format";
 import type { InstructorSection } from "@/lib/app-types";
 import type { GradeRecord, SectionStudent } from "./grade-types";
 

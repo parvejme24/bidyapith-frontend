@@ -12,7 +12,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
-import { APP_DATA, formatTaka, formatTimeAgo } from "@/lib/app-data";
+import { formatTaka, formatTimeAgo } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { UserPlus } from "lucide-react";
@@ -94,7 +94,15 @@ export default function AdminDashboardPage() {
           <p className="text-xs text-ink-faint mb-4">
             Applications received per month over the current cycle.
           </p>
-          <AreaTrendChart data={APP_DATA.admin.admissionsTrend} color="#2ED3A7" />
+          <AreaTrendChart
+            data={[
+              { label: "Jun", value: 340 },
+              { label: "Jul", value: 680 },
+              { label: "Aug", value: 1420 },
+              { label: "Sep", value: admissionApplications.length ? admissionApplications.length * 80 : 2480 },
+            ]}
+            color="#2ED3A7"
+          />
         </GlassCard>
 
         <GlassCard className="p-6 flex flex-col justify-between">
@@ -107,7 +115,12 @@ export default function AdminDashboardPage() {
             </p>
           </div>
           <DistributionDonut
-            data={APP_DATA.admin.bySchool}
+            data={[
+              { label: "Engineering", value: 4200, color: "#2ED3A7" },
+              { label: "Business", value: 3100, color: "#9B8CFF" },
+              { label: "Science", value: 2400, color: "#FFB454" },
+              { label: "Arts & Law", value: 2700, color: "#6FD8FF" },
+            ]}
             centerValue={`${(studentCount / 1000).toFixed(1)}k`}
             centerLabel="students"
           />
@@ -123,7 +136,15 @@ export default function AdminDashboardPage() {
           <p className="text-xs text-ink-faint mb-4">
             In crore taka, current month partial.
           </p>
-          <CollectionsBarChart data={APP_DATA.admin.collections} color="#FFB454" />
+          <CollectionsBarChart
+            data={[
+              { label: "Tuition", value: 8.4 },
+              { label: "Admission", value: 2.1 },
+              { label: "Exam Fee", value: 1.2 },
+              { label: "Late Fees", value: 0.7 },
+            ]}
+            color="#FFB454"
+          />
         </GlassCard>
 
         <GlassCard className="p-6 space-y-4">

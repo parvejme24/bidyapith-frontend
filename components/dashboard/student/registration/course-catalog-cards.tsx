@@ -19,7 +19,7 @@ import {
 import { Meter } from "@/components/dashboard/meter";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { useApp } from "@/lib/app-context";
 import { cn } from "@/lib/utils";
 import {

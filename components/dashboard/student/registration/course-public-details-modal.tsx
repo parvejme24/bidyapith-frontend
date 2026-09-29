@@ -16,7 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { StatusPill } from "@/components/dashboard/status-pill";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 
 export interface PublicCourseDetails {
   code: string;

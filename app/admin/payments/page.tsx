@@ -9,7 +9,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { useApp } from "@/lib/app-context";
-import { formatTaka, formatTimeAgo } from "@/lib/app-data";
+import { formatTaka, formatTimeAgo } from "@/lib/format";
 import type { PaymentTransaction } from "@/lib/app-types";
 import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";

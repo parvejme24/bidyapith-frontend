@@ -4,7 +4,7 @@ import React from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { RegistrationView } from "@/components/dashboard/student/registration-view";
 import { useApp } from "@/lib/app-context";
-import { formatShortDate } from "@/lib/app-data";
+import { formatShortDate } from "@/lib/format";
 
 export default function StudentRegistrationPage() {
   const { term } = useApp();

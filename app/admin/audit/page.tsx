@@ -9,7 +9,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
-import { formatTimeAgo } from "@/lib/app-data";
+import { formatTimeAgo } from "@/lib/format";
 import type { AuditRecord } from "@/lib/app-types";
 import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";

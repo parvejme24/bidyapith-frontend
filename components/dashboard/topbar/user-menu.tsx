@@ -8,7 +8,7 @@ import { LayoutDashboard, LogOut, User } from "lucide-react";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import { removeStoredToken } from "@/lib/api-client";
 import { useApp } from "@/lib/app-context";
-import { ROLE_LABELS } from "@/lib/app-data";
+import { ROLE_LABELS } from "@/lib/format";
 
 export function UserMenu() {
   const router = useRouter();

@@ -3,16 +3,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import {
-  APP_DATA,
-  APP_SESSIONS,
-  DEGREE_PROGRAMS,
-  INITIAL_ADMISSION_APPLICATIONS,
-  SAMPLE_GRADUATION_CERTIFICATE,
-  formatTimeAgo,
-} from "./app-data";
+import { formatTimeAgo } from "./format";
 import { apiClient, getStoredToken } from "./api-client";
 import type {
+  AcademicTermInfo,
   AdminSection,
   AdminUser,
   AdmissionApplication,
@@ -26,16 +20,87 @@ import type {
   Role,
   RosterStudent,
   SemesterCurriculum,
+  StudentAcademicState,
   StudentCourse,
   UserSession,
 } from "./app-types";
+
+const DEFAULT_USER_SESSIONS: Record<Role, UserSession> = {
+  student: {
+    role: "student",
+    name: "Student",
+    id: "STU-2026-001",
+    email: "student@bidyapith.edu.bd",
+    dept: "Computer Science & Engineering",
+    program: "Bachelor of Science in Computer Science & Engineering",
+    phone: "+880 1700-000000",
+  },
+  instructor: {
+    role: "instructor",
+    name: "Faculty Instructor",
+    id: "FAC-2026-001",
+    email: "faculty@bidyapith.edu.bd",
+    dept: "Computer Science & Engineering",
+    phone: "+880 1700-000000",
+  },
+  admin: {
+    role: "admin",
+    name: "System Administrator",
+    id: "ADM-2026-001",
+    email: "admin@bidyapith.edu.bd",
+    phone: "+880 1700-000000",
+  },
+};
+
+const DEFAULT_TERM: AcademicTermInfo = {
+  name: "Fall 2026",
+  week: 6,
+  of: 14,
+  regCloses: "2026-10-15",
+};
+
+const DEFAULT_STUDENT_STATE: StudentAcademicState = {
+  cgpa: 3.82,
+  creditsDone: 96,
+  creditsNeeded: 140,
+  attendance: 92,
+  standing: "Dean's Honour List",
+  advisor: "Prof. Dr. Ayesha Rahman",
+  gpaHistory: [
+    { term: "Fall 24", gpa: 3.75 },
+    { term: "Spring 25", gpa: 3.8 },
+    { term: "Fall 25", gpa: 3.85 },
+    { term: "Spring 26", gpa: 3.88 },
+  ],
+  enrolled: [],
+  attendanceLog: [],
+  transcript: [],
+  invoices: [],
+  notices: [],
+};
+
+const DEFAULT_GRADUATION_CERTIFICATE: GraduationCertificate = {
+  certificateNumber: "CERT-2026-CSE-88419",
+  studentName: "Student",
+  studentId: "2022-1-60-042",
+  programTitle: "Bachelor of Science in Computer Science & Engineering",
+  degreeType: "B.Sc.",
+  cgpa: 3.82,
+  creditsCompleted: 140,
+  honors: "Summa Cum Laude (Highest Distinction)",
+  graduationDate: "October 15, 2026",
+  issueDate: "2026-10-15",
+  chancellorName: "Prof. Dr. A. K. M. Fazlul Haque",
+  registrarName: "Prof. Md. Anwarul Islam",
+  verificationHash: "0x8f2d4e1a9c3b7a5e6f8d0c2b4a6e8f1d3c5a7e9b",
+};
 
 interface AppContextType {
   role: Role;
   setRole: (role: Role) => void;
   user: UserSession;
   updateUser: (updates: Partial<UserSession>) => void;
-  term: typeof APP_DATA.term;
+  term: AcademicTermInfo;
 
   /* Degree Program & Curriculum */
   programs: DegreeProgram[];
@@ -52,7 +117,7 @@ interface AppContextType {
   payAdmissionFee: (appId: string, method: string) => Promise<void>;
 
   /* Student state */
-  student: typeof APP_DATA.student;
+  student: StudentAcademicState;
   cart: StudentCourse[];
   addToCart: (course: StudentCourse) => void;
   removeFromCart: (code: string) => void;
@@ -148,7 +213,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   });
 
-  const baseUser = APP_SESSIONS[role] || APP_SESSIONS.student;
+  const baseUser = DEFAULT_USER_SESSIONS[role] || DEFAULT_USER_SESSIONS.student;
   const user: UserSession = { ...baseUser, ...(userOverrides[role] || {}) };
 
   const updateUser = (updates: Partial<UserSession>) => {
@@ -171,17 +236,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   /* Semester Term State */
-  const [termState, setTermState] = useState(APP_DATA.term);
+  const [termState, setTermState] = useState<AcademicTermInfo>(DEFAULT_TERM);
 
   /* Student */
-  const [studentState, setStudentState] = useState(APP_DATA.student);
+  const [studentState, setStudentState] = useState<StudentAcademicState>(DEFAULT_STUDENT_STATE);
   const [cart, setCart] = useState<StudentCourse[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>(APP_DATA.student.invoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLiveSynced, setIsLiveSynced] = useState(false);
 
   /* Instructor */
-  const [instructorSections, setInstructorSections] = useState<InstructorSection[]>(APP_DATA.instructor.sections);
-  const [roster, setRoster] = useState<RosterStudent[]>(APP_DATA.instructor.roster);
+  const [instructorSections, setInstructorSections] = useState<InstructorSection[]>([]);
+  const [roster, setRoster] = useState<RosterStudent[]>([]);
   const [attendanceStore, setAttendanceStore] = useState<Record<string, Record<string, "P" | "L" | "A">>>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -193,9 +258,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   /* Admin */
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(APP_DATA.admin.users);
-  const [adminSections, setAdminSections] = useState<AdminSection[]>(APP_DATA.admin.sections);
-  const [adminPayments, setAdminPayments] = useState<PaymentTransaction[]>(APP_DATA.admin.payments);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [adminSections, setAdminSections] = useState<AdminSection[]>([]);
+  const [adminPayments, setAdminPayments] = useState<PaymentTransaction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -203,7 +268,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (saved) return JSON.parse(saved);
       } catch {}
     }
-    return APP_DATA.admin.audit;
+    return [];
   });
 
   const [publishedGradeSections, setPublishedGradeSections] = useState<string[]>(() => {
@@ -224,7 +289,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (saved) return JSON.parse(saved);
       } catch {}
     }
-    return DEGREE_PROGRAMS;
+    return [];
   });
 
   const [admissionApplications, setAdmissionApplications] = useState<AdmissionApplication[]>(() => {
@@ -234,7 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (saved) return JSON.parse(saved);
       } catch {}
     }
-    return INITIAL_ADMISSION_APPLICATIONS;
+    return [];
   });
 
   // Sync Current Semester Info from Live API
@@ -984,9 +1049,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ? dbNotifications
       : role === "student"
       ? studentState.notices.map((n, idx) => ({ ...n, id: `student-note-${idx}`, time: "Just now" }))
-      : role === "instructor"
-      ? APP_DATA.instructor.queue.map((n, idx) => ({ ...n, id: `instructor-note-${idx}`, time: "Today" }))
-      : auditLogs.slice(0, 5).map((a, idx) => ({ id: `admin-note-${idx}`, t: a.action, m: a.detail, tone: a.tone, time: "Recent" }));
+      : auditLogs.slice(0, 5).map((a, idx) => ({ id: `activity-note-${idx}`, t: a.action, m: a.detail, tone: a.tone, time: "Recent" }));
 
   const notifications: NoticeItem[] = baseNotices.map((n) => ({
     ...n,
@@ -1218,10 +1281,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const graduationCertificate: GraduationCertificate = {
-    ...SAMPLE_GRADUATION_CERTIFICATE,
+    ...DEFAULT_GRADUATION_CERTIFICATE,
     studentName: user.name,
     studentId: user.id,
-    programTitle: user.program || SAMPLE_GRADUATION_CERTIFICATE.programTitle,
+    programTitle: user.program || DEFAULT_GRADUATION_CERTIFICATE.programTitle,
     cgpa: studentState.cgpa,
   };
 

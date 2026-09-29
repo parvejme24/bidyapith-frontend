@@ -6,7 +6,7 @@ import { NotificationDrawer } from "@/components/dashboard/topbar/notification-d
 import { SearchPortal } from "@/components/dashboard/topbar/search-portal";
 import { UserMenu } from "@/components/dashboard/topbar/user-menu";
 import { useApp } from "@/lib/app-context";
-import { ROLE_LABELS } from "@/lib/app-data";
+import { ROLE_LABELS } from "@/lib/format";
 
 interface AppTopbarProps {
   title: string;

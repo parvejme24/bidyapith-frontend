@@ -10,7 +10,7 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
 import { AdmissionStatusCard } from "@/components/dashboard/student/admission/admission-status-card";
 import { useApp } from "@/lib/app-context";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
@@ -87,10 +87,13 @@ export default function StudentDashboardPage() {
           <h3 className="font-display text-lg font-semibold text-ink mb-1">
             GPA by Term
           </h3>
-          <p className="text-xs text-ink-faint mb-4">
-            Six terms, term GPA not cumulative.
-          </p>
-          <AreaTrendChart data={student.gpaHistory} color="#2ED3A7" />
+          <AreaTrendChart
+            data={(student.gpaHistory || []).map((g) => ({
+              label: g.term,
+              value: g.gpa,
+            }))}
+            color="#2ED3A7"
+          />
         </GlassCard>
 
         <GlassCard className="p-6 flex flex-col justify-between items-center text-center">

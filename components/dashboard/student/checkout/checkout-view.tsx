@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useApp } from "@/lib/app-context";
-import { formatTaka } from "@/lib/app-data";
+import { formatTaka } from "@/lib/format";
 import {
   GatewaySelector,
   type PaymentGatewayType,

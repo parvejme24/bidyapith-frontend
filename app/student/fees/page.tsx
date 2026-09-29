@@ -7,7 +7,7 @@ import { StatusPill } from "@/components/dashboard/status-pill";
 import { PaymentModal } from "@/components/dashboard/student/payment-modal";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
-import { formatShortDate, formatTaka } from "@/lib/app-data";
+import { formatShortDate, formatTaka } from "@/lib/format";
 import type { Invoice } from "@/lib/app-types";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";

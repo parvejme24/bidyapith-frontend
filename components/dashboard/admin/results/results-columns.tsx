@@ -3,7 +3,7 @@
 import React from "react";
 import type { ColumnDef } from "@/components/dashboard/data-table";
 import { StatusPill } from "@/components/dashboard/status-pill";
-import { getInitials } from "@/lib/app-data";
+import { getInitials } from "@/lib/format";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { Award } from "lucide-react";

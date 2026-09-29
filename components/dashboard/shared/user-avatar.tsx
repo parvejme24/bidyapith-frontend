@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { getInitials } from "@/lib/app-data";
+import { getInitials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export interface UserAvatarProps {

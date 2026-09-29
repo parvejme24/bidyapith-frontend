@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { StatusPill } from "@/components/dashboard/status-pill";
-import { formatTaka, formatTimeAgo } from "@/lib/app-data";
+import { formatTaka, formatTimeAgo } from "@/lib/format";
 import type { PaymentTransaction } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
 

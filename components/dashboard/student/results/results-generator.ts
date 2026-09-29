@@ -1,5 +1,5 @@
 import type { DegreeProgram, StudentCourse } from "@/lib/app-types";
-import { computeGrade } from "@/lib/app-data";
+import { computeGrade } from "@/lib/format";
 import type { SemesterResultRecord, CourseGradeRow, GpaTrendPoint } from "./results-types";
 
 const GRADE_DISTRIBUTION: Array<Array<{ grade: string; point: number; marks: number }>> = [
