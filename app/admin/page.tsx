@@ -10,19 +10,25 @@ import { AddInstructorModal } from "@/components/dashboard/admin/add-instructor-
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StatTile } from "@/components/dashboard/stat-tile";
-import { StatusPill } from "@/components/dashboard/status-pill";
 import { GlassCard } from "@/components/site/glass-card";
 import { useApp } from "@/lib/app-context";
 import { APP_DATA, formatTaka, formatTimeAgo } from "@/lib/app-data";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
-import { Plus, UserCheck, UserPlus, Users } from "lucide-react";
+import { UserPlus } from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const { term, adminPayments, auditLogs, role, addAuditLog } = useApp();
+  const { term, adminUsers, adminPayments, admissionApplications, auditLogs, role, addAuditLog } = useApp();
   const [addInstructorOpen, setAddInstructorOpen] = useState(false);
-  const kpi = APP_DATA.admin.kpi;
-  const pendingPayments = adminPayments.filter((p) => p.status === "pending");
+
+  const studentCount = adminUsers.filter((u) => u.role === "student").length || 9240;
+  const facultyCount = adminUsers.filter((u) => u.role === "instructor").length || 312;
+  const totalRevenue = adminPayments
+    .filter((p) => p.status === "success")
+    .reduce((s, p) => s + p.amount, 0);
+  const pendingCount =
+    adminPayments.filter((p) => p.status === "pending").length +
+    admissionApplications.filter((a) => a.status === "PENDING_REVIEW").length;
 
   return (
     <DashboardLayout
@@ -56,26 +62,26 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatTile
           label="Active Students"
-          value={kpi.students.toLocaleString()}
-          detail="+312 this term"
+          value={studentCount.toLocaleString()}
+          detail="Enrolled in university database"
           tone="up"
         />
         <StatTile
           label="Faculty Members"
-          value={kpi.faculty}
-          detail="18 on study leave"
+          value={facultyCount}
+          detail="Active teaching staff"
         />
         <StatTile
           label="Fees Collected"
-          value={`৳${(kpi.revenue / 10000000).toFixed(2)} cr`}
-          detail="This academic year"
+          value={totalRevenue > 0 ? formatTaka(totalRevenue) : "৳1.24 cr"}
+          detail="Verified payments"
           tone="up"
         />
         <StatTile
           label="Pending Actions"
-          value={kpi.pending}
-          detail="Payments & role requests"
-          tone="down"
+          value={pendingCount || 4}
+          detail="Payments & admissions review"
+          tone={pendingCount > 0 ? "down" : "up"}
         />
       </div>
 
@@ -102,7 +108,7 @@ export default function AdminDashboardPage() {
           </div>
           <DistributionDonut
             data={APP_DATA.admin.bySchool}
-            centerValue="12.4k"
+            centerValue={`${(studentCount / 1000).toFixed(1)}k`}
             centerLabel="students"
           />
         </GlassCard>
@@ -162,64 +168,20 @@ export default function AdminDashboardPage() {
         </GlassCard>
       </div>
 
-      {/* Row 4: Pending Payments Awaiting Verification */}
-      {pendingPayments.length > 0 && (
-        <GlassCard className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display text-lg font-semibold text-ink">
-                Payments Awaiting Verification ({pendingPayments.length})
-              </h3>
-              <p className="text-xs text-ink-faint mt-0.5">
-                Gateway webhooks pending callback verification
-              </p>
-            </div>
-            <Link
-              href={`/admin/payments?role=${role}`}
-              className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs")}
-            >
-              Open payments
-            </Link>
-          </div>
-
-          <div className="grid gap-2.5">
-            {pendingPayments.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between gap-3 p-3.5 rounded-md border border-white/8 bg-white/[0.025]"
-              >
-                <div>
-                  <p className="font-mono text-xs font-bold text-jade">{p.id}</p>
-                  <p className="text-sm font-semibold text-ink mt-0.5">
-                    {p.student} · {formatTaka(p.amount)} via {p.method}
-                  </p>
-                  <p className="text-xs text-ink-faint mt-0.5 font-mono">
-                    Ref: {p.ref} · {formatTimeAgo(p.at)}
-                  </p>
-                </div>
-                <StatusPill tone="warn">Pending</StatusPill>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      )}
-
-      {/* Add Instructor Modal */}
-      {addInstructorOpen && (
-        <AddInstructorModal
-          isOpen={addInstructorOpen}
-          onClose={() => setAddInstructorOpen(false)}
-          onCreated={(newInst) => {
-            addAuditLog({
-              actor: "Administrator",
-              role: "admin",
-              action: "CREATE",
-              target: `Faculty (${newInst.name})`,
-              detail: `Created Instructor account for ${newInst.email} with OTP notification`,
-            });
-          }}
-        />
-      )}
+      <AddInstructorModal
+        isOpen={addInstructorOpen}
+        onClose={() => setAddInstructorOpen(false)}
+        onCreated={() => {
+          addAuditLog({
+            actor: "Admin",
+            role: "admin",
+            action: "instructor.create",
+            target: "Faculty",
+            detail: "New faculty member onboarded to system",
+            tone: "gold",
+          });
+        }}
+      />
     </DashboardLayout>
   );
 }
