@@ -2,11 +2,13 @@
 
 import React from "react";
 import {
+  AlertCircle,
   CheckCircle2,
   Clock,
   GraduationCap,
   Lock,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
@@ -15,14 +17,28 @@ import type { GraduationCertificate } from "@/lib/app-types";
 interface CertificatePreviewCardProps {
   certificate: GraduationCertificate;
   isLocked: boolean;
+  isSemestersComplete?: boolean;
+  isPaymentComplete?: boolean;
+  isAcademicComplete?: boolean;
+  creditsDone?: number;
+  creditsNeeded?: number;
+  totalDue?: number;
   onViewAudit?: () => void;
+  onSimulateUnlock?: () => void;
   certRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function CertificatePreviewCard({
   certificate,
   isLocked,
+  isSemestersComplete = false,
+  isPaymentComplete = false,
+  isAcademicComplete = false,
+  creditsDone = 96,
+  creditsNeeded = 140,
+  totalDue = 0,
   onViewAudit,
+  onSimulateUnlock,
   certRef,
 }: CertificatePreviewCardProps) {
   return (
@@ -59,7 +75,7 @@ export function CertificatePreviewCard({
           </div>
 
           <h1 className="font-display text-2xl sm:text-4xl font-bold tracking-tight text-ink uppercase">
-            Bidyapith University
+            Bidyapith Open University
           </h1>
           <p className="text-xs sm:text-sm text-[#FFD9A6] tracking-widest uppercase font-semibold font-serif">
             DHAKA, BANGLADESH · ESTABLISHED 1998
@@ -144,79 +160,117 @@ export function CertificatePreviewCard({
 
       {/* Prominent Overlay Lock */}
       {isLocked && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 sm:p-8 bg-night-950/80 backdrop-blur-md rounded-2xl border-2 border-amber-500/30 text-center animate-in fade-in duration-300">
-          <div className="size-16 sm:size-20 rounded-full bg-amber-500/15 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-500/10 mb-4 animate-pulse">
-            <Lock className="size-8 sm:size-10" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 sm:p-8 bg-night-950/85 backdrop-blur-md rounded-2xl border-2 border-amber-500/30 text-center animate-in fade-in duration-300">
+          <div className="size-14 sm:size-16 rounded-full bg-amber-500/15 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-500/10 mb-3 animate-pulse">
+            <Lock className="size-7 sm:size-8" />
           </div>
 
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-ink mb-2">
-            Official Degree Certificate is Locked
+          <h3 className="font-display text-lg sm:text-xl font-bold text-ink mb-1.5">
+            Degree Certificate is Locked
           </h3>
 
-          <p className="text-xs sm:text-sm text-ink-muted max-w-lg mb-6 leading-relaxed">
-            This official degree certificate parchment and digital cryptographic credentials remain locked until all graduation requirements, project defense, and University Registrar clearances are finalized.
+          <p className="text-xs sm:text-sm text-ink-muted max-w-lg mb-5 leading-relaxed">
+            Your official degree certificate will be issued automatically once all 3 graduation requirements below are fulfilled:
           </p>
 
           {/* Clearance & Requirement Status Card */}
-          <div className="w-full max-w-md p-4 rounded-xl bg-white/[0.04] border border-white/10 text-left space-y-2.5 text-xs mb-6">
+          <div className="w-full max-w-md p-4 rounded-xl bg-white/[0.04] border border-white/10 text-left space-y-3 text-xs mb-5 shadow-lg">
             <div className="flex items-center justify-between font-semibold pb-2 border-b border-white/10">
-              <span className="text-ink">Graduation Clearance Status</span>
-              <span className="text-amber-400 font-mono">4 / 5 Pending</span>
+              <span className="text-ink">Graduation Issuance Checklist</span>
+              <span className={cn("font-mono font-bold", isSemestersComplete && isPaymentComplete && isAcademicComplete ? "text-jade" : "text-amber-400")}>
+                {[isSemestersComplete, isPaymentComplete, isAcademicComplete].filter(Boolean).length} / 3 Completed
+              </span>
             </div>
 
-            <div className="flex items-center justify-between text-ink-muted">
+            {/* Requirement 1: All Semesters Completed */}
+            <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <CheckCircle2 className="size-3.5 text-jade shrink-0" />
-                <span>Enrolment & Admission Status</span>
+                {isSemestersComplete ? (
+                  <CheckCircle2 className="size-4 text-jade shrink-0" />
+                ) : (
+                  <Clock className="size-4 text-amber-400 shrink-0" />
+                )}
+                <div>
+                  <span className="font-medium text-ink block">All Semesters Completed</span>
+                  <span className="text-[0.68rem] text-ink-faint">
+                    {creditsDone} of {creditsNeeded} Total Credits Completed
+                  </span>
+                </div>
               </span>
-              <span className="text-jade font-semibold">Verified</span>
+              <span className={cn("font-bold text-xs", isSemestersComplete ? "text-jade" : "text-amber-400")}>
+                {isSemestersComplete ? "Completed ✓" : "In Progress"}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between text-ink-muted">
+            {/* Requirement 2: Total Payment Completed */}
+            <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Clock className="size-3.5 text-amber-400 shrink-0" />
-                <span>Curriculum ({certificate.creditsCompleted} / 140 Credits)</span>
+                {isPaymentComplete ? (
+                  <CheckCircle2 className="size-4 text-jade shrink-0" />
+                ) : (
+                  <Clock className="size-4 text-amber-400 shrink-0" />
+                )}
+                <div>
+                  <span className="font-medium text-ink block">Total Payment Completed</span>
+                  <span className="text-[0.68rem] text-ink-faint">
+                    {isPaymentComplete ? "Zero tuition dues / fully paid" : `Outstanding dues: ৳${totalDue.toLocaleString()}`}
+                  </span>
+                </div>
               </span>
-              <span className="text-amber-400 font-semibold">In Progress</span>
+              <span className={cn("font-bold text-xs", isPaymentComplete ? "text-jade" : "text-rose")}>
+                {isPaymentComplete ? "Paid in Full ✓" : "Dues Pending"}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between text-ink-muted">
+            {/* Requirement 3: All Semester Marks Done & No Failed Courses */}
+            <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Clock className="size-3.5 text-amber-400 shrink-0" />
-                <span>Library & Laboratory Clearances</span>
+                {isAcademicComplete ? (
+                  <CheckCircle2 className="size-4 text-jade shrink-0" />
+                ) : (
+                  <AlertCircle className="size-4 text-amber-400 shrink-0" />
+                )}
+                <div>
+                  <span className="font-medium text-ink block">All Marks Done & No Failed Courses</span>
+                  <span className="text-[0.68rem] text-ink-faint">
+                    {isAcademicComplete ? `All grades recorded (CGPA: ${certificate.cgpa.toFixed(2)})` : "Pending grade completion or retake"}
+                  </span>
+                </div>
               </span>
-              <span className="text-ink-faint">Pending</span>
-            </div>
-
-            <div className="flex items-center justify-between text-ink-muted">
-              <span className="flex items-center gap-2">
-                <Clock className="size-3.5 text-amber-400 shrink-0" />
-                <span>Accounts & Tuition Clearance</span>
+              <span className={cn("font-bold text-xs", isAcademicComplete ? "text-jade" : "text-amber-400")}>
+                {isAcademicComplete ? "Passed ✓" : "Pending"}
               </span>
-              <span className="text-ink-faint">Pending</span>
-            </div>
-
-            <div className="flex items-center justify-between text-ink-muted">
-              <span className="flex items-center gap-2">
-                <Clock className="size-3.5 text-amber-400 shrink-0" />
-                <span>Registrar & Academic Council Conferral</span>
-              </span>
-              <span className="text-ink-faint">Pending</span>
             </div>
           </div>
 
-          {onViewAudit && (
-            <button
-              type="button"
-              onClick={onViewAudit}
-              className={cn(
-                buttonClass({ variant: "ghost", size: "sm" }),
-                "cursor-pointer text-xs font-semibold px-5 py-2 hover:border-jade/50 hover:text-jade transition-colors"
-              )}
-            >
-              View Graduation Audit Details →
-            </button>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {onViewAudit && (
+              <button
+                type="button"
+                onClick={onViewAudit}
+                className={cn(
+                  buttonClass({ variant: "ghost", size: "sm" }),
+                  "cursor-pointer text-xs font-semibold px-4 py-2 hover:border-jade/50 hover:text-jade transition-colors"
+                )}
+              >
+                View Graduation Audit →
+              </button>
+            )}
+
+            {onSimulateUnlock && (
+              <button
+                type="button"
+                onClick={onSimulateUnlock}
+                className={cn(
+                  buttonClass({ variant: "primary", size: "sm" }),
+                  "cursor-pointer text-xs font-bold px-4 py-2 flex items-center gap-1.5 shadow-md bg-jade text-night-900 hover:bg-jade/90"
+                )}
+              >
+                <Sparkles className="size-3.5" />
+                <span>Simulate Complete Clearance & Unlock</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

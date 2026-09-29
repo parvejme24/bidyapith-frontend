@@ -51,12 +51,13 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   const { attendanceStore, saveAttendance } = useApp();
   const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily");
   const [selectedSec, setSelectedSec] = useState<string>(sections[0]?.id || "S1");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date(2026, 8, 27));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
-  // Month navigation (default September 2026)
-  const [activeYear, setActiveYear] = useState<number>(2026);
-  const [activeMonth, setActiveMonth] = useState<number>(8);
+  // Month navigation (default to current month & year)
+  const [activeYear, setActiveYear] = useState<number>(() => new Date().getFullYear());
+  const [activeMonth, setActiveMonth] = useState<number>(() => new Date().getMonth());
 
   // Selected student for detailed monthly modal
   const [selectedStudentForModal, setSelectedStudentForModal] = useState<RosterStudent | null>(null);
@@ -96,26 +97,28 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     }
   };
 
-  const dateKey = selectedDate
-    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`
-    : "2026-09-27";
+  const dateKey = useMemo(() => {
+    const target = selectedDate || new Date();
+    return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+  }, [selectedDate]);
 
   const currentSection = sections.find((s) => s.id === selectedSec) || sections[0];
 
   const [dailyAttendance, setDailyAttendance] = useState<Record<string, "P" | "L" | "A">>(() => {
-    const compositeKey = `${sections[0]?.id || "S1"}_${dateKey}`;
-    return attendanceStore?.[compositeKey] || {};
+    const initialKey = `${sections[0]?.id || "S1"}_${dateKey}`;
+    return attendanceStore?.[initialKey] || {};
   });
 
-  // Keep daily attendance in sync when section or date changes
+  // Keep daily attendance in sync when section or date changes and reset unsaved flag
   useEffect(() => {
     const compositeKey = `${selectedSec}_${dateKey}`;
     setDailyAttendance(attendanceStore?.[compositeKey] || {});
+    setHasUnsavedChanges(false);
   }, [selectedSec, dateKey, attendanceStore]);
 
   const monthDays = useMemo(() => {
-    return getDaysInMonth(activeYear, activeMonth, new Date(2026, 8, 27), currentSectionOverrides);
-  }, [activeYear, activeMonth, currentSectionOverrides]);
+    return getDaysInMonth(activeYear, activeMonth, selectedDate || new Date(), currentSectionOverrides);
+  }, [activeYear, activeMonth, selectedDate, currentSectionOverrides]);
 
   const studentStatsMap = useMemo(() => {
     const map: Record<string, AttendanceStats> = {};
@@ -128,7 +131,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   const handleMarkDaily = (studentId: string, status: "P" | "L" | "A") => {
     const updated = { ...dailyAttendance, [studentId]: status };
     setDailyAttendance(updated);
-    saveAttendance(selectedSec, dateKey, updated);
+    setHasUnsavedChanges(true);
   };
 
   const handleMarkAllDaily = (status: "P" | "L" | "A") => {
@@ -137,11 +140,12 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
       next[st.id] = status;
     });
     setDailyAttendance(next);
-    saveAttendance(selectedSec, dateKey, next);
+    setHasUnsavedChanges(true);
   };
 
   const handleSaveDailyAttendance = () => {
     saveAttendance(selectedSec, dateKey, dailyAttendance);
+    setHasUnsavedChanges(false);
     if (onSave) {
       onSave(Object.keys(dailyAttendance).length);
     }
@@ -360,14 +364,17 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
             </button>
             <button
               type="button"
+              disabled={!hasUnsavedChanges}
               onClick={handleSaveDailyAttendance}
               className={cn(
-                buttonClass({ variant: "primary", size: "sm" }),
-                "text-xs cursor-pointer shadow-md flex items-center justify-center gap-1.5 rounded-lg grow sm:grow-0"
+                "text-xs flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-1.5 font-semibold transition-all duration-200 grow sm:grow-0",
+                hasUnsavedChanges
+                  ? "bg-jade text-night-900 shadow-md font-bold hover:brightness-110 cursor-pointer active:scale-95 ring-1 ring-jade/50"
+                  : "bg-white/[0.05] text-ink-muted/70 border border-white/10 cursor-not-allowed opacity-65"
               )}
             >
-              <Check className="size-3.5 shrink-0" />
-              <span>Save attendance</span>
+              <Check className={cn("size-3.5 shrink-0", hasUnsavedChanges ? "text-night-900" : "text-ink-muted/70")} />
+              <span>{hasUnsavedChanges ? "Save attendance" : "Saved ✓"}</span>
             </button>
           </div>
         ) : (

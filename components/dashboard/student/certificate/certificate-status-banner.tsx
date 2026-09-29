@@ -1,18 +1,20 @@
 "use client";
 
 import React from "react";
-import { Award, Download, Lock } from "lucide-react";
+import { Award, Download, FileImage, Lock, Printer } from "lucide-react";
 import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 interface CertificateStatusBannerProps {
   isLocked: boolean;
-  onDownload: () => void;
+  onDownloadPng: () => void;
+  onDownloadPdf: () => void;
 }
 
 export function CertificateStatusBanner({
   isLocked,
-  onDownload,
+  onDownloadPng,
+  onDownloadPdf,
 }: CertificateStatusBannerProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-white/10 bg-white/[0.02]">
@@ -38,18 +40,18 @@ export function CertificateStatusBanner({
                   : "bg-jade/20 text-jade"
               )}
             >
-              {isLocked ? "LOCKED · GRADUATION PENDING" : "VERIFIED & ISSUED"}
+              {isLocked ? "LOCKED · CLEARANCE PENDING" : "VERIFIED & ISSUED"}
             </span>
           </h3>
           <p className="text-xs text-ink-faint">
             {isLocked
-              ? "Degree certificate unlocks upon completion of all semester credits & clearance"
-              : "Digitally signed and recorded in University Academic Registry"}
+              ? "Certificate unlocks when all semesters, total tuition payments, and passing marks are completed"
+              : "Digitally verified and recorded in Bidyapith Open University Registry"}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {isLocked ? (
           <button
             type="button"
@@ -63,17 +65,32 @@ export function CertificateStatusBanner({
             <span>Certificate Locked (Not Downloadable)</span>
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={onDownload}
-            className={cn(
-              buttonClass({ variant: "primary", size: "sm" }),
-              "text-xs px-4 flex items-center gap-1.5 shadow-md cursor-pointer bg-jade text-night-900 font-bold hover:bg-jade/90"
-            )}
-          >
-            <Download className="size-3.5" />
-            <span>Download Official PDF Certificate</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onDownloadPng}
+              className={cn(
+                buttonClass({ variant: "primary", size: "sm" }),
+                "text-xs px-3.5 sm:px-4 flex items-center gap-1.5 shadow-md cursor-pointer bg-jade text-night-900 font-bold hover:bg-jade/90"
+              )}
+              title="Download high-resolution certificate image in PNG format"
+            >
+              <FileImage className="size-3.5" />
+              <span>Download (.PNG)</span>
+            </button>
+            <button
+              type="button"
+              onClick={onDownloadPdf}
+              className={cn(
+                buttonClass({ variant: "ghost", size: "sm" }),
+                "text-xs px-3.5 sm:px-4 flex items-center gap-1.5 cursor-pointer hover:border-jade/40"
+              )}
+              title="Print official certificate document"
+            >
+              <Printer className="size-3.5 text-jade" />
+              <span>Print / PDF</span>
+            </button>
+          </>
         )}
       </div>
     </div>

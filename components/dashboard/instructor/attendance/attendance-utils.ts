@@ -37,7 +37,7 @@ export function formatDateDMY(d: Date): string {
 export function getDaysInMonth(
   year: number,
   month: number,
-  referenceDate: Date = new Date(2026, 8, 27),
+  referenceDate: Date = new Date(),
   scheduleOverrides: Record<string, { type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY"; reason?: string }> = {}
 ): MonthDayInfo[] {
   const daysCount = new Date(year, month + 1, 0).getDate();
