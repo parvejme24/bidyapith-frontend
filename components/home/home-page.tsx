@@ -8,6 +8,7 @@ import {
   IntakeBarChart,
   RegistrationAreaChart,
 } from "@/components/home/campus-charts";
+import { PortalPreview } from "@/components/home/portal-preview";
 import { NoticeTicker } from "@/components/home/notice-ticker";
 import { AdmissionCountdown } from "@/components/site/admission-countdown";
 import { Chip } from "@/components/site/chip";
@@ -308,6 +309,8 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <PortalPreview />
 
       <section className={sectionClass}>
         <div className={shellClass}>

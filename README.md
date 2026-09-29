@@ -150,17 +150,17 @@ bidyapith_frontend/
 
 <div align="center">
 
-| Public Landing & Hero Section | Admissions Application Workflow |
+| Student Academic Cockpit (CGPA & Dues) | Course Registration & Capacity Engine |
 |:---:|:---:|
-| ![Landing Page Preview](public/screenshots/preview-landing.png) | ![Admissions Page Preview](public/screenshots/preview-admissions.png) |
+| ![Student Dashboard](public/screenshots/student-dashboard.png) | ![Course Registration](public/screenshots/course-registration.png) |
 
-| Interactive Course Catalog | Faculty & Department Showcase |
+| Student Attendance & 75% Clearance | Instructor Grade Entry & Marksheet |
 |:---:|:---:|
-| ![Course Catalog Preview](public/screenshots/preview-courses.png) | ![Faculty Directory Preview](public/screenshots/preview-faculty.png) |
+| ![Attendance Record](public/screenshots/student-attendance.png) | ![Instructor Grade Entry](public/screenshots/instructor-grades.png) |
 
-| Institutional About & Overview | Secure Role-Based Authentication |
+| Instructor Monthly Attendance Matrix | Public Landing & Real-Time Campus Stats |
 |:---:|:---:|
-| ![About Page Preview](public/screenshots/preview-about.png) | ![Login Portal Preview](public/screenshots/preview-login.png) |
+| ![Instructor Attendance Matrix](public/screenshots/instructor-attendance.png) | ![Landing Page](public/screenshots/preview-landing.png) |
 
 </div>
 
