@@ -102,7 +102,20 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
   }, [selectedDate]);
 
-  const currentSection = sections.find((s) => s.id === selectedSec) || sections[0];
+  const defaultFallbackSection: InstructorSection = {
+    id: "S1",
+    code: "CSE-3101",
+    title: "Operating Systems Principles",
+    section: "1",
+    room: "AB2-401",
+    slots: ["Sun 09:00", "Tue 09:00"],
+    enrolled: roster.length,
+    capacity: 40,
+    avgAttendance: 92,
+    gradesSubmitted: false,
+  };
+
+  const currentSection = sections.find((s) => s.id === selectedSec) || sections[0] || defaultFallbackSection;
 
   const [dailyAttendance, setDailyAttendance] = useState<Record<string, "P" | "L" | "A">>(() => {
     const initialKey = `${sections[0]?.id || "S1"}_${dateKey}`;

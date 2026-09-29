@@ -102,7 +102,7 @@ export function DailyRosterView({
             )}
           </div>
           <p className="text-[0.72rem] text-ink-faint mt-0.5">
-            {currentSection.code} · Section {currentSection.section} · {currentSection.room} ·
+            {currentSection?.code || "Course"} · Section {currentSection?.section || "1"} · {currentSection?.room || "Classroom"} ·
             Click student to view month
           </p>
         </div>

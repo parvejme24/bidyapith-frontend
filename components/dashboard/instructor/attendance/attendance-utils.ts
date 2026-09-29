@@ -101,7 +101,7 @@ export function resolveStudentMark(
   }
 
   // Composite key format: {sectionId}_{dateKey} (e.g. S1_2026-09-27)
-  const compositeKey = `${section.id}_${dayInfo.dateKey}`;
+  const compositeKey = `${section?.id || "S1"}_${dayInfo.dateKey}`;
   const secRecords = attendanceStore?.[compositeKey];
   if (secRecords && secRecords[student.id]) {
     return secRecords[student.id]!;
