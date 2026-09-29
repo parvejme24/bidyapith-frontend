@@ -1,20 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import { format, parseISO } from "date-fns";
-import { enGB } from "date-fns/locale";
-import { EnrolmentDonut, IntakeBarChart } from "@/components/home/campus-charts";
-import { AdmissionCountdown } from "@/components/site/admission-countdown";
-import { Chip, type ChipTone } from "@/components/site/chip";
-import { FaqAccordion } from "@/components/site/faq-accordion";
-import { GlassCard } from "@/components/site/glass-card";
-import { Reveal, Rise } from "@/components/site/motion";
-import {
-  AdmissionStepSkeleton,
-  FeeRowSkeleton,
-  KeyDateSkeleton,
-} from "@/components/site/skeletons";
+import { AdmissionsHero } from "@/components/admissions/admissions-hero";
+import { AdmissionsStepsOverview } from "@/components/admissions/admissions-steps-overview";
+import { AdmissionsDatesPayment } from "@/components/admissions/admissions-dates-payment";
+import { AdmissionsFeesSection } from "@/components/admissions/admissions-fees-section";
+import { AdmissionsScholarshipsFaq } from "@/components/admissions/admissions-scholarships-faq";
 import {
   useAdmissionSteps,
   useEnrolment,
@@ -24,48 +14,8 @@ import {
   useMeta,
   useScholarships,
 } from "@/hooks/use-data";
-import { formatTaka } from "@/lib/format";
-import {
-  buttonClass,
-  displayClass,
-  leadClass,
-  numClass,
-  ruleClass,
-  sectionClass,
-  shellClass,
-  tableClass,
-  tableScrollClass,
-  tdClass,
-  thClass,
-  trClass,
-} from "@/lib/styles";
-import type { KeyDate } from "@/lib/types";
-import { cn } from "@/lib/utils";
-
-const FEE_LABELS = ["CSE", "EEE", "Civil", "BBA", "LL.B.", "Pharm"];
-
-const ELIGIBILITY = [
-  "You have passed HSC, A-Levels or an equivalent examination.",
-  "Your combined SSC and HSC GPA is 7.00 or above (7.50 for Engineering and Pharmacy).",
-  "You sat Mathematics and Physics at HSC, for engineering programmes.",
-];
-
-function dateStatus(status: KeyDate["status"]): { tone: ChipTone; label: string } {
-  if (status === "live") return { tone: "jade", label: "Open now" };
-  if (status === "done") return { tone: "default", label: "Done" };
-  return { tone: "gold", label: "Upcoming" };
-}
-
-function formatClosesAt(iso?: string) {
-  if (!iso) return "15 October 2026, 11:59 PM";
-  return format(parseISO(iso), "d MMMM yyyy, h:mm a", { locale: enGB }).replace(
-    /\b(am|pm)\b/i,
-    (match) => match.toUpperCase(),
-  );
-}
 
 export function AdmissionsPage() {
-  const [chartView, setChartView] = useState<"distribution" | "tuition">("distribution");
   const meta = useMeta();
   const steps = useAdmissionSteps();
   const keyDates = useKeyDates();
@@ -75,343 +25,30 @@ export function AdmissionsPage() {
   const enrolment = useEnrolment();
 
   const closesAt = meta.data?.admissionCloses ?? "2026-10-15T23:59:00";
-  const feeChart =
-    fees.data?.map((fee, index) => ({
-      label: FEE_LABELS[index] || fee.program.slice(0, 6),
-      value: fee.semester,
-    })) ?? [];
-
-  const totalSeats = (enrolment.data ?? []).reduce((acc, s) => acc + s.value, 0).toLocaleString();
 
   return (
     <main id="main">
-      <section className="pt-12 pb-6 md:pt-16">
-        <div className={cn(shellClass, "grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-center")}>
-          <div>
-            <Rise delay={1}>
-              <Chip tone="jade" live>
-                Fall 2026 applications open
-              </Chip>
-            </Rise>
-            <Rise delay={2}>
-              <h1 className={cn(displayClass.d1, "mt-5")}>Twenty minutes, one fee, three choices</h1>
-            </Rise>
-            <Rise delay={3}>
-              <p className={cn(leadClass, "mt-5")}>
-                Apply to up to three programmes on a single form. Save your progress and come back —
-                nothing is submitted until the ৳1,000 fee is paid and verified.
-              </p>
-            </Rise>
-            <Rise delay={4}>
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Link href="/register" className={buttonClass({ variant: "primary" })}>
-                  Start your application
-                </Link>
-                <a href="#fees" className={buttonClass({ variant: "ghost" })}>
-                  Jump to fees
-                </a>
-              </div>
-            </Rise>
-          </div>
+      {/* 1. Hero, Deadlines & Eligibility */}
+      <AdmissionsHero closesAt={closesAt} />
 
-          <Rise delay={3}>
-            <GlassCard strong className="p-7">
-              <p className="text-sm text-ink-muted mb-1">Applications close</p>
-              <p className="font-display text-2xl mb-5">{formatClosesAt(closesAt)}</p>
-              <AdmissionCountdown closesAt={closesAt} />
-              <hr className={cn(ruleClass, "my-6")} />
-              <h2 className="text-sm font-bold mb-3">You are eligible if</h2>
-              <ul className="space-y-2.5 text-sm text-ink-muted">
-                {ELIGIBILITY.map((item) => (
-                  <li key={item} className="flex gap-2.5">
-                    <span className="text-jade shrink-0 mt-0.5">✓</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </GlassCard>
-          </Rise>
-        </div>
-      </section>
+      {/* 2. 5-Step Admission Process */}
+      <AdmissionsStepsOverview steps={steps.data} isLoading={steps.isLoading} />
 
-      <section className={sectionClass}>
-        <div className={shellClass}>
-          <Reveal>
-            <div className="max-w-2xl mb-9">
-              <h2 className={displayClass.d2}>The five steps</h2>
-              <p className={cn(leadClass, "mt-4")}>
-                Each step updates in your applicant portal, so you always know what is waiting on
-                you and what is waiting on us.
-              </p>
-            </div>
-          </Reveal>
-          <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5 items-stretch">
-            {steps.isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <li key={i} className="h-full flex flex-col">
-                  <AdmissionStepSkeleton />
-                </li>
-              ))
-            ) : (
-              (steps.data ?? []).map((step, index) => (
-                <li key={step.title} className="h-full flex flex-col">
-                  <Reveal delay={index * 60} className="h-full flex flex-col flex-1">
-                    <GlassCard className="p-6 h-full min-h-[210px] flex flex-col justify-start flex-1">
-                      <span className={cn("font-display text-jade text-sm", numClass)}>
-                        Step {index + 1}
-                      </span>
-                      <h3 className="font-display text-[1.08rem] mt-2.5 leading-snug min-h-[2.8rem] flex items-center font-semibold">
-                        {step.title}
-                      </h3>
-                      <p className="text-sm text-ink-muted mt-2 leading-relaxed flex-1">
-                        {step.text}
-                      </p>
-                    </GlassCard>
-                  </Reveal>
-                </li>
-              ))
-            )}
-          </ol>
-        </div>
-      </section>
+      {/* 3. Key Dates & Payment Gateways */}
+      <AdmissionsDatesPayment keyDates={keyDates.data} isLoading={keyDates.isLoading} />
 
-      <section className={sectionClass}>
-        <div className={cn(shellClass, "grid gap-4 lg:grid-cols-2")}>
-          <Reveal>
-            <GlassCard className="p-7 h-full">
-              <h2 className={cn(displayClass.d3, "mb-5")}>Key dates for this cycle</h2>
-              <ul>
-                {keyDates.isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <KeyDateSkeleton key={i} />
-                  ))
-                ) : (
-                  (keyDates.data ?? []).map((item) => {
-                    const status = dateStatus(item.status);
-                    return (
-                      <li
-                        key={item.label}
-                        className="flex flex-wrap items-center justify-between gap-3 py-4 border-b border-white/6 last:border-0"
-                      >
-                        <span className="font-semibold">{item.label}</span>
-                        <span className="flex items-center gap-3">
-                          <span className={cn("text-sm text-ink-muted", numClass)}>{item.date}</span>
-                          <Chip tone={status.tone}>{status.label}</Chip>
-                        </span>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
-            </GlassCard>
-          </Reveal>
+      {/* 4. Tuition Fees & Intake Capacity */}
+      <AdmissionsFeesSection
+        fees={fees.data}
+        enrolmentData={enrolment.data}
+        isLoading={fees.isLoading}
+      />
 
-          <Reveal delay={90}>
-            <GlassCard className="p-7 h-full">
-              <h2 className={cn(displayClass.d3, "mb-2")}>Paying the fee</h2>
-              <p className="text-sm text-ink-muted mb-6">
-                Payments run through a licensed gateway. Your application only moves forward once
-                the gateway confirms the transaction back to us — never pay anyone in cash.
-              </p>
-              <ul className="grid sm:grid-cols-3 gap-3">
-                <li>
-                  <GlassCard quiet className="p-4 text-center">
-                    <p className="font-display text-lg">bKash</p>
-                    <p className="text-xs text-ink-faint mt-1">Mobile wallet</p>
-                  </GlassCard>
-                </li>
-                <li>
-                  <GlassCard quiet className="p-4 text-center">
-                    <p className="font-display text-lg">SSLCommerz</p>
-                    <p className="text-xs text-ink-faint mt-1">Cards &amp; bank</p>
-                  </GlassCard>
-                </li>
-                <li>
-                  <GlassCard quiet className="p-4 text-center">
-                    <p className="font-display text-lg">Stripe</p>
-                    <p className="text-xs text-ink-faint mt-1">International cards</p>
-                  </GlassCard>
-                </li>
-              </ul>
-              <GlassCard quiet className="p-4 mt-4">
-                <p className="text-sm">
-                  <span className="text-jade font-semibold">Refunds.</span> The application fee is
-                  not refundable. Tuition paid at seat confirmation is refunded in full if you
-                  withdraw before classes begin.
-                </p>
-              </GlassCard>
-            </GlassCard>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className={sectionClass} id="fees">
-        <div className={shellClass}>
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-5 mb-8">
-              <div className="max-w-xl">
-                <h2 className={displayClass.d2}>What it costs</h2>
-                <p className={cn(leadClass, "mt-4")}>
-                  Published in full, per programme. Tuition is billed by semester and can be split
-                  into two instalments.
-                </p>
-              </div>
-              <Chip tone="gold">No hidden charges</Chip>
-            </div>
-          </Reveal>
-
-          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] items-start">
-            <Reveal>
-              <GlassCard className="p-2 sm:p-4">
-                <div className={tableScrollClass}>
-                  <table className={tableClass}>
-                    <thead>
-                      <tr>
-                        <th className={thClass}>Programme</th>
-                        <th className={cn(thClass, "text-right")}>Admission</th>
-                        <th className={cn(thClass, "text-right")}>Per credit</th>
-                        <th className={cn(thClass, "text-right")}>Per semester</th>
-                        <th className={cn(thClass, "text-right")}>Full degree</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {fees.isLoading ? (
-                        Array.from({ length: 6 }).map((_, i) => (
-                          <FeeRowSkeleton key={i} />
-                        ))
-                      ) : (
-                        (fees.data ?? []).map((fee) => (
-                          <tr key={fee.program} className={trClass}>
-                            <td className={cn(tdClass, "font-semibold")}>{fee.program}</td>
-                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.admission)}</td>
-                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.perCredit)}</td>
-                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.semester)}</td>
-                            <td className={cn(tdClass, numClass, "text-right font-semibold")}>{formatTaka(fee.total)}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </GlassCard>
-            </Reveal>
-
-            <Reveal delay={90}>
-              <GlassCard className="p-6 h-full flex flex-col justify-between">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div>
-                    <h3 className="text-sm font-bold">
-                      {chartView === "distribution" ? "Seat allocation by school" : "Semester tuition compared"}
-                    </h3>
-                    <p className="text-xs text-ink-faint mt-0.5">
-                      {chartView === "distribution" ? "Intake capacity for Fall 2026" : "Bangladeshi taka, Fall 2026"}
-                    </p>
-                  </div>
-                  <div className="flex rounded-lg bg-white/5 p-0.5 border border-white/10">
-                    <button
-                      type="button"
-                      className={cn(
-                        "px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer",
-                        chartView === "distribution" ? "bg-jade/20 text-jade" : "text-ink-muted hover:text-ink"
-                      )}
-                      onClick={() => setChartView("distribution")}
-                    >
-                      Pie Chart
-                    </button>
-                    <button
-                      type="button"
-                      className={cn(
-                        "px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer",
-                        chartView === "tuition" ? "bg-marigold/20 text-marigold" : "text-ink-muted hover:text-ink"
-                      )}
-                      onClick={() => setChartView("tuition")}
-                    >
-                      Tuition
-                    </button>
-                  </div>
-                </div>
-
-                {chartView === "distribution" ? (
-                  enrolment.data ? (
-                    <div className="flex flex-col items-center justify-center py-2">
-                      <EnrolmentDonut
-                        data={enrolment.data}
-                        centerValue={totalSeats}
-                        centerLabel="total seats"
-                        className="max-w-[280px] h-[280px]"
-                      />
-                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full mt-4 pt-4 border-t border-white/8">
-                        {enrolment.data.map((slice) => (
-                          <li key={slice.label} className="flex items-center justify-between text-xs py-0.5">
-                            <span className="flex items-center gap-2 truncate">
-                              <span className="size-2 rounded-full shrink-0" style={{ background: slice.color }} />
-                              <span className="text-ink-muted truncate">{slice.label}</span>
-                            </span>
-                            <span className={cn(numClass, "font-semibold ml-2 text-ink")}>{slice.value}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <div className="h-[320px] animate-pulse rounded-2xl bg-white/5" />
-                  )
-                ) : feeChart.length ? (
-                  <div className="h-[320px] w-full flex items-center">
-                    <IntakeBarChart data={feeChart} color="#FFB454" unit=" BDT" />
-                  </div>
-                ) : (
-                  <div className="h-[320px] animate-pulse rounded-2xl bg-white/5" />
-                )}
-              </GlassCard>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      <section className={sectionClass}>
-        <div className={shellClass}>
-          <Reveal>
-            <div className="max-w-2xl mb-9">
-              <h2 className={displayClass.d2}>Help paying for it</h2>
-              <p className={cn(leadClass, "mt-4")}>
-                About one student in four holds a waiver or scholarship. You apply once and it is
-                reviewed every year.
-              </p>
-            </div>
-          </Reveal>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {(scholarships.data ?? []).map((item, index) => (
-              <Reveal key={item.name} delay={index * 60}>
-                <GlassCard lift className="p-6 h-full">
-                  <Chip tone={item.accent}>{item.cover}</Chip>
-                  <h3 className="font-display text-[1.15rem] mt-4">{item.name}</h3>
-                  <p className="text-sm text-ink-muted mt-2">{item.who}</p>
-                </GlassCard>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className={sectionClass}>
-        <div className={cn(shellClass, "grid gap-9 lg:grid-cols-[0.8fr_1.2fr]")}>
-          <Reveal>
-            <h2 className={displayClass.d2}>Questions we get every year</h2>
-            <p className={cn(leadClass, "mt-4")}>
-              Still stuck? The admission office answers the phone between 9 AM and 5 PM, Sunday to
-              Thursday.
-            </p>
-            <Link href="/contact" className={cn(buttonClass({ variant: "ghost" }), "mt-6")}>
-              Contact admissions
-            </Link>
-          </Reveal>
-          <Reveal delay={90}>
-            <GlassCard className="p-7">
-              {faqs.data ? <FaqAccordion faqs={faqs.data} /> : null}
-            </GlassCard>
-          </Reveal>
-        </div>
-      </section>
+      {/* 5. Scholarships, Waivers & Applicant FAQs */}
+      <AdmissionsScholarshipsFaq
+        scholarships={scholarships.data}
+        faqs={faqs.data}
+      />
     </main>
   );
 }
