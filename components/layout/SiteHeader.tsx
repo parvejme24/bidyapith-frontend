@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BrandLogo } from "@/components/site/brand-logo";
-import { GlassCard } from "@/components/site/glass-card";
 import {
   getStoredToken,
   getStoredUser,
@@ -13,20 +12,13 @@ import {
 import { NAV, isNavActive } from "@/lib/site";
 import { buttonClass, navLinkClass, shellClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
-import { ChevronDown, GraduationCap, LayoutDashboard, LogOut, Settings, ShieldCheck, User } from "lucide-react";
+import { SiteHeaderUserDropdown } from "./site-header-user-dropdown";
+import { SiteHeaderMobileDrawer } from "./site-header-mobile-drawer";
 
 function MenuIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M6 6l12 12M18 6L6 18" />
     </svg>
   );
 }
@@ -100,52 +92,27 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setUserDropdownOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
-    setOpen(false);
-    setUserDropdownOpen(false);
-  }, [pathname]);
-
-  const isDashboard =
-    pathname.startsWith("/student") ||
-    pathname.startsWith("/instructor") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/profile");
-
-  if (isDashboard) return null;
-
-  const userRole = (currentUser?.role || "STUDENT").toLowerCase();
+  const userRole = (currentUser?.role || "student").toLowerCase();
   const dashboardHref =
     userRole === "admin"
-      ? "/admin?role=admin"
+      ? "/admin"
       : userRole === "instructor"
-      ? "/instructor?role=instructor"
-      : "/student?role=student";
+      ? "/instructor"
+      : "/student";
 
-  const profileHref = `/profile?role=${userRole}`;
+  const profileHref =
+    userRole === "admin"
+      ? "/admin"
+      : userRole === "instructor"
+      ? "/instructor/profile"
+      : "/student/profile";
+
   const userName =
     currentUser?.name ||
     (currentUser?.firstName
       ? `${currentUser.firstName} ${currentUser.lastName || ""}`.trim()
       : userRole === "admin"
-      ? "Parvej Admin"
+      ? "Super Administrator"
       : userRole === "instructor"
       ? "Dr. Farhana Islam"
       : "Nusrat Jahan");
@@ -176,7 +143,7 @@ export function SiteHeader() {
           <nav
             className={cn(
               "relative flex items-center gap-4 rounded-2xl sm:rounded-full border border-white/13 bg-white/[0.055] p-[0.6rem] pl-[1.15rem] shadow-[0_24px_60px_-24px_rgba(4,8,30,0.85)] backdrop-blur-[20px] backdrop-saturate-150 transition-[background,box-shadow] duration-300",
-              stuck && "bg-[rgba(12,16,46,0.72)] shadow-[0_18px_44px_-22px_rgba(0,0,0,0.95)]",
+              stuck && "bg-[rgba(12,16,46,0.72)] shadow-[0_18px_44px_-22px_rgba(0,0,0,0.95)]"
             )}
             aria-label="Primary"
           >
@@ -202,83 +169,20 @@ export function SiteHeader() {
 
             <div className="ml-auto flex items-center gap-2 lg:ml-2">
               {hasToken ? (
-                /* User Avatar with Dropdown */
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setUserDropdownOpen((prev) => !prev)}
-                    className={cn(
-                      "relative size-9 rounded-full p-0.5 border transition-all cursor-pointer overflow-hidden",
-                      userDropdownOpen
-                        ? "border-jade ring-2 ring-jade/30 scale-105"
-                        : "border-white/20 hover:border-jade/60 hover:scale-105"
-                    )}
-                    aria-label="Open user menu"
-                    aria-expanded={userDropdownOpen}
-                  >
-                    <img
-                      src={avatarUrl}
-                      alt={userName}
-                      className="size-full rounded-full object-cover"
-                    />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 rounded-xl sm:rounded-2xl border border-white/15 bg-night-900/95 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 z-50">
-                      {/* User Info Header */}
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 mb-1.5">
-                        <img
-                          src={avatarUrl}
-                          alt={userName}
-                          className="size-10 rounded-full object-cover border border-white/20 shadow-sm shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-ink truncate">{userName}</p>
-                          <p className="text-[0.72rem] text-ink-faint truncate">{userEmail}</p>
-                          <span className="inline-block text-[0.62rem] font-bold px-2 py-0.5 rounded-full bg-jade/15 text-jade mt-1">
-                            {userRole.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Navigation Links */}
-                      <div className="space-y-1">
-                        <Link
-                          href={dashboardHref}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-ink hover:bg-jade/10 hover:text-jade transition-colors"
-                          onClick={() => setUserDropdownOpen(false)}
-                        >
-                          <LayoutDashboard className="size-4 text-jade" />
-                          <span>Open Dashboard</span>
-                        </Link>
-
-                        <Link
-                          href={profileHref}
-                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-ink hover:bg-white/[0.07] transition-colors"
-                          onClick={() => setUserDropdownOpen(false)}
-                        >
-                          <User className="size-4 text-ink-muted" />
-                          <span>My Profile</span>
-                        </Link>
-                      </div>
-
-                      {/* Divider & Sign Out */}
-                      <div className="my-1.5 border-t border-white/10 pt-1.5">
-                        <button
-                          type="button"
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose hover:bg-rose/10 transition-colors text-left cursor-pointer"
-                        >
-                          <LogOut className="size-4" />
-                          <span>Sign out</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <SiteHeaderUserDropdown
+                  isOpen={userDropdownOpen}
+                  onToggle={() => setUserDropdownOpen((prev) => !prev)}
+                  onClose={() => setUserDropdownOpen(false)}
+                  avatarUrl={avatarUrl}
+                  userName={userName}
+                  userEmail={userEmail}
+                  userRole={userRole}
+                  dashboardHref={dashboardHref}
+                  profileHref={profileHref}
+                  onLogout={handleLogout}
+                  dropdownRef={dropdownRef}
+                />
               ) : (
-                /* Unauthenticated View: Sign In & Apply Buttons */
                 <>
                   <Link href="/login" className={cn(buttonClass({ variant: "ghost", size: "sm" }), "hidden sm:inline-flex")}>
                     Sign in
@@ -304,104 +208,17 @@ export function SiteHeader() {
       </div>
 
       {/* Mobile Drawer Menu */}
-      <div
-        className={cn(
-          "fixed inset-0 z-[80] grid place-items-start justify-center bg-[rgba(6,9,28,0.72)] p-[1.1rem] backdrop-blur-[14px] transition-opacity duration-300",
-          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
-        )}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menu"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) setOpen(false);
-        }}
-      >
-        <GlassCard
-          className={cn(
-            shellClass,
-            "w-full p-[1.1rem] transition-transform duration-[350ms] ease-[cubic-bezier(0.2,0.8,0.3,1)]",
-            open ? "translate-y-0" : "-translate-y-3.5",
-          )}
-        >
-          <div className="mb-3 flex items-center justify-between px-1">
-            <span className="font-display text-lg">Menu</span>
-            <button
-              type="button"
-              className="grid size-10 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/5"
-              aria-label="Close menu"
-              onClick={() => setOpen(false)}
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          {/* User badge on mobile if logged in */}
-          {hasToken && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/8 mb-3">
-              <img
-                src={avatarUrl}
-                alt={userName}
-                className="size-10 rounded-full object-cover border border-white/20 shadow-sm shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink truncate">{userName}</p>
-                <p className="text-xs text-ink-faint truncate">{userEmail}</p>
-              </div>
-              <Link
-                href={dashboardHref}
-                className="px-3 py-1.5 rounded-lg bg-jade text-ink-dark text-xs font-semibold shrink-0"
-              >
-                Dashboard
-              </Link>
-            </div>
-          )}
-
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "block rounded-xl px-4 py-[0.85rem] font-semibold text-ink-muted transition-colors hover:bg-white/[0.07] hover:text-ink",
-                isNavActive(item.href, pathname) && "bg-jade/15 text-jade border border-jade/25 font-bold shadow-sm",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <Link
-            href="/contact"
-            className="block rounded-xl px-4 py-[0.85rem] font-semibold text-ink-muted transition-colors hover:bg-white/[0.07] hover:text-ink"
-          >
-            Contact
-          </Link>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {hasToken ? (
-              <>
-                <Link href={dashboardHref} className={buttonClass({ variant: "primary" })}>
-                  Dashboard
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className={buttonClass({ variant: "ghost" })}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className={buttonClass({ variant: "ghost" })}>
-                  Sign in
-                </Link>
-                <Link href="/register" className={buttonClass({ variant: "primary" })}>
-                  Apply now
-                </Link>
-              </>
-            )}
-          </div>
-        </GlassCard>
-      </div>
+      <SiteHeaderMobileDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        hasToken={hasToken}
+        avatarUrl={avatarUrl}
+        userName={userName}
+        userEmail={userEmail}
+        dashboardHref={dashboardHref}
+        pathname={pathname}
+        onLogout={handleLogout}
+      />
     </>
   );
 }
