@@ -99,24 +99,23 @@ export function resolveStudentMark(
     return "UNMARKED";
   }
 
-  // Deterministic hash simulation for unrecorded past days
-  const hash =
-    student.id.charCodeAt(student.id.length - 1) * 31 +
-    dayInfo.dayNumber * 17 +
-    dayInfo.weekdayIndex * 7;
+  // Deterministic realistic hash simulation for past days per month & year
+  const m = dayInfo.date.getMonth(); // 0..11
+  const y = dayInfo.date.getFullYear();
+  const studentSeed = student.id.split("").reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 0);
+  const hash = Math.abs(studentSeed ^ (m * 269) ^ (y * 811) ^ (dayInfo.dayNumber * 37) ^ (dayInfo.weekdayIndex * 13));
 
-  if (student.att >= 85) {
-    if (hash % 10 === 0) return "A";
-    if (hash % 7 === 0) return "L";
+  // Base profile per student: realistic monthly variance
+  const monthlyVariance = ((studentSeed + m * 17) % 21) - 10; // -10% to +10% variance per month
+  const targetMonthlyRate = Math.min(100, Math.max(35, student.att + monthlyVariance));
+
+  const roll = hash % 100;
+  if (roll < targetMonthlyRate - 12) {
     return "P";
-  } else if (student.att >= 70) {
-    if (hash % 4 === 0) return "A";
-    if (hash % 5 === 0) return "L";
-    return "P";
+  } else if (roll < targetMonthlyRate) {
+    return "L";
   } else {
-    if (hash % 2 === 0) return "A";
-    if (hash % 3 === 0) return "L";
-    return "P";
+    return "A";
   }
 }
 
@@ -140,7 +139,7 @@ export function calculateStudentAttendanceStats(
 
   const held = p + l + a;
   const effectivePresent = p + l * 0.5;
-  const ratePct = held > 0 ? Math.round((effectivePresent / held) * 100) : student.att;
+  const ratePct = held > 0 ? Math.round((effectivePresent / held) * 100) : 0;
 
   return { held, p, l, a, effectivePresent, ratePct };
 }

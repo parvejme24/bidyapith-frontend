@@ -126,7 +126,7 @@ export function StudentMonthlyModalBody({
         </div>
 
         {/* Real-time Monthly Attendance Metrics Grid */}
-        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-white/8">
+        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-white/8">
           <div className="p-2 sm:p-2.5 rounded bg-white/[0.03] border border-white/10 flex flex-col justify-between">
             <span className="text-[0.62rem] sm:text-[0.68rem] text-ink-faint font-semibold uppercase tracking-wider truncate">
               Classes Held
@@ -175,19 +175,40 @@ export function StudentMonthlyModalBody({
             </p>
           </div>
 
-          <div className="col-span-2 min-[420px]:col-span-1 sm:col-span-1 p-2 sm:p-2.5 rounded bg-white/[0.04] border border-white/15 flex flex-col justify-between">
+          <div className="p-2 sm:p-2.5 rounded bg-white/[0.04] border border-white/15 flex flex-col justify-between">
             <span className="text-[0.62rem] sm:text-[0.68rem] text-ink-faint font-semibold uppercase tracking-wider truncate">
-              Real Rate %
+              Month Rate %
             </span>
             <p
               className={cn(
                 "font-mono font-bold text-sm sm:text-base mt-0.5 flex items-baseline gap-1",
-                isGoodStanding ? "text-jade" : "text-rose"
+                modalStats.held > 0
+                  ? isGoodStanding
+                    ? "text-jade"
+                    : "text-rose"
+                  : "text-ink-faint"
               )}
             >
-              <span>{modalStats.ratePct}%</span>
+              <span>{modalStats.held > 0 ? `${modalStats.ratePct}%` : "—"}</span>
               <span className="text-[0.6rem] sm:text-[0.65rem] text-ink-faint font-normal font-sans hidden min-[420px]:inline">
-                overall
+                this month
+              </span>
+            </p>
+          </div>
+
+          <div className="p-2 sm:p-2.5 rounded bg-jade/[0.08] border border-jade/20 flex flex-col justify-between">
+            <span className="text-[0.62rem] sm:text-[0.68rem] text-jade font-semibold uppercase tracking-wider truncate">
+              Total Rate %
+            </span>
+            <p
+              className={cn(
+                "font-mono font-bold text-sm sm:text-base mt-0.5 flex items-baseline gap-1",
+                student.att >= 75 ? "text-jade" : "text-rose"
+              )}
+            >
+              <span>{student.att}%</span>
+              <span className="text-[0.6rem] sm:text-[0.65rem] text-ink-faint font-normal font-sans hidden min-[420px]:inline">
+                all months
               </span>
             </p>
           </div>

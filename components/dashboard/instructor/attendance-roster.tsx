@@ -150,7 +150,8 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
       "Total Present (P)",
       "Total Late (L)",
       "Total Absent (A)",
-      "Real Attendance Rate (%)",
+      "Month Attendance Rate (%)",
+      "Cumulative Total Rate (%)",
     ];
 
     const rows = roster.map((st) => {
@@ -168,7 +169,8 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         stats.p,
         stats.l,
         stats.a,
-        `${stats.ratePct}%`,
+        stats.held > 0 ? `${stats.ratePct}%` : "N/A",
+        `${st.att}%`,
       ];
     });
 

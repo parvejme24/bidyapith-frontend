@@ -328,7 +328,7 @@ export function MonthlyMatrixView({
         onScroll={handleTopScroll}
         className="overflow-x-auto overflow-y-hidden h-2 rounded bg-white/[0.04] border border-white/8 mx-1 scrollbar-thin scrollbar-thumb-jade/40 scrollbar-track-transparent cursor-ew-resize"
       >
-        <div style={{ width: `${170 + monthDays.length * 36 + 170}px`, height: "1px" }} />
+        <div style={{ width: `${170 + monthDays.length * 36 + 230}px`, height: "1px" }} />
       </div>
 
       {/* Draggable Matrix Table */}
@@ -347,7 +347,7 @@ export function MonthlyMatrixView({
           onMouseLeave={handleMouseLeave}
           className="overflow-x-auto max-w-full scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-white/5 touch-pan-x"
         >
-          <table className="w-full text-left text-xs border-collapse min-w-[780px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[850px]">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.04]">
                 <th className="sticky left-0 z-20 bg-night-900/98 backdrop-blur-md px-3 py-2.5 min-w-[150px] sm:min-w-[200px] text-ink-faint font-semibold uppercase tracking-wider text-[0.65rem] sm:text-[0.68rem] border-r border-white/10 select-text">
@@ -386,8 +386,11 @@ export function MonthlyMatrixView({
                 <th className="px-2 py-2 text-center min-w-[34px] text-rose font-bold bg-night-900/90 text-[0.7rem]">
                   A
                 </th>
+                <th className="px-2 py-2 text-right min-w-[65px] font-bold text-jade bg-night-900/90 border-l border-white/10 text-[0.7rem]">
+                  Month %
+                </th>
                 <th className="sticky right-0 z-20 bg-night-900/98 backdrop-blur-md px-2.5 py-2 text-right min-w-[70px] font-bold text-ink border-l border-white/10 text-[0.7rem]">
-                  Rate %
+                  Total %
                 </th>
               </tr>
             </thead>
@@ -439,9 +442,45 @@ export function MonthlyMatrixView({
                         return (
                           <td
                             key={day.dayNumber}
-                            className="px-1 py-1.5 text-center text-ink-faint text-[0.68rem] border-r border-white/5"
+                            className={cn("px-0.5 py-1 text-center border-r border-white/5", day.isToday && "bg-jade/5")}
                           >
-                            -
+                            <DropdownMenu>
+                              <DropdownMenuTrigger
+                                className="size-5 sm:size-6 rounded font-bold text-[0.68rem] text-ink-muted/60 border border-dashed border-white/20 hover:border-jade/60 hover:text-jade hover:bg-jade/10 flex items-center justify-center mx-auto transition-all cursor-pointer"
+                                title={`Click to add attendance mark for ${day.dateKey} (${day.weekday})`}
+                              >
+                                -
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="center"
+                                className="w-[130px] rounded-lg border border-white/15 bg-night-900/98 p-1 shadow-2xl backdrop-blur-xl z-50 text-xs"
+                              >
+                                <div className="px-2 py-1 text-[0.68rem] text-ink-faint border-b border-white/10 mb-1">
+                                  {day.dayNumber} {MONTH_NAMES[activeMonth]} ({day.weekday})
+                                </div>
+                                <DropdownMenuItem
+                                  onClick={() => onToggleDayMark(st.id, day.dateKey, "P")}
+                                  className="flex items-center gap-2 px-2 py-1 text-jade hover:bg-jade/15 rounded cursor-pointer font-bold text-xs"
+                                >
+                                  <CheckCircle2 className="size-3.5" />
+                                  <span>Present (P)</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => onToggleDayMark(st.id, day.dateKey, "L")}
+                                  className="flex items-center gap-2 px-2 py-1 text-marigold hover:bg-marigold/15 rounded cursor-pointer font-bold text-xs"
+                                >
+                                  <Clock className="size-3.5" />
+                                  <span>Late (L)</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => onToggleDayMark(st.id, day.dateKey, "A")}
+                                  className="flex items-center gap-2 px-2 py-1 text-rose hover:bg-rose/15 rounded cursor-pointer font-bold text-xs"
+                                >
+                                  <XCircle className="size-3.5" />
+                                  <span>Absent (A)</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </td>
                         );
                       }
@@ -506,16 +545,31 @@ export function MonthlyMatrixView({
                     <td className="px-2 py-1.5 text-center text-rose font-bold text-[0.7rem]">
                       {stats ? stats.a : 0}
                     </td>
+                    <td className="px-2 py-1.5 text-right font-bold border-l border-white/10 text-[0.7rem]">
+                      <span
+                        className={cn(
+                          "px-1.5 py-0.5 rounded text-[0.68rem] font-bold inline-block",
+                          stats && stats.held > 0
+                            ? stats.ratePct >= 75
+                              ? "text-jade bg-jade/10 border border-jade/25"
+                              : "text-rose bg-rose/10 border border-rose/25"
+                            : "text-ink-faint"
+                        )}
+                      >
+                        {stats && stats.held > 0 ? `${stats.ratePct}%` : "—"}
+                      </span>
+                    </td>
                     <td className="sticky right-0 z-10 bg-night-900/98 group-hover/row:bg-night-800/98 backdrop-blur-md px-2.5 py-1.5 text-right border-l border-white/10">
                       <span
                         className={cn(
-                          "px-1.5 py-0.2 rounded text-[0.68rem] sm:text-xs font-bold inline-block",
-                          stats && stats.ratePct >= 75
+                          "px-1.5 py-0.5 rounded text-[0.68rem] sm:text-xs font-bold inline-block",
+                          st.att >= 75
                             ? "bg-jade/15 text-jade border border-jade/30"
                             : "bg-rose/15 text-rose border border-rose/30"
                         )}
+                        title={`Cumulative all-months semester rate: ${st.att}%`}
                       >
-                        {stats ? stats.ratePct : 0}%
+                        {st.att}%
                       </span>
                     </td>
                   </tr>
