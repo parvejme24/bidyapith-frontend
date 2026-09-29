@@ -136,6 +136,14 @@ export function SiteHeader() {
     router.push("/login");
   };
 
+  const isDashboard =
+    pathname.startsWith("/student") ||
+    pathname.startsWith("/instructor") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/profile");
+
+  if (isDashboard) return null;
+
   return (
     <>
       <div className={cn("sticky top-0 z-[60] pt-[0.9rem] transition-[padding] duration-300", stuck && "pt-[0.45rem]")}>
