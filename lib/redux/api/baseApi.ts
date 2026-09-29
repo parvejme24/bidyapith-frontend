@@ -23,7 +23,9 @@ export const baseApi = createApi({
       // Fallback to localStorage
       if (!token && typeof window !== "undefined") {
         try {
-          token = localStorage.getItem("bidyapith_access_token");
+          token =
+            localStorage.getItem("bidyapith_token") ||
+            localStorage.getItem("bidyapith_access_token");
         } catch {}
       }
 

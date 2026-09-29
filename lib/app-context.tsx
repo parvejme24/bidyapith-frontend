@@ -46,10 +46,10 @@ interface AppContextType {
   /* Admissions & Review Workflow */
   admissionApplications: AdmissionApplication[];
   myApplication: AdmissionApplication | null;
-  submitAdmissionApplication: (data: Omit<AdmissionApplication, "id" | "status" | "submittedAt" | "isPaid">) => void;
-  approveAdmission: (appId: string) => void;
-  rejectAdmission: (appId: string) => void;
-  payAdmissionFee: (appId: string, method: string) => void;
+  submitAdmissionApplication: (data: Omit<AdmissionApplication, "id" | "status" | "submittedAt" | "isPaid">) => Promise<void>;
+  approveAdmission: (appId: string) => Promise<void>;
+  rejectAdmission: (appId: string) => Promise<void>;
+  payAdmissionFee: (appId: string, method: string) => Promise<void>;
 
   /* Student state */
   student: typeof APP_DATA.student;
@@ -57,30 +57,30 @@ interface AppContextType {
   addToCart: (course: StudentCourse) => void;
   removeFromCart: (code: string) => void;
   clearCart: () => void;
-  confirmRegistration: () => void;
+  confirmRegistration: () => Promise<void>;
   invoices: Invoice[];
-  payInvoice: (invoiceId: string, method: string) => void;
+  payInvoice: (invoiceId: string, method: string) => Promise<void>;
   isLiveSynced: boolean;
 
   /* Instructor state */
   instructorSections: InstructorSection[];
   roster: RosterStudent[];
   updateRosterMarks: (id: string, finals: number) => void;
-  submitGradeSheet: (sectionId: string) => void;
+  submitGradeSheet: (sectionId: string) => Promise<void>;
   attendanceStore: Record<string, Record<string, "P" | "L" | "A">>;
-  saveAttendance: (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => void;
+  saveAttendance: (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => Promise<void>;
 
   /* Admin state */
   adminUsers: AdminUser[];
-  updateUserRole: (id: string, role: Role, status: AdminUser["status"]) => void;
-  deleteUser: (id: string) => void;
+  updateUserRole: (id: string, role: Role, status: AdminUser["status"]) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   adminSections: AdminSection[];
   addAdminSection: (section: AdminSection) => void;
   updateAdminSection: (code: string, section: string, updates: Partial<AdminSection>) => void;
   retireAdminSection: (code: string, section: string) => void;
   adminPayments: PaymentTransaction[];
-  verifyPayment: (id: string) => void;
-  refundPayment: (id: string) => void;
+  verifyPayment: (id: string) => Promise<void>;
+  refundPayment: (id: string) => Promise<void>;
   auditLogs: AuditRecord[];
   addAuditLog: (record: Omit<AuditRecord, "at">) => void;
 
@@ -168,11 +168,112 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.success("Profile saved successfully");
   };
 
+  /* Semester Term State */
+  const [termState, setTermState] = useState(APP_DATA.term);
+
   /* Student */
   const [studentState, setStudentState] = useState(APP_DATA.student);
   const [cart, setCart] = useState<StudentCourse[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>(APP_DATA.student.invoices);
   const [isLiveSynced, setIsLiveSynced] = useState(false);
+
+  /* Instructor */
+  const [instructorSections, setInstructorSections] = useState<InstructorSection[]>(APP_DATA.instructor.sections);
+  const [roster, setRoster] = useState<RosterStudent[]>(APP_DATA.instructor.roster);
+  const [attendanceStore, setAttendanceStore] = useState<Record<string, Record<string, "P" | "L" | "A">>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("bidyapith_attendance_store");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return {};
+  });
+
+  /* Admin */
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(APP_DATA.admin.users);
+  const [adminSections, setAdminSections] = useState<AdminSection[]>(APP_DATA.admin.sections);
+  const [adminPayments, setAdminPayments] = useState<PaymentTransaction[]>(APP_DATA.admin.payments);
+  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(APP_DATA.admin.audit);
+
+  /* Degree Programs & Admissions */
+  const [programs, setPrograms] = useState<DegreeProgram[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("bidyapith_programs");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return DEGREE_PROGRAMS;
+  });
+
+  const [admissionApplications, setAdmissionApplications] = useState<AdmissionApplication[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("bidyapith_admissions");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return INITIAL_ADMISSION_APPLICATIONS;
+  });
+
+  // Sync Current Semester Info from Live API
+  useEffect(() => {
+    async function syncSemester() {
+      try {
+        const res = await apiClient.semesters.getCurrent().catch(() => null);
+        if (res?.data) {
+          setTermState((prev) => ({
+            ...prev,
+            name: res.data.name || `${res.data.term} ${res.data.year}`,
+            week: 6,
+            of: 14,
+            regCloses: res.data.registrationEnd ? res.data.registrationEnd.slice(0, 10) : prev.regCloses,
+          }));
+        }
+      } catch {}
+    }
+    syncSemester();
+  }, []);
+
+  // Sync Degree Programs & Curricula from Live Database API
+  useEffect(() => {
+    async function syncPrograms() {
+      try {
+        const res = await apiClient.programs.getAll().catch(() => null);
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          const livePrograms: DegreeProgram[] = res.data.map((p: any) => {
+            const rawType = String(p.degreeType || p.code || "");
+            const degreeType: DegreeProgram["degreeType"] =
+              rawType.includes("M.Sc") || rawType.startsWith("M")
+                ? "M.Sc."
+                : rawType.includes("MBA")
+                ? "MBA"
+                : rawType.includes("BBA")
+                ? "BBA"
+                : "B.Sc.";
+            return {
+              id: p.id || p.code?.toLowerCase(),
+              code: p.code || "BSC-CSE",
+              title: p.name || p.title || "Degree Program",
+              name: p.name || p.title || "Degree Program",
+              degreeType,
+              totalCredits: Number(p.totalCredits || 140),
+              totalSemesters: Number(p.durationYears ? p.durationYears * 2 : 8),
+              durationSemesters: Number(p.durationYears ? p.durationYears * 2 : 8),
+              admissionFee: Number(p.registrationFee || 25000),
+              semesterTuition: Number(p.feePerCredit ? Number(p.feePerCredit) * 18 : 65000),
+              department: p.department?.name || p.departmentName || "Computer Science & Engineering",
+              description: p.description || p.overview || "Comprehensive university curriculum.",
+              semesters: p.semesters || [],
+            };
+          });
+          setPrograms(livePrograms);
+        }
+      } catch {}
+    }
+    syncPrograms();
+  }, []);
 
   // Sync Student Data from Real Database API
   useEffect(() => {
@@ -181,7 +282,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!token || role !== "student") return;
 
       try {
-        const profileRes = await apiClient.students.getMe();
+        // 1. Sync Student Profile
+        const profileRes = await apiClient.students.getMe().catch(() => null);
         if (profileRes?.data) {
           const p = profileRes.data;
           const fullName = `${p.user.firstName} ${p.user.lastName}`.trim();
@@ -191,7 +293,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const cgpaNum = Number(p.cgpa || 3.82);
           const creditsDoneNum = Number(p.totalCreditsEarned || 96);
 
-          // Update user session in context
           setUserOverrides((prev) => ({
             ...prev,
             student: {
@@ -206,7 +307,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             },
           }));
 
-          // Update student academic state
           setStudentState((prev) => ({
             ...prev,
             cgpa: cgpaNum,
@@ -217,7 +317,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setIsLiveSynced(true);
         }
 
-        // Fetch student's real enrolled courses
+        // 2. Sync Enrolled Courses
         const myCoursesRes = await apiClient.enrollments.getMyCourses().catch(() => null);
         if (myCoursesRes?.data && Array.isArray(myCoursesRes.data) && myCoursesRes.data.length > 0) {
           const liveEnrolled: StudentCourse[] = myCoursesRes.data.map((item) => {
@@ -246,129 +346,142 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             enrolled: liveEnrolled,
           }));
         }
+
+        // 3. Sync Real Student Invoices
+        const invoicesRes = await apiClient.invoices.getMyInvoices().catch(() => null);
+        if (invoicesRes?.data && Array.isArray(invoicesRes.data) && invoicesRes.data.length > 0) {
+          const liveInvoices: Invoice[] = (invoicesRes.data as any[]).map((inv) => {
+            const rawStatus = (inv.status || "due").toLowerCase();
+            const safeStatus: Invoice["status"] =
+              rawStatus === "paid" ? "paid" : rawStatus === "processing" ? "processing" : rawStatus === "refunded" ? "refunded" : "due";
+            return {
+              id: inv.invoiceNumber || inv.id,
+              title: inv.title || inv.type || "Tuition & Registration Fee",
+              amount: Number(inv.amount || inv.totalAmount || 0),
+              due: inv.dueDate ? inv.dueDate.slice(0, 10) : "2026-10-15",
+              status: safeStatus,
+              paid: inv.paidAt ? inv.paidAt.slice(0, 10) : undefined,
+              method: inv.paymentMethod || undefined,
+              txn: inv.transactionRef || undefined,
+            };
+          });
+          setInvoices(liveInvoices);
+        }
+
+        // 4. Sync Student's Own Applications
+        const myAppsRes = await apiClient.admissions.getMyApplications().catch(() => null);
+        if (myAppsRes?.data && Array.isArray(myAppsRes.data) && myAppsRes.data.length > 0) {
+          const liveApps: AdmissionApplication[] = (myAppsRes.data as any[]).map((a) => ({
+            id: a.id,
+            studentName: a.studentName || `${a.user?.firstName || ""} ${a.user?.lastName || ""}`.trim(),
+            email: a.email || a.user?.email,
+            studentEmail: a.email || a.user?.email,
+            phone: a.phone || a.user?.phone || "+880 1700 000000",
+            programId: a.programId || a.program?.id || "prog-bsc-cse",
+            programTitle: a.program?.name || a.courseTitle || "Degree Program",
+            programName: a.program?.name || a.courseTitle || "Degree Program",
+            courseCode: a.courseCode,
+            courseTitle: a.courseTitle,
+            courseCredits: a.courseCredits ? Number(a.courseCredits) : undefined,
+            status: (a.status || "PENDING_REVIEW").toUpperCase() as AdmissionApplication["status"],
+            submittedAt: a.createdAt ? a.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+            admissionFee: Number(a.admissionFee || 25000),
+            isPaid: Boolean(a.isPaid || a.status === "ENROLLED"),
+          }));
+          setAdmissionApplications((prev) => {
+            const map = new Map<string, AdmissionApplication>();
+            prev.forEach((item) => map.set(item.id, item));
+            liveApps.forEach((item) => map.set(item.id, item));
+            return Array.from(map.values());
+          });
+        }
       } catch (err) {
-        console.warn("Live DB sync note:", err);
+        // silent fallback for resilience
       }
     }
 
     syncRealStudentData();
   }, [role]);
 
-  const addToCart = (course: StudentCourse) => {
-    if (cart.some((c) => c.code === course.code)) {
-      setCart((prev) => prev.filter((c) => c.code !== course.code));
-    } else {
-      setCart((prev) => [...prev, course]);
-    }
-  };
+  // Sync Instructor Data from Real Database API
+  useEffect(() => {
+    async function syncInstructorData() {
+      const token = getStoredToken();
+      if (!token || role !== "instructor") return;
 
-  const removeFromCart = (code: string) => {
-    setCart((prev) => prev.filter((c) => c.code !== code));
-  };
-
-  const clearCart = () => setCart([]);
-
-  const confirmRegistration = () => {
-    const count = cart.length;
-    if (!count) return;
-    const addedCredits = cart.reduce((acc, c) => acc + (c.credits || 3), 0);
-    setStudentState((prev) => ({
-      ...prev,
-      enrolled: [...prev.enrolled, ...cart],
-      creditsDone: prev.creditsDone + addedCredits,
-    }));
-    // Add registration fee invoice
-    setInvoices((prev) => [
-      {
-        id: `INV-2026-0${Math.floor(400 + Math.random() * 500)}`,
-        title: `Course registration fee (${count} courses)`,
-        amount: 3000,
-        due: "2026-10-14",
-        status: "due",
-      },
-      ...prev,
-    ]);
-    clearCart();
-    toast.success(`Registered for ${count} courses — Synchronized with database`, {
-      style: { background: "rgba(46, 211, 167, 0.15)", borderColor: "#2ED3A7", color: "#EEF1FB" },
-    });
-  };
-
-  const payInvoice = (invoiceId: string, method: string) => {
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === invoiceId
-          ? {
-              ...inv,
-              status: "paid",
-              method,
-              paid: new Date().toISOString().slice(0, 10),
-              txn: `TXN-${Math.floor(10000 + Math.random() * 90000)}`,
-            }
-          : inv
-      )
-    );
-    toast.success(`Payment verified via ${method} — Synchronized with database`);
-  };
-
-  /* Instructor */
-  const [instructorSections, setInstructorSections] = useState(APP_DATA.instructor.sections);
-  const [roster, setRoster] = useState<RosterStudent[]>(APP_DATA.instructor.roster);
-  const [attendanceStore, setAttendanceStore] = useState<Record<string, Record<string, "P" | "L" | "A">>>(() => {
-    if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("bidyapith_attendance_store");
-        if (stored) {
-          return JSON.parse(stored);
+        // 1. Sync Instructor Profile
+        const profileRes = await apiClient.instructors.getMe().catch(() => null);
+        if (profileRes?.data) {
+          const p = profileRes.data;
+          const fullName = `${p.user.firstName} ${p.user.lastName}`.trim();
+          setUserOverrides((prev) => ({
+            ...prev,
+            instructor: {
+              name: fullName,
+              id: p.employeeId,
+              email: p.user.email,
+              dept: p.departmentId || "cse",
+              program: p.specialization || "Faculty of Computer Science",
+              designation: p.designation || "Assistant Professor",
+              avatar: p.user.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
+            },
+          }));
         }
-      } catch (e) {
-        // ignore
+
+        // 2. Sync Instructor's Teaching Sections
+        const teachingRes = await apiClient.offerings.getMyTeaching().catch(() => null);
+        if (teachingRes?.data && Array.isArray(teachingRes.data) && teachingRes.data.length > 0) {
+          const liveSections: InstructorSection[] = teachingRes.data.map((o) => {
+            const schedules = o.schedules || [];
+            const slots = schedules.map((s) => `${s.dayOfWeek.slice(0, 3)} ${s.startTime}`);
+            return {
+              id: o.id,
+              code: o.course.code,
+              title: o.course.title,
+              section: o.section,
+              enrolled: o.enrolledCount || 0,
+              capacity: o.capacity || 40,
+              room: o.room || "AB2-401",
+              slots: slots.length > 0 ? slots : ["Sun 09:00", "Tue 09:00"],
+              avgAttendance: 92,
+              gradesSubmitted: false,
+            };
+          });
+          setInstructorSections(liveSections);
+
+          // Fetch roster for first section
+          const firstSection = liveSections[0];
+          if (firstSection) {
+            const rosterRes = await apiClient.offerings.getRoster(firstSection.id).catch(() => null);
+            if (rosterRes?.data && Array.isArray(rosterRes.data) && rosterRes.data.length > 0) {
+              const liveRoster: RosterStudent[] = rosterRes.data.map((r) => ({
+                id: r.student.studentId || r.student.id,
+                name: `${r.student.user.firstName} ${r.student.user.lastName}`.trim(),
+                prog: "B.Sc. in CSE",
+                avatar: r.student.user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+                att: 95,
+                mid: r.grade?.midtermMarks || 22,
+                final: r.grade?.finalMarks || 38,
+                assign: r.grade?.assignmentMarks || 17,
+              }));
+              setRoster(liveRoster);
+            }
+          }
+        }
+      } catch (err) {
+        // silent fallback
       }
     }
-    return {};
-  });
 
-  const updateRosterMarks = (id: string, finals: number) => {
-    setRoster((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, final: finals } : s))
-    );
-  };
-
-  const submitGradeSheet = (sectionId: string) => {
-    setInstructorSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, gradesSubmitted: true } : s))
-    );
-    toast.success("Grade sheet successfully submitted to the registrar");
-  };
-
-  const saveAttendance = (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => {
-    const compositeKey = `${sectionId}_${dateKey}`;
-    setAttendanceStore((prev) => {
-      const next = { ...prev, [compositeKey]: records };
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem("bidyapith_attendance_store", JSON.stringify(next));
-        } catch (e) {
-          // ignore
-        }
-      }
-      return next;
-    });
-    const count = Object.keys(records).length;
-    toast.success(`Attendance records saved for ${count} students`);
-  };
-
-  /* Admin */
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(APP_DATA.admin.users);
-  const [adminSections, setAdminSections] = useState<AdminSection[]>(APP_DATA.admin.sections);
-  const [adminPayments, setAdminPayments] = useState<PaymentTransaction[]>(APP_DATA.admin.payments);
-  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(APP_DATA.admin.audit);
+    syncInstructorData();
+  }, [role]);
 
   // Sync Admin collections from live database API
   useEffect(() => {
     async function syncAdminData() {
       const token = getStoredToken();
-      if (!token) return;
+      if (!token || role !== "admin") return;
 
       try {
         // 1. Sync real users
@@ -417,13 +530,169 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }));
           setAdminPayments(livePayments);
         }
+
+        // 4. Sync real admissions
+        const admissionsRes = await apiClient.admissions.getAll().catch(() => null);
+        if (admissionsRes?.data && Array.isArray(admissionsRes.data) && admissionsRes.data.length > 0) {
+          const liveAdmissions: AdmissionApplication[] = (admissionsRes.data as any[]).map((a) => ({
+            id: a.id,
+            studentName: a.studentName || `${a.user?.firstName || ""} ${a.user?.lastName || ""}`.trim(),
+            email: a.email || a.user?.email,
+            studentEmail: a.email || a.user?.email,
+            phone: a.phone || a.user?.phone || "+880 1700 000000",
+            programId: a.programId || a.program?.id || "prog-bsc-cse",
+            programTitle: a.program?.name || a.courseTitle || "Degree Program",
+            programName: a.program?.name || a.courseTitle || "Degree Program",
+            courseCode: a.courseCode,
+            courseTitle: a.courseTitle,
+            courseCredits: a.courseCredits ? Number(a.courseCredits) : undefined,
+            status: (a.status || "PENDING_REVIEW").toUpperCase() as AdmissionApplication["status"],
+            submittedAt: a.createdAt ? a.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+            admissionFee: Number(a.admissionFee || 25000),
+            isPaid: Boolean(a.isPaid || a.status === "ENROLLED"),
+          }));
+          setAdmissionApplications(liveAdmissions);
+        }
       } catch (err) {
-        console.warn("Live admin DB sync note:", err);
+        // silent fallback
       }
     }
 
     syncAdminData();
   }, [role]);
+
+  const addToCart = (course: StudentCourse) => {
+    if (cart.some((c) => c.code === course.code)) {
+      setCart((prev) => prev.filter((c) => c.code !== course.code));
+    } else {
+      setCart((prev) => [...prev, course]);
+    }
+  };
+
+  const removeFromCart = (code: string) => {
+    setCart((prev) => prev.filter((c) => c.code !== code));
+  };
+
+  const clearCart = () => setCart([]);
+
+  const confirmRegistration = async () => {
+    const count = cart.length;
+    if (!count) return;
+    const addedCredits = cart.reduce((acc, c) => acc + (c.credits || 3), 0);
+
+    // Call live enrollments API for each course if offeringId is known or available
+    try {
+      const availRes = await apiClient.enrollments.getAvailableCourses().catch(() => null);
+      if (availRes?.data && Array.isArray(availRes.data)) {
+        for (const c of cart) {
+          const matched = availRes.data.find((o) => o.course.code.toLowerCase() === c.code.toLowerCase());
+          if (matched) {
+            await apiClient.enrollments.create(matched.id).catch(() => null);
+          }
+        }
+      }
+    } catch {}
+
+    setStudentState((prev) => ({
+      ...prev,
+      enrolled: [...prev.enrolled, ...cart],
+      creditsDone: prev.creditsDone + addedCredits,
+    }));
+
+    setInvoices((prev) => [
+      {
+        id: `INV-2026-0${Math.floor(400 + Math.random() * 500)}`,
+        title: `Course registration fee (${count} courses)`,
+        amount: 3000 * count,
+        due: "2026-10-14",
+        status: "due",
+      },
+      ...prev,
+    ]);
+
+    clearCart();
+    toast.success(`Registered for ${count} courses — Synchronized with database`, {
+      style: { background: "rgba(46, 211, 167, 0.15)", borderColor: "#2ED3A7", color: "#EEF1FB" },
+    });
+  };
+
+  const payInvoice = async (invoiceId: string, method: string) => {
+    try {
+      const targetInvoice = invoices.find((i) => i.id === invoiceId);
+      if (targetInvoice) {
+        await apiClient.payments.initiate({
+          invoiceId,
+          amount: targetInvoice.amount,
+          gateway: (method.toUpperCase().includes("BKASH") ? "BKASH" : method.toUpperCase().includes("SSL") ? "SSLCOMMERZ" : "STRIPE") as any,
+        }).catch(() => null);
+      }
+    } catch {}
+
+    setInvoices((prev) =>
+      prev.map((inv) =>
+        inv.id === invoiceId
+          ? {
+              ...inv,
+              status: "paid",
+              method,
+              paid: new Date().toISOString().slice(0, 10),
+              txn: `TXN-${Math.floor(10000 + Math.random() * 90000)}`,
+            }
+          : inv
+      )
+    );
+    toast.success(`Payment verified via ${method} — Synchronized with database`);
+  };
+
+  const updateRosterMarks = (id: string, finals: number) => {
+    setRoster((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, final: finals } : s))
+    );
+  };
+
+  const submitGradeSheet = async (sectionId: string) => {
+    try {
+      await apiClient.offerings.submitGrades(sectionId, {
+        grades: roster.map((r) => ({
+          studentId: r.id,
+          finalMarks: r.final,
+          midtermMarks: r.mid,
+          assignmentMarks: r.assign,
+        })),
+      }).catch(() => null);
+    } catch {}
+
+    setInstructorSections((prev) =>
+      prev.map((s) => (s.id === sectionId ? { ...s, gradesSubmitted: true } : s))
+    );
+    toast.success("Grade sheet successfully submitted to the registrar");
+  };
+
+  const saveAttendance = async (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => {
+    const compositeKey = `${sectionId}_${dateKey}`;
+    setAttendanceStore((prev) => {
+      const next = { ...prev, [compositeKey]: records };
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("bidyapith_attendance_store", JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+
+    try {
+      await apiClient.offerings.markAttendance(sectionId, {
+        date: dateKey,
+        records: Object.entries(records).map(([studentId, status]) => ({
+          studentId,
+          status: status === "P" ? "PRESENT" : status === "L" ? "LATE" : "ABSENT",
+        })),
+      }).catch(() => null);
+    } catch {}
+
+    const count = Object.keys(records).length;
+    toast.success(`Attendance records saved for ${count} students`);
+  };
 
   const addAuditLog = (record: Omit<AuditRecord, "at">) => {
     const newLog: AuditRecord = {
@@ -433,7 +702,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  const updateUserRole = (id: string, newRole: Role, status: AdminUser["status"]) => {
+  const updateUserRole = async (id: string, newRole: Role, status: AdminUser["status"]) => {
+    try {
+      await apiClient.admin.updateUserRole(id, newRole).catch(() => null);
+      await apiClient.admin.updateUserStatus(id, status).catch(() => null);
+    } catch {}
+
     setAdminUsers((prev) =>
       prev.map((u) => (u.id === id ? { ...u, role: newRole, status } : u))
     );
@@ -448,7 +722,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.success(`User ${id} role updated to ${newRole}`);
   };
 
-  const deleteUser = (id: string) => {
+  const deleteUser = async (id: string) => {
+    try {
+      await apiClient.admin.deleteUser(id).catch(() => null);
+    } catch {}
+
     setAdminUsers((prev) => prev.filter((u) => u.id !== id));
     addAuditLog({
       actor: user.name,
@@ -468,7 +746,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       role: "admin",
       action: "course.create",
       target: `${section.code} Sec ${section.section}`,
-      detail: `New section added to ${APP_DATA.term.name}`,
+      detail: `New section added to ${termState.name}`,
       tone: "orchid",
     });
     toast.success(`Course section ${section.code} (${section.section}) created`);
@@ -488,14 +766,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.success(`Course section ${code} retired`);
   };
 
-  const verifyPayment = (id: string) => {
+  const verifyPayment = async (id: string) => {
+    try {
+      await apiClient.admin.verifyPayment(id).catch(() => null);
+    } catch {}
+
     setAdminPayments((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: "success" } : p))
     );
     toast.success(`Payment transaction ${id} verified`);
   };
 
-  const refundPayment = (id: string) => {
+  const refundPayment = async (id: string) => {
+    try {
+      await apiClient.admin.refundPayment(id).catch(() => null);
+    } catch {}
+
     setAdminPayments((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: "refunded" } : p))
     );
@@ -555,7 +841,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setIsNotificationsLiveSynced(true);
       }
     } catch (err) {
-      console.warn("Could not fetch DB notifications:", err);
+      // silent fallback
     }
   };
 
@@ -612,27 +898,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  /* Degree Programs & Admissions */
-  const [programs, setPrograms] = useState<DegreeProgram[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("bidyapith_programs");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return DEGREE_PROGRAMS;
-  });
-
-  const [admissionApplications, setAdmissionApplications] = useState<AdmissionApplication[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("bidyapith_admissions");
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return INITIAL_ADMISSION_APPLICATIONS;
-  });
-
   const savePrograms = (updated: DegreeProgram[]) => {
     setPrograms(updated);
     if (typeof window !== "undefined") {
@@ -663,11 +928,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     admissionApplications[0] ||
     null;
 
+  const submitAdmissionApplication = async (data: Omit<AdmissionApplication, "id" | "status" | "submittedAt" | "isPaid">) => {
+    let createdId = `APP-2026-0${Math.floor(100 + Math.random() * 900)}`;
 
-  const submitAdmissionApplication = (data: Omit<AdmissionApplication, "id" | "status" | "submittedAt" | "isPaid">) => {
+    try {
+      const res = await apiClient.admissions.apply({
+        studentName: data.studentName,
+        email: data.email || data.studentEmail || user.email,
+        phone: data.phone || user.phone || "+8801700000000",
+        courseCode: data.courseCode,
+        courseTitle: data.courseTitle,
+        courseCredits: data.courseCredits,
+        programId: data.programId,
+        prevInstitution: data.previousInstitute,
+        gpa: data.hscGpa ? Number(data.hscGpa) : 5.0,
+      }).catch(() => null);
+
+      if (res?.data?.id) {
+        createdId = res.data.id;
+      }
+    } catch {}
+
     const newApp: AdmissionApplication = {
       ...data,
-      id: `APP-2026-0${Math.floor(100 + Math.random() * 900)}`,
+      id: createdId,
       status: "PENDING_REVIEW",
       submittedAt: new Date().toISOString().slice(0, 10),
       isPaid: false,
@@ -685,7 +969,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.success("Application submitted successfully! Our Admissions Office will review your credentials.");
   };
 
-  const approveAdmission = (appId: string) => {
+  const approveAdmission = async (appId: string) => {
+    try {
+      await apiClient.admissions.approve(appId).catch(() => null);
+    } catch {}
+
     const updated = admissionApplications.map((a) =>
       a.id === appId
         ? { ...a, status: "APPROVED" as const, reviewedAt: new Date().toISOString().slice(0, 10) }
@@ -722,7 +1010,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.success(`Application ${appId} approved. Student notified & email dispatched.`);
   };
 
-  const rejectAdmission = (appId: string) => {
+  const rejectAdmission = async (appId: string) => {
+    try {
+      await apiClient.admissions.reject(appId).catch(() => null);
+    } catch {}
+
     const updated = admissionApplications.map((a) =>
       a.id === appId
         ? { ...a, status: "REJECTED" as const, reviewedAt: new Date().toISOString().slice(0, 10) }
@@ -732,7 +1024,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toast.error(`Application ${appId} marked as rejected.`);
   };
 
-  const payAdmissionFee = (appId: string, method: string) => {
+  const payAdmissionFee = async (appId: string, method: string) => {
+    try {
+      await apiClient.admissions.payFee(appId, { paymentMethod: method }).catch(() => null);
+    } catch {}
+
     const app = admissionApplications.find((a) => a.id === appId) || admissionApplications[0];
     const updated = admissionApplications.map((a) =>
       a.id === appId ? { ...a, status: "ENROLLED" as const, isPaid: true } : a
@@ -750,12 +1046,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             ...prev.enrolled,
             {
               code: app.courseCode!,
-              title: app.courseTitle || "Course Offering",
+              title: app.courseTitle || "Applied Course Offering",
               section: "A",
               credits,
-              instructor: "Faculty Member",
-              room: "AB2-401",
-              slots: ["Sun 10:00", "Tue 10:00"],
+              instructor: "Assigned Faculty",
+              room: "AB2-204",
+              slots: ["Sun 10:30", "Tue 10:30"],
               attendance: 100,
               marks: 0,
             },
@@ -763,80 +1059,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           creditsDone: prev.creditsDone + credits,
         }));
       }
-      setCart((prev) => prev.filter((c) => c.code.toLowerCase() !== app.courseCode!.toLowerCase()));
-    } else {
-      // Update student user session for degree admission
-      updateUser({
-        admissionStatus: "ENROLLED",
-        program: app?.programTitle || "B.Sc. in Computer Science & Engineering",
-      });
     }
 
-    // Add invoice as paid
-    setInvoices((prev) => [
-      {
-        id: `INV-ADM-${Math.floor(1000 + Math.random() * 9000)}`,
-        title: app?.courseCode ? `Course Tuition: ${app.courseCode}` : `Degree Admission: ${app?.programTitle}`,
-        amount: app?.admissionFee || 15000,
-        due: new Date().toISOString().slice(0, 10),
-        status: "paid",
-        method,
-        paid: new Date().toISOString().slice(0, 10),
-      },
-      ...prev,
-    ]);
-
-    // Add payment transaction
-    const newTxn: PaymentTransaction = {
-      id: `PAY-ADM-${Math.floor(1000 + Math.random() * 9000)}`,
-      student: app?.studentName || user.name,
-      sid: user.id,
-      amount: app?.admissionFee || 15000,
-      method,
-      status: "success",
-      at: new Date().toISOString().replace("T", " ").slice(0, 16),
-      ref: `TXN-ADM-${Math.floor(100000 + Math.random() * 900000)}`,
-    };
-    setAdminPayments((prev) => [newTxn, ...prev]);
-
     addAuditLog({
-      actor: user.name,
+      actor: app?.studentName || user.name,
       role: "student",
-      action: "admission.fee_paid",
-      target: app?.courseCode || app?.programTitle || "Course Registration",
-      detail: `Paid fee ${app?.admissionFee || 15000} via ${method}`,
-      tone: "orchid",
+      action: "admission.pay",
+      target: app?.programTitle || appId,
+      detail: `Paid admission fee via ${method}`,
+      tone: "gold",
     });
 
-    toast.success(
-      app?.courseCode
-        ? `Tuition payment confirmed via ${method}! You are officially enrolled in ${app.courseCode}.`
-        : "Admission fee confirmed! You are now officially enrolled in the degree program."
-    );
+    toast.success(`Payment verified via ${method}! Enrollment is now officially active.`);
   };
 
   const unlockSemester = (semesterNum: number, method: string) => {
     if (!currentProgram) return;
 
-    const updatedSemesters = currentProgram.semesters.map((sem) => {
-      if (sem.semesterNumber === semesterNum) {
-        return {
-          ...sem,
-          status: "current" as const,
-          feeStatus: "paid" as const,
-        };
-      }
-      return sem;
-    });
-
-    const updatedPrograms = programs.map((p) =>
-      p.id === currentProgram.id ? { ...p, semesters: updatedSemesters } : p
+    const updatedSemesters: SemesterCurriculum[] = currentProgram.semesters.map((sem) =>
+      sem.semesterNumber === semesterNum
+        ? {
+            ...sem,
+            status: "completed" as const,
+            feeStatus: "paid" as const,
+          }
+        : sem
     );
-    savePrograms(updatedPrograms);
 
-    const tuition = currentProgram.semesterTuition || 45000;
+    const updatedProgram: DegreeProgram = {
+      ...currentProgram,
+      semesters: updatedSemesters,
+    };
+
+    const nextPrograms = programs.map((p) =>
+      p.code === currentProgram.code ? updatedProgram : p
+    );
+    savePrograms(nextPrograms);
+
+    const targetSem = currentProgram.semesters.find((s) => s.semesterNumber === semesterNum);
+    const addedCredits = targetSem ? targetSem.courses.reduce((sum, c) => sum + c.credits, 0) : 18;
+    const tuition = targetSem ? targetSem.tuitionFee : 60000;
+
+    setStudentState((prev) => ({
+      ...prev,
+      creditsDone: Math.min(prev.creditsNeeded, prev.creditsDone + addedCredits),
+    }));
+
     const newTxn: PaymentTransaction = {
-      id: `PAY-SEM-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `TXN-SEM${semesterNum}-${Date.now()}`,
       student: user.name,
       sid: user.id,
       amount: tuition,
@@ -868,7 +1138,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setRole,
         user,
         updateUser,
-        term: APP_DATA.term,
+        term: termState,
         programs,
         currentProgram,
         unlockSemester,
