@@ -39,7 +39,7 @@ const DASHBOARD_NAV: Record<Role, NavItem[]> = {
     { group: "Teaching", href: "", label: "", icon: "" },
     { href: "/instructor", label: "Overview", icon: "home" },
     { href: "/instructor/attendance", label: "Take attendance", icon: "check" },
-    { href: "/instructor/grades", label: "Grade entry", icon: "award", tag: "3" },
+    { href: "/instructor/grades", label: "Grade entry", icon: "award" },
     { group: "Account", href: "", label: "", icon: "" },
     { href: "/profile", label: "Profile", icon: "user" },
   ],
