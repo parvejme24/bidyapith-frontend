@@ -16,14 +16,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -46,7 +38,6 @@ import {
   Search,
   Send,
   Unlock,
-  UserPlus,
   Users,
   Wand2,
 } from "lucide-react";
@@ -70,27 +61,8 @@ interface GradeSheetProps {
 export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
   const [selectedSec, setSelectedSec] = useState<string>(sections[0]?.id || "S1");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [addStudentModalOpen, setAddStudentModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // New Student Form State
-  const [newStudentId, setNewStudentId] = useState("");
-  const [newStudentName, setNewStudentName] = useState("");
-  const [newStudentEmail, setNewStudentEmail] = useState("");
-
-  // Section-wise custom students store
-  const [sectionStudents, setSectionStudents] = useState<Record<string, SectionStudent[]>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("bidyapith_section_students");
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // ignore
-      }
-    }
-    return {};
-  });
 
   // Load persistent marks store from localStorage
   const [marksStore, setMarksStore] = useState<Record<string, Record<string, GradeRecord>>>(() => {
@@ -112,19 +84,13 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
 
   // Active students in current section
   const currentStudents: SectionStudent[] = useMemo(() => {
-    const customList = sectionStudents[selectedSec];
-    if (customList && customList.length > 0) {
-      return customList;
-    }
-    // Default from roster
     return roster.map((st, idx) => ({
       ...st,
       sectionId: selectedSec,
-      // Distribute variations for different sections
       mid: st.mid ?? (20 + (idx % 10)),
       assign: st.assign ?? (15 + (idx % 5)),
     }));
-  }, [selectedSec, sectionStudents, roster]);
+  }, [selectedSec, roster]);
 
   // Sync marks when section changes or store updates
   useEffect(() => {
@@ -187,55 +153,6 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
     toast.success(`Grade sheet officially submitted to Registrar for ${currentSection?.code}`);
   };
 
-  // Add a new student to this section roster
-  const handleAddStudent = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newStudentId.trim() || !newStudentName.trim()) {
-      toast.error("Please enter valid Student ID and Name");
-      return;
-    }
-
-    const newStudent: SectionStudent = {
-      id: newStudentId.trim(),
-      name: newStudentName.trim(),
-      prog: "B.Sc. in CSE",
-      mid: 25,
-      assign: 18,
-      final: null,
-      att: 100,
-      sectionId: selectedSec,
-    };
-
-    const updatedList = [newStudent, ...currentStudents];
-    const updatedSectionsMap = { ...sectionStudents, [selectedSec]: updatedList };
-    setSectionStudents(updatedSectionsMap);
-
-    // Also initialize marks
-    const updatedMarks = {
-      ...currentMarks,
-      [newStudent.id]: { mid: 25, assign: 18, final: null },
-    };
-    setCurrentMarks(updatedMarks);
-
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem("bidyapith_section_students", JSON.stringify(updatedSectionsMap));
-        localStorage.setItem(
-          "bidyapith_grade_marks_store",
-          JSON.stringify({ ...marksStore, [selectedSec]: updatedMarks })
-        );
-      } catch {
-        // ignore
-      }
-    }
-
-    toast.success(`Added ${newStudent.name} (${newStudent.id}) to ${currentSection?.code} Section ${currentSection?.section}`);
-    setNewStudentId("");
-    setNewStudentName("");
-    setNewStudentEmail("");
-    setAddStudentModalOpen(false);
-  };
-
   // Autofill full assignments
   const handleAutofillAssignments = () => {
     const updated: Record<string, GradeRecord> = {};
@@ -295,7 +212,7 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
                 </div>
                 {sections.map((s) => {
                   const isSelected = selectedSec === s.id;
-                  const count = sectionStudents[s.id]?.length || s.enrolled || roster.length;
+                  const count = s.enrolled || roster.length;
                   return (
                     <DropdownMenuItem
                       key={s.id}
@@ -348,19 +265,6 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
         <div className="flex items-center gap-2">
           {!isLocked ? (
             <>
-              <button
-                type="button"
-                onClick={() => setAddStudentModalOpen(true)}
-                className={cn(
-                  buttonClass({ variant: "ghost", size: "sm" }),
-                  "text-xs flex items-center gap-1.5 cursor-pointer hover:border-jade/40"
-                )}
-                title="Add student to this section"
-              >
-                <UserPlus className="size-3.5 text-jade" />
-                <span className="hidden sm:inline">Add Student</span>
-              </button>
-
               <button
                 type="button"
                 onClick={handleAutofillAssignments}
@@ -552,80 +456,6 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
           </span>
         </div>
       </GlassCard>
-
-      {/* Add Student Modal */}
-      <Dialog open={addStudentModalOpen} onOpenChange={setAddStudentModalOpen}>
-        <DialogContent className="border border-white/20 bg-night-900/98 p-6 rounded-2xl shadow-2xl backdrop-blur-2xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display text-lg font-bold text-ink flex items-center gap-2">
-              <UserPlus className="size-5 text-jade" />
-              Add Student to {currentSection?.code} (Sec {currentSection?.section})
-            </DialogTitle>
-            <DialogDescription className="text-xs text-ink-muted">
-              Manually enroll or append a registered student to this class section mark sheet.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleAddStudent} className="space-y-4 mt-2">
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1">
-                Student ID *
-              </label>
-              <input
-                type="text"
-                required
-                value={newStudentId}
-                onChange={(e) => setNewStudentId(e.target.value)}
-                placeholder="e.g. 2024-BSC-CSE-1035"
-                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3.5 py-2 text-xs font-mono text-ink outline-none focus:border-jade"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1">
-                Student Full Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={newStudentName}
-                onChange={(e) => setNewStudentName(e.target.value)}
-                placeholder="e.g. Shakil Ahmed"
-                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3.5 py-2 text-xs text-ink outline-none focus:border-jade"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-ink-muted mb-1">
-                University Email (Optional)
-              </label>
-              <input
-                type="email"
-                value={newStudentEmail}
-                onChange={(e) => setNewStudentEmail(e.target.value)}
-                placeholder="student@bidyapith.edu"
-                className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3.5 py-2 text-xs text-ink outline-none focus:border-jade"
-              />
-            </div>
-
-            <DialogFooter className="mt-5 flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setAddStudentModalOpen(false)}
-                className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs cursor-pointer")}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={cn(buttonClass({ variant: "primary", size: "sm" }), "text-xs cursor-pointer shadow-md")}
-              >
-                Add to Roster
-              </button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Submission Confirmation Dialog */}
       <AlertDialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
