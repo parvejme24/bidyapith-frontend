@@ -16,6 +16,8 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  LayoutDashboard,
+  Users,
 } from "lucide-react";
 
 interface ShowcaseItem {
@@ -75,6 +77,38 @@ const SHOWCASE_ITEMS: ShowcaseItem[] = [
       "Automated 75% examination eligibility clearance status",
       "Daily lecture audit log with Present/Late/Absent breakdown",
       "One-click PDF & printable attendance slip export",
+    ],
+    link: "/login",
+  },
+  {
+    id: "admin-overview",
+    title: "University Overview & Analytics",
+    category: "Administration",
+    icon: LayoutDashboard,
+    description:
+      "Executive control dashboard featuring live admission application trends, school-by-school enrollment distributions, monthly tuition fee collections, and real-time audit logs.",
+    image: "/screenshots/admin-overview.png",
+    highlights: [
+      "Real-time institutional metrics & financial totals (৳132,000+)",
+      "Interactive admission application growth curve",
+      "Enrollment distribution donut charts by academic school",
+      "Live administrative audit trail and action queue",
+    ],
+    link: "/login",
+  },
+  {
+    id: "admin-faculty",
+    title: "Faculty & Staff Governance",
+    category: "Administration",
+    icon: Users,
+    description:
+      "Centralized directory for managing faculty rosters, active departmental teaching assignments, student load ratios, and account security credentials.",
+    image: "/screenshots/admin-faculty.png",
+    highlights: [
+      "Active teaching load and student-to-faculty metrics",
+      "Departmental filtering across 10 academic faculties",
+      "One-click login OTP generation and course assignments",
+      "New faculty onboarding wizard and credential dispatch",
     ],
     link: "/login",
   },

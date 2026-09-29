@@ -150,6 +150,10 @@ bidyapith_frontend/
 
 <div align="center">
 
+| University Administration & Analytics Cockpit | Faculty Directory & Staff Governance |
+|:---:|:---:|
+| ![Admin Overview](public/screenshots/admin-overview.png) | ![Faculty Directory](public/screenshots/admin-faculty.png) |
+
 | Student Academic Cockpit (CGPA & Dues) | Course Registration & Capacity Engine |
 |:---:|:---:|
 | ![Student Dashboard](public/screenshots/student-dashboard.png) | ![Course Registration](public/screenshots/course-registration.png) |
