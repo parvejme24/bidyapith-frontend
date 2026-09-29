@@ -5,13 +5,7 @@ import { GlassCard } from "@/components/site/glass-card";
 import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { AlertCircle, Calendar, Check, ChevronDown, Eye, Sparkles, Sun, Umbrella, X } from "lucide-react";
+import { AlertCircle, Check, Eye, Sparkles, Sun, Umbrella, X } from "lucide-react";
 import type { AttendanceStats, DayOverrideInfo } from "./attendance-types";
 import { formatDateDMY } from "./attendance-utils";
 
@@ -114,42 +108,55 @@ export function DailyRosterView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          {onSetDaySchedule && !isHoliday && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-white/15 bg-white/[0.04] text-[0.7rem] font-sans font-semibold text-ink-muted hover:text-ink hover:border-jade/40 transition-colors cursor-pointer">
-                <span>Schedule Options</span>
-                <ChevronDown className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[230px] rounded-lg border border-white/15 bg-night-900/98 p-1 shadow-2xl backdrop-blur-xl z-50 text-xs">
-                {isWeekend && !isSpecialClass && (
-                  <DropdownMenuItem
-                    onClick={() => onSetDaySchedule(dateKey, "SPECIAL_CLASS", "Makeup Lecture")}
-                    className="flex items-center gap-2 px-2.5 py-1.5 text-jade font-semibold cursor-pointer"
-                  >
-                    <Sparkles className="size-3.5" />
-                    <span>Arrange Makeup Class</span>
-                  </DropdownMenuItem>
+          {/* Direct Schedule Option Toggle Buttons */}
+          {onSetDaySchedule && (
+            <div className="flex items-center gap-1.5 font-sans">
+              {/* Holiday Toggle Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isHoliday) {
+                    onSetDaySchedule(dateKey, "REGULAR");
+                  } else {
+                    onSetDaySchedule(dateKey, "HOLIDAY", "Declared Holiday / No Class");
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[0.72rem] font-semibold transition-all cursor-pointer border shadow-2xs",
+                  isHoliday
+                    ? "bg-marigold/20 text-marigold border-marigold/50 hover:bg-marigold/30 ring-1 ring-marigold/30"
+                    : "bg-white/[0.04] text-ink-muted border-white/15 hover:text-marigold hover:border-marigold/40 hover:bg-marigold/10"
                 )}
-                {!isHoliday && (
-                  <DropdownMenuItem
-                    onClick={() => onSetDaySchedule(dateKey, "HOLIDAY", "Govt/University Holiday")}
-                    className="flex items-center gap-2 px-2.5 py-1.5 text-marigold font-semibold cursor-pointer"
-                  >
-                    <Umbrella className="size-3.5" />
-                    <span>Declare Holiday / No Class</span>
-                  </DropdownMenuItem>
-                )}
-                {(isSpecialClass || isHoliday) && (
-                  <DropdownMenuItem
-                    onClick={() => onSetDaySchedule(dateKey, "REGULAR")}
-                    className="flex items-center gap-2 px-2.5 py-1.5 text-ink-muted cursor-pointer"
-                  >
-                    <Calendar className="size-3.5" />
-                    <span>Reset to Regular</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                title={isHoliday ? "Click to remove holiday and resume session" : "Click to declare today as a holiday / no class"}
+              >
+                <Umbrella className={cn("size-3.5 shrink-0", isHoliday ? "text-marigold" : "text-ink-muted")} />
+                <span>{isHoliday ? "Remove Today Holiday" : "Declare Today Holiday"}</span>
+              </button>
+
+              {/* Weekend Makeup Class Toggle Button */}
+              {isWeekend && !isHoliday && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isSpecialClass) {
+                      onSetDaySchedule(dateKey, "REGULAR");
+                    } else {
+                      onSetDaySchedule(dateKey, "SPECIAL_CLASS", "Weekend Makeup Lecture");
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[0.72rem] font-semibold transition-all cursor-pointer border shadow-2xs",
+                    isSpecialClass
+                      ? "bg-jade/20 text-jade border-jade/50 hover:bg-jade/30 ring-1 ring-jade/30"
+                      : "bg-white/[0.04] text-ink-muted border-white/15 hover:text-jade hover:border-jade/40 hover:bg-jade/10"
+                  )}
+                  title={isSpecialClass ? "Click to cancel special makeup class" : "Click to arrange a makeup lecture on this weekend"}
+                >
+                  <Sparkles className={cn("size-3.5 shrink-0", isSpecialClass ? "text-jade" : "text-ink-muted")} />
+                  <span>{isSpecialClass ? "Cancel Makeup Class" : "Arrange Makeup Class"}</span>
+                </button>
+              )}
+            </div>
           )}
 
           {!isHoliday && (
