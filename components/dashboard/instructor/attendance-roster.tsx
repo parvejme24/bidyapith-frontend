@@ -355,27 +355,44 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
               </PopoverContent>
             </Popover>
 
-            <button
-              type="button"
-              onClick={() => handleMarkAllDaily("P")}
-              className={cn(buttonClass({ variant: "ghost", size: "sm" }), "text-xs rounded-lg grow sm:grow-0")}
-            >
-              Mark all present
-            </button>
-            <button
-              type="button"
-              disabled={!hasUnsavedChanges}
-              onClick={handleSaveDailyAttendance}
-              className={cn(
-                "text-xs flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-1.5 font-semibold transition-all duration-200 grow sm:grow-0",
-                hasUnsavedChanges
-                  ? "bg-jade text-night-900 shadow-md font-bold hover:brightness-110 cursor-pointer active:scale-95 ring-1 ring-jade/50"
-                  : "bg-white/[0.05] text-ink-muted/70 border border-white/10 cursor-not-allowed opacity-65"
-              )}
-            >
-              <Check className={cn("size-3.5 shrink-0", hasUnsavedChanges ? "text-night-900" : "text-ink-muted/70")} />
-              <span>{hasUnsavedChanges ? "Save attendance" : "Saved ✓"}</span>
-            </button>
+            {(() => {
+              const isCurrentDateHoliday = currentSectionOverrides[dateKey]?.type === "HOLIDAY";
+              return (
+                <>
+                  <button
+                    type="button"
+                    disabled={isCurrentDateHoliday}
+                    onClick={() => handleMarkAllDaily("P")}
+                    className={cn(
+                      buttonClass({ variant: "ghost", size: "sm" }),
+                      "text-xs rounded-lg grow sm:grow-0",
+                      isCurrentDateHoliday && "opacity-40 cursor-not-allowed pointer-events-none"
+                    )}
+                  >
+                    Mark all present
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!hasUnsavedChanges || isCurrentDateHoliday}
+                    onClick={handleSaveDailyAttendance}
+                    className={cn(
+                      "text-xs flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-1.5 font-semibold transition-all duration-200 grow sm:grow-0",
+                      hasUnsavedChanges && !isCurrentDateHoliday
+                        ? "bg-jade text-night-900 shadow-md font-bold hover:brightness-110 cursor-pointer active:scale-95 ring-1 ring-jade/50"
+                        : "bg-white/[0.05] text-ink-muted/70 border border-white/10 cursor-not-allowed opacity-65"
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "size-3.5 shrink-0",
+                        hasUnsavedChanges && !isCurrentDateHoliday ? "text-night-900" : "text-ink-muted/70"
+                      )}
+                    />
+                    <span>{isCurrentDateHoliday ? "Holiday / No Class" : hasUnsavedChanges ? "Save attendance" : "Saved ✓"}</span>
+                  </button>
+                </>
+              );
+            })()}
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2">

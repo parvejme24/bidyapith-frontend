@@ -240,48 +240,55 @@ export function DailyRosterView({
                 </div>
               </button>
 
-              {/* Mark Toggle Buttons (P / L / A) */}
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => onMarkDaily(st.id, "P")}
-                  className={cn(
-                    "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
-                    currentMark === "P"
-                      ? "bg-jade text-night-900 border-jade shadow-sm scale-105"
-                      : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
-                  )}
-                  title="Mark Present"
-                >
-                  P
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMarkDaily(st.id, "L")}
-                  className={cn(
-                    "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
-                    currentMark === "L"
-                      ? "bg-marigold text-night-900 border-marigold shadow-sm scale-105"
-                      : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
-                  )}
-                  title="Mark Late"
-                >
-                  L
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onMarkDaily(st.id, "A")}
-                  className={cn(
-                    "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
-                    currentMark === "A"
-                      ? "bg-rose text-night-900 border-rose shadow-sm scale-105"
-                      : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
-                  )}
-                  title="Mark Absent"
-                >
-                  A
-                </button>
-              </div>
+              {/* Mark Toggle Buttons (P / L / A) or Holiday Status Badge */}
+              {isHoliday ? (
+                <span className="text-[0.68rem] px-2.5 py-1 rounded-md bg-marigold/10 text-marigold border border-marigold/20 font-sans font-semibold inline-flex items-center gap-1 shrink-0">
+                  <Umbrella className="size-3" />
+                  <span>Holiday / No Class</span>
+                </span>
+              ) : (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onMarkDaily(st.id, "P")}
+                    className={cn(
+                      "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
+                      currentMark === "P"
+                        ? "bg-jade text-night-900 border-jade shadow-sm scale-105"
+                        : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
+                    )}
+                    title="Mark Present"
+                  >
+                    P
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMarkDaily(st.id, "L")}
+                    className={cn(
+                      "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
+                      currentMark === "L"
+                        ? "bg-marigold text-night-900 border-marigold shadow-sm scale-105"
+                        : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
+                    )}
+                    title="Mark Late"
+                  >
+                    L
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMarkDaily(st.id, "A")}
+                    className={cn(
+                      "size-6 sm:size-7 rounded-md text-[0.7rem] sm:text-xs font-bold border transition-all cursor-pointer",
+                      currentMark === "A"
+                        ? "bg-rose text-night-900 border-rose shadow-sm scale-105"
+                        : "border-white/10 bg-white/[0.04] text-ink-muted hover:text-ink hover:border-white/20"
+                    )}
+                    title="Mark Absent"
+                  >
+                    A
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
