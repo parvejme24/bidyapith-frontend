@@ -26,11 +26,17 @@ export default function StudentCertificatePage() {
     verificationHash: "0x8f2d4e7a91c3b5d2e0f81a74c6e93b1d5a7f2e4c",
   };
 
+  const isLocked = graduationCertificate ? false : true;
+
   return (
     <DashboardLayout
       requiredRole="student"
       title="Graduation & Degree Certificate"
-      subtitle={`${cert.programTitle} · Graduated ${cert.graduationDate}`}
+      subtitle={
+        isLocked
+          ? `${cert.programTitle} · Degree Clearance in Progress`
+          : `${cert.programTitle} · Graduated ${cert.graduationDate}`
+      }
       crumb="Student / Degree Certificate"
       actions={
         <div className="flex items-center p-0.5 rounded-lg border border-white/10 bg-white/[0.04] print:hidden">
@@ -60,14 +66,18 @@ export default function StudentCertificatePage() {
       }
     >
       {activeTab === "certificate" ? (
-        <CertificateView certificate={cert} />
+        <CertificateView
+          certificate={cert}
+          isLocked={isLocked}
+          onViewAudit={() => setActiveTab("audit")}
+        />
       ) : (
         <GraduationAudit
           creditsDone={student.creditsDone}
           creditsNeeded={student.creditsNeeded}
           cgpa={student.cgpa}
           programTitle={cert.programTitle}
-          isGraduated={true}
+          isGraduated={!isLocked}
           onViewCertificate={() => setActiveTab("certificate")}
         />
       )}
