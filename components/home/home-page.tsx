@@ -18,6 +18,7 @@ import { Reveal, Rise } from "@/components/site/motion";
 import { NoticeRow } from "@/components/site/notice-row";
 import { ProgramCard } from "@/components/site/program-card";
 import { SeatMeter } from "@/components/site/seat-meter";
+import { AdmissionStepSkeleton } from "@/components/site/skeletons";
 import {
   useAdmissionSteps,
   useEnrolment,
@@ -343,18 +344,32 @@ export function HomePage() {
               </p>
             </div>
           </Reveal>
-          <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {steps.data?.map((step, index) => (
-              <li key={step.title}>
-                <Reveal delay={index * 70}>
-                  <GlassCard className="p-6 h-full">
-                    <span className={cn("font-display text-jade text-sm", numClass)}>Step {index + 1}</span>
-                    <h3 className="font-display text-[1.08rem] mt-2 leading-snug">{step.title}</h3>
-                    <p className="text-sm text-ink-muted mt-2">{step.text}</p>
-                  </GlassCard>
-                </Reveal>
-              </li>
-            ))}
+          <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5 items-stretch">
+            {steps.data ? (
+              steps.data.map((step, index) => (
+                <li key={step.title} className="flex flex-col h-full">
+                  <Reveal delay={index * 70} className="h-full flex flex-col flex-1">
+                    <GlassCard className="p-6 flex flex-col h-full min-h-[210px] justify-start flex-1">
+                      <span className={cn("font-display text-jade text-sm", numClass)}>
+                        Step {index + 1}
+                      </span>
+                      <h3 className="font-display text-[1.08rem] font-semibold mt-2 leading-snug text-ink">
+                        {step.title}
+                      </h3>
+                      <p className="text-sm text-ink-muted mt-2 leading-relaxed flex-1">
+                        {step.text}
+                      </p>
+                    </GlassCard>
+                  </Reveal>
+                </li>
+              ))
+            ) : (
+              Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="flex flex-col h-full">
+                  <AdmissionStepSkeleton />
+                </li>
+              ))
+            )}
           </ol>
         </div>
       </section>

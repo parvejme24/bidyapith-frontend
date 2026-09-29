@@ -121,23 +121,25 @@ export function EnrolmentDonut({
   data,
   centerValue,
   centerLabel,
+  className,
 }: {
   data: EnrolmentSlice[];
   centerValue: string;
   centerLabel: string;
+  className?: string;
 }) {
   return (
-    <div className="relative mx-auto max-w-[240px] aspect-square">
+    <div className={cn("relative mx-auto max-w-[280px] w-full aspect-square min-h-[240px]", className)}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
             dataKey="value"
             nameKey="label"
-            innerRadius="68%"
+            innerRadius="66%"
             outerRadius="88%"
             stroke="rgba(11,16,48,0.55)"
-            strokeWidth={2}
+            strokeWidth={2.5}
           >
             {data.map((slice) => (
               <Cell key={slice.label} fill={slice.color} />
@@ -159,8 +161,8 @@ export function EnrolmentDonut({
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
         <div>
-          <p className="font-display text-[1.7rem] leading-none">{centerValue}</p>
-          <p className="text-[0.66rem] font-semibold text-ink-faint mt-1">{centerLabel}</p>
+          <p className="font-display text-[1.9rem] leading-none">{centerValue}</p>
+          <p className="text-[0.7rem] font-semibold text-ink-faint mt-1.5">{centerLabel}</p>
         </div>
       </div>
     </div>

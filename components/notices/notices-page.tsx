@@ -8,6 +8,7 @@ import { GlassCard } from "@/components/site/glass-card";
 import { PageHero } from "@/components/site/page-hero";
 import { Reveal } from "@/components/site/motion";
 import { NoticeRow } from "@/components/site/notice-row";
+import { NoticeRowSkeleton } from "@/components/site/skeletons";
 import { useEvents, useNotices } from "@/hooks/use-data";
 import { formatEventDay, formatEventMonth } from "@/lib/format";
 import {
@@ -83,7 +84,9 @@ export function NoticesPage() {
         <div className={cn(shellClass, "grid gap-4 lg:grid-cols-[1.6fr_1fr] items-start")}>
           <div className="space-y-3">
             {notices.isLoading ? (
-              <GlassCard className="p-10 animate-pulse min-h-40" />
+              Array.from({ length: 5 }).map((_, i) => (
+                <NoticeRowSkeleton key={i} />
+              ))
             ) : filtered.length ? (
               filtered.map((notice) => <NoticeRow key={notice.id} notice={notice} />)
             ) : (

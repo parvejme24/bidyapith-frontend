@@ -73,19 +73,21 @@ export function AboutPage() {
   return (
     <main id="main">
       <section className="pt-12 pb-6 md:pt-16">
-        <div className={cn(shellClass, "max-w-3xl")}>
-          <Rise delay={1}>
-            <Chip className={cn(bnClass, "text-base")}>বিদ্যাপীঠ · seat of learning</Chip>
-          </Rise>
-          <Rise delay={2}>
-            <h1 className={cn(displayClass.d1, "mt-5")}>Twenty-eight years, one idea</h1>
-          </Rise>
-          <Rise delay={3}>
-            <p className={cn(leadClass, "mt-5")}>
-              Bidyapith opened in 1998 with 240 students in a rented building. The idea has not
-              changed: teach well, keep the administration out of the way, and publish what we do.
-            </p>
-          </Rise>
+        <div className={shellClass}>
+          <div className="max-w-3xl text-left">
+            <Rise delay={1}>
+              <Chip className={cn(bnClass, "text-base")}>বিদ্যাপীঠ · seat of learning</Chip>
+            </Rise>
+            <Rise delay={2}>
+              <h1 className={cn(displayClass.d1, "mt-5")}>Twenty-eight years, one idea</h1>
+            </Rise>
+            <Rise delay={3}>
+              <p className={cn(leadClass, "mt-5")}>
+                Bidyapith opened in 1998 with 240 students in a rented building. The idea has not
+                changed: teach well, keep the administration out of the way, and publish what we do.
+              </p>
+            </Rise>
+          </div>
         </div>
       </section>
 

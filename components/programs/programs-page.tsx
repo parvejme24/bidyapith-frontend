@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/site/empty-state";
 import { GlassCard } from "@/components/site/glass-card";
 import { PageHero } from "@/components/site/page-hero";
 import { ProgramCard } from "@/components/site/program-card";
+import { ProgramCardSkeleton } from "@/components/site/skeletons";
 import { Reveal } from "@/components/site/motion";
 import { SelectInput } from "@/components/site/select-input";
 import { usePrograms } from "@/hooks/use-data";
@@ -169,32 +170,40 @@ export function ProgramsPage() {
 
       <section className={cn(sectionClass, "pt-4")}>
         <div className={shellClass}>
-          <AnimatePresence mode="popLayout">
-            {filtered.length ? (
-              <motion.div
-                key={`${school}-${level}-${deferredQ}`}
-                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-                initial={reduce ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: [0.2, 0.7, 0.3, 1] }}
-              >
-                {filtered.map((program, index) => (
-                  <motion.div
-                    key={program.code}
-                    layout={!reduce}
-                    initial={reduce ? false : { opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.4 }}
-                  >
-                    <ProgramCard program={program} reveal={false} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              <EmptyState className="md:col-span-2 lg:col-span-3" />
-            )}
-          </AnimatePresence>
+          {isLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProgramCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filtered.length ? (
+                <motion.div
+                  key={`${school}-${level}-${deferredQ}`}
+                  className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+                  initial={reduce ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduce ? undefined : { opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: [0.2, 0.7, 0.3, 1] }}
+                >
+                  {filtered.map((program, index) => (
+                    <motion.div
+                      key={program.code}
+                      layout={!reduce}
+                      initial={reduce ? false : { opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.4 }}
+                    >
+                      <ProgramCard program={program} reveal={false} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <EmptyState className="md:col-span-2 lg:col-span-3" />
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </section>
 

@@ -9,6 +9,7 @@ import { Chip } from "@/components/site/chip";
 import { CountUp } from "@/components/site/count-up";
 import { EmptyState } from "@/components/site/empty-state";
 import { FacultyCard } from "@/components/site/faculty-card";
+import { FacultyCardSkeleton } from "@/components/site/skeletons";
 import { GlassCard } from "@/components/site/glass-card";
 import { Reveal, Rise } from "@/components/site/motion";
 import { SelectInput } from "@/components/site/select-input";
@@ -211,36 +212,44 @@ export function FacultyPage() {
             </p>
           </GlassCard>
 
-          <AnimatePresence mode="popLayout">
-            {filtered.length ? (
-              <motion.div
-                key={`${dept}-${deferredQ}`}
-                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                initial={reduce ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduce ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: [0.2, 0.7, 0.3, 1] }}
-              >
-                {filtered.map((member, index) => (
-                  <motion.div
-                    key={`${member.name}-${member.dept}-${member.email}`}
-                    layout={!reduce}
-                    initial={reduce ? false : { opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.4 }}
-                  >
-                    <FacultyCard faculty={member} index={index} reveal={false} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              <EmptyState
-                className="sm:col-span-2 lg:col-span-3"
-                title="No one by that name"
-                description='Search by surname or research area — “finance”, “quantum”, “law”.'
-              />
-            )}
-          </AnimatePresence>
+          {isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <FacultyCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filtered.length ? (
+                <motion.div
+                  key={`${dept}-${deferredQ}`}
+                  className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  initial={reduce ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduce ? undefined : { opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: [0.2, 0.7, 0.3, 1] }}
+                >
+                  {filtered.map((member, index) => (
+                    <motion.div
+                      key={`${member.name}-${member.dept}-${member.email}`}
+                      layout={!reduce}
+                      initial={reduce ? false : { opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index, 8) * 0.04, duration: 0.4 }}
+                    >
+                      <FacultyCard faculty={member} index={index} reveal={false} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                <EmptyState
+                  className="sm:col-span-2 lg:col-span-3"
+                  title="No one by that name"
+                  description='Search by surname or research area — “finance”, “quantum”, “law”.'
+                />
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </section>
 

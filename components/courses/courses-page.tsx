@@ -6,6 +6,7 @@ import { IntakeBarChart } from "@/components/home/campus-charts";
 import { Chip } from "@/components/site/chip";
 import { GlassCard } from "@/components/site/glass-card";
 import { Reveal, Rise } from "@/components/site/motion";
+import { CourseRowSkeleton } from "@/components/site/skeletons";
 import { SelectInput } from "@/components/site/select-input";
 import { useCourses, useDepartments } from "@/hooks/use-data";
 import { deptName } from "@/lib/api";
@@ -275,7 +276,11 @@ export function CoursesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {slice.length ? (
+                  {coursesLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <CourseRowSkeleton key={i} />
+                    ))
+                  ) : slice.length ? (
                     slice.map((course) => {
                       const left = seatsLeft(course);
                       return (

@@ -1,16 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { enGB } from "date-fns/locale";
-import { IntakeBarChart } from "@/components/home/campus-charts";
+import { EnrolmentDonut, IntakeBarChart } from "@/components/home/campus-charts";
 import { AdmissionCountdown } from "@/components/site/admission-countdown";
 import { Chip, type ChipTone } from "@/components/site/chip";
 import { FaqAccordion } from "@/components/site/faq-accordion";
 import { GlassCard } from "@/components/site/glass-card";
 import { Reveal, Rise } from "@/components/site/motion";
 import {
+  AdmissionStepSkeleton,
+  FeeRowSkeleton,
+  KeyDateSkeleton,
+} from "@/components/site/skeletons";
+import {
   useAdmissionSteps,
+  useEnrolment,
   useFaqs,
   useFees,
   useKeyDates,
@@ -58,12 +65,14 @@ function formatClosesAt(iso?: string) {
 }
 
 export function AdmissionsPage() {
+  const [chartView, setChartView] = useState<"distribution" | "tuition">("distribution");
   const meta = useMeta();
   const steps = useAdmissionSteps();
   const keyDates = useKeyDates();
   const fees = useFees();
   const scholarships = useScholarships();
   const faqs = useFaqs();
+  const enrolment = useEnrolment();
 
   const closesAt = meta.data?.admissionCloses ?? "2026-10-15T23:59:00";
   const feeChart =
@@ -71,6 +80,8 @@ export function AdmissionsPage() {
       label: FEE_LABELS[index] || fee.program.slice(0, 6),
       value: fee.semester,
     })) ?? [];
+
+  const totalSeats = (enrolment.data ?? []).reduce((acc, s) => acc + s.value, 0).toLocaleString();
 
   return (
     <main id="main">
@@ -134,18 +145,32 @@ export function AdmissionsPage() {
               </p>
             </div>
           </Reveal>
-          <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {(steps.data ?? []).map((step, index) => (
-              <li key={step.title}>
-                <Reveal delay={index * 60}>
-                  <GlassCard className="p-6 h-full">
-                    <span className={cn("font-display text-jade text-sm", numClass)}>Step {index + 1}</span>
-                    <h3 className="font-display text-[1.08rem] mt-2 leading-snug">{step.title}</h3>
-                    <p className="text-sm text-ink-muted mt-2">{step.text}</p>
-                  </GlassCard>
-                </Reveal>
-              </li>
-            ))}
+          <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5 items-stretch">
+            {steps.isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="h-full flex flex-col">
+                  <AdmissionStepSkeleton />
+                </li>
+              ))
+            ) : (
+              (steps.data ?? []).map((step, index) => (
+                <li key={step.title} className="h-full flex flex-col">
+                  <Reveal delay={index * 60} className="h-full flex flex-col flex-1">
+                    <GlassCard className="p-6 h-full min-h-[210px] flex flex-col justify-start flex-1">
+                      <span className={cn("font-display text-jade text-sm", numClass)}>
+                        Step {index + 1}
+                      </span>
+                      <h3 className="font-display text-[1.08rem] mt-2.5 leading-snug min-h-[2.8rem] flex items-center font-semibold">
+                        {step.title}
+                      </h3>
+                      <p className="text-sm text-ink-muted mt-2 leading-relaxed flex-1">
+                        {step.text}
+                      </p>
+                    </GlassCard>
+                  </Reveal>
+                </li>
+              ))
+            )}
           </ol>
         </div>
       </section>
@@ -156,21 +181,27 @@ export function AdmissionsPage() {
             <GlassCard className="p-7 h-full">
               <h2 className={cn(displayClass.d3, "mb-5")}>Key dates for this cycle</h2>
               <ul>
-                {(keyDates.data ?? []).map((item) => {
-                  const status = dateStatus(item.status);
-                  return (
-                    <li
-                      key={item.label}
-                      className="flex flex-wrap items-center justify-between gap-3 py-4 border-b border-white/6 last:border-0"
-                    >
-                      <span className="font-semibold">{item.label}</span>
-                      <span className="flex items-center gap-3">
-                        <span className={cn("text-sm text-ink-muted", numClass)}>{item.date}</span>
-                        <Chip tone={status.tone}>{status.label}</Chip>
-                      </span>
-                    </li>
-                  );
-                })}
+                {keyDates.isLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <KeyDateSkeleton key={i} />
+                  ))
+                ) : (
+                  (keyDates.data ?? []).map((item) => {
+                    const status = dateStatus(item.status);
+                    return (
+                      <li
+                        key={item.label}
+                        className="flex flex-wrap items-center justify-between gap-3 py-4 border-b border-white/6 last:border-0"
+                      >
+                        <span className="font-semibold">{item.label}</span>
+                        <span className="flex items-center gap-3">
+                          <span className={cn("text-sm text-ink-muted", numClass)}>{item.date}</span>
+                          <Chip tone={status.tone}>{status.label}</Chip>
+                        </span>
+                      </li>
+                    );
+                  })
+                )}
               </ul>
             </GlassCard>
           </Reveal>
@@ -229,7 +260,7 @@ export function AdmissionsPage() {
             </div>
           </Reveal>
 
-          <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr] items-start">
             <Reveal>
               <GlassCard className="p-2 sm:p-4">
                 <div className={tableScrollClass}>
@@ -244,15 +275,21 @@ export function AdmissionsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(fees.data ?? []).map((fee) => (
-                        <tr key={fee.program} className={trClass}>
-                          <td className={cn(tdClass, "font-semibold")}>{fee.program}</td>
-                          <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.admission)}</td>
-                          <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.perCredit)}</td>
-                          <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.semester)}</td>
-                          <td className={cn(tdClass, numClass, "text-right font-semibold")}>{formatTaka(fee.total)}</td>
-                        </tr>
-                      ))}
+                      {fees.isLoading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <FeeRowSkeleton key={i} />
+                        ))
+                      ) : (
+                        (fees.data ?? []).map((fee) => (
+                          <tr key={fee.program} className={trClass}>
+                            <td className={cn(tdClass, "font-semibold")}>{fee.program}</td>
+                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.admission)}</td>
+                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.perCredit)}</td>
+                            <td className={cn(tdClass, numClass, "text-right")}>{formatTaka(fee.semester)}</td>
+                            <td className={cn(tdClass, numClass, "text-right font-semibold")}>{formatTaka(fee.total)}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -260,13 +297,70 @@ export function AdmissionsPage() {
             </Reveal>
 
             <Reveal delay={90}>
-              <GlassCard className="p-6 h-full">
-                <h3 className="text-sm font-bold mb-1">Semester tuition compared</h3>
-                <p className="text-xs text-ink-faint mb-4">Bangladeshi taka, Fall 2026</p>
-                {feeChart.length ? (
-                  <IntakeBarChart data={feeChart} color="#FFB454" unit=" BDT" />
+              <GlassCard className="p-6 h-full flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-sm font-bold">
+                      {chartView === "distribution" ? "Seat allocation by school" : "Semester tuition compared"}
+                    </h3>
+                    <p className="text-xs text-ink-faint mt-0.5">
+                      {chartView === "distribution" ? "Intake capacity for Fall 2026" : "Bangladeshi taka, Fall 2026"}
+                    </p>
+                  </div>
+                  <div className="flex rounded-lg bg-white/5 p-0.5 border border-white/10">
+                    <button
+                      type="button"
+                      className={cn(
+                        "px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer",
+                        chartView === "distribution" ? "bg-jade/20 text-jade" : "text-ink-muted hover:text-ink"
+                      )}
+                      onClick={() => setChartView("distribution")}
+                    >
+                      Pie Chart
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        "px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer",
+                        chartView === "tuition" ? "bg-marigold/20 text-marigold" : "text-ink-muted hover:text-ink"
+                      )}
+                      onClick={() => setChartView("tuition")}
+                    >
+                      Tuition
+                    </button>
+                  </div>
+                </div>
+
+                {chartView === "distribution" ? (
+                  enrolment.data ? (
+                    <div className="flex flex-col items-center justify-center py-2">
+                      <EnrolmentDonut
+                        data={enrolment.data}
+                        centerValue={totalSeats}
+                        centerLabel="total seats"
+                        className="max-w-[280px] h-[280px]"
+                      />
+                      <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full mt-4 pt-4 border-t border-white/8">
+                        {enrolment.data.map((slice) => (
+                          <li key={slice.label} className="flex items-center justify-between text-xs py-0.5">
+                            <span className="flex items-center gap-2 truncate">
+                              <span className="size-2 rounded-full shrink-0" style={{ background: slice.color }} />
+                              <span className="text-ink-muted truncate">{slice.label}</span>
+                            </span>
+                            <span className={cn(numClass, "font-semibold ml-2 text-ink")}>{slice.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="h-[320px] animate-pulse rounded-2xl bg-white/5" />
+                  )
+                ) : feeChart.length ? (
+                  <div className="h-[320px] w-full flex items-center">
+                    <IntakeBarChart data={feeChart} color="#FFB454" unit=" BDT" />
+                  </div>
                 ) : (
-                  <div className="h-[250px] animate-pulse rounded-2xl bg-white/5" />
+                  <div className="h-[320px] animate-pulse rounded-2xl bg-white/5" />
                 )}
               </GlassCard>
             </Reveal>
