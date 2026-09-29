@@ -1,51 +1,41 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { GlassCard } from "@/components/site/glass-card";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useApp } from "@/lib/app-context";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
-import { downloadCsv } from "@/lib/csv-export";
-import { buttonClass } from "@/lib/styles";
-import { cn } from "@/lib/utils";
-import {
-  BookOpen,
-  Calendar as CalendarIcon,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Table as TableIcon,
-} from "lucide-react";
 import type { AttendanceStats, DayOverrideInfo } from "./attendance/attendance-types";
 import {
-  formatDateDMY,
   getDaysInMonth,
-  MONTH_NAMES,
   resolveStudentMark,
   calculateStudentAttendanceStats,
 } from "./attendance/attendance-utils";
+import { AttendanceRosterHeader } from "./attendance/attendance-roster-header";
 import { DailyRosterView } from "./attendance/daily-roster-view";
 import { MonthlyMatrixView } from "./attendance/monthly-matrix-view";
-import { StudentMonthlyModalBody } from "./attendance/student-monthly-modal";
+import { StudentMonthlyDialog } from "./attendance/student-monthly-dialog";
+import {
+  exportMonthlyMatrixCsv,
+  exportStudentMonthlyCsv,
+} from "./attendance/attendance-csv-exporter";
 
 interface AttendanceRosterProps {
   sections: InstructorSection[];
   roster: RosterStudent[];
   onSave?: (marksCount: number) => void;
 }
+
+const DEFAULT_FALLBACK_SECTION: InstructorSection = {
+  id: "S1",
+  code: "CSE-3101",
+  title: "Operating Systems Principles",
+  section: "1",
+  room: "AB2-401",
+  slots: ["Sun 09:00", "Tue 09:00"],
+  enrolled: 0,
+  capacity: 40,
+  avgAttendance: 92,
+  gradesSubmitted: false,
+};
 
 export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterProps) {
   const { attendanceStore, saveAttendance } = useApp();
@@ -102,20 +92,10 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
   }, [selectedDate]);
 
-  const defaultFallbackSection: InstructorSection = {
-    id: "S1",
-    code: "CSE-3101",
-    title: "Operating Systems Principles",
-    section: "1",
-    room: "AB2-401",
-    slots: ["Sun 09:00", "Tue 09:00"],
-    enrolled: roster.length,
-    capacity: 40,
-    avgAttendance: 92,
-    gradesSubmitted: false,
-  };
-
-  const currentSection = sections.find((s) => s.id === selectedSec) || sections[0] || defaultFallbackSection;
+  const currentSection =
+    sections.find((s) => s.id === selectedSec) ||
+    sections[0] ||
+    { ...DEFAULT_FALLBACK_SECTION, enrolled: roster.length };
 
   const [dailyAttendance, setDailyAttendance] = useState<Record<string, "P" | "L" | "A">>(() => {
     const initialKey = `${sections[0]?.id || "S1"}_${dateKey}`;
@@ -207,246 +187,44 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     }
   };
 
-  const handleExportMonthlyMatrix = () => {
-    const headers = [
-      "Student ID",
-      "Student Name",
-      "Program",
-      ...monthDays.map((d) => `${d.dayNumber}-${d.weekday}`),
-      "Total Present (P)",
-      "Total Late (L)",
-      "Total Absent (A)",
-      "Month Attendance Rate (%)",
-      "Cumulative Total Rate (%)",
-    ];
-
-    const rows = roster.map((st) => {
-      const stats = studentStatsMap[st.id] || calculateStudentAttendanceStats(st, currentSection, monthDays, attendanceStore);
-      const dayMarks = monthDays.map((day) => {
-        const mark = resolveStudentMark(st, currentSection, day, attendanceStore);
-        return mark === "OFF" ? "OFF" : mark === "UNMARKED" ? "-" : mark;
-      });
-
-      return [
-        st.id,
-        st.name,
-        st.prog,
-        ...dayMarks,
-        stats.p,
-        stats.l,
-        stats.a,
-        stats.held > 0 ? `${stats.ratePct}%` : "N/A",
-        `${st.att}%`,
-      ];
-    });
-
-    const filename = `Attendance_${currentSection?.code || "Course"}_Sec${currentSection?.section || "1"}_${MONTH_NAMES[activeMonth]}_${activeYear}.csv`;
-    downloadCsv(filename, [headers, ...rows]);
-  };
-
-  const handleExportStudentMonthly = (student: RosterStudent) => {
-    const headers = ["Date", "Day", "Session Type", "Attendance Status"];
-    const rows = monthDays.map((day) => {
-      const mark = resolveStudentMark(student, currentSection, day, attendanceStore);
-      let statusText = "Off Day / Weekend";
-      if (day.isClassDay) {
-        if (mark === "P") statusText = "Present (1.0)";
-        else if (mark === "L") statusText = "Late (0.5)";
-        else if (mark === "A") statusText = "Absent (0.0)";
-        else if (mark === "UNMARKED") statusText = "Upcoming / Not Marked";
-      }
-      return [day.dateKey, day.weekdayFull, day.isClassDay ? "Scheduled Lecture" : "No Class", statusText];
-    });
-
-    const filename = `Attendance_${student.id}_${student.name.replace(/\s+/g, "_")}_${MONTH_NAMES[activeMonth]}_${activeYear}.csv`;
-    downloadCsv(filename, [headers, ...rows]);
-  };
+  const isCurrentDateHoliday = currentSectionOverrides[dateKey]?.type === "HOLIDAY";
 
   return (
     <div className="space-y-4 max-w-full overflow-hidden">
-      {/* Top View Mode Switcher & Section Selector Bar */}
-      <GlassCard className="p-3 sm:p-4 rounded-xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-          <div className="grid grid-cols-2 sm:flex items-center p-1 rounded-lg bg-white/[0.04] border border-white/10 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setViewMode("daily")}
-              className={cn(
-                "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer",
-                viewMode === "daily"
-                  ? "bg-jade text-night-900 shadow-md font-bold"
-                  : "text-ink-muted hover:text-ink hover:bg-white/5"
-              )}
-            >
-              <CalendarIcon className="size-3.5 shrink-0" />
-              <span className="truncate">Daily Session</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("monthly")}
-              className={cn(
-                "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer",
-                viewMode === "monthly"
-                  ? "bg-jade text-night-900 shadow-md font-bold"
-                  : "text-ink-muted hover:text-ink hover:bg-white/5"
-              )}
-            >
-              <TableIcon className="size-3.5 shrink-0" />
-              <span className="truncate">Monthly Sheet</span>
-            </button>
-          </div>
+      {/* Top View Mode Switcher & Section Toolbar */}
+      <AttendanceRosterHeader
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        sections={sections}
+        selectedSec={selectedSec}
+        onSelectSection={setSelectedSec}
+        currentSection={currentSection}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        calendarOpen={calendarOpen}
+        onCalendarOpenChange={setCalendarOpen}
+        isHoliday={isCurrentDateHoliday}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onMarkAllPresent={() => handleMarkAllDaily("P")}
+        onSaveDaily={handleSaveDailyAttendance}
+        activeMonth={activeMonth}
+        activeYear={activeYear}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+        onExportMonth={() =>
+          exportMonthlyMatrixCsv({
+            roster,
+            currentSection,
+            monthDays,
+            activeMonth,
+            activeYear,
+            studentStatsMap,
+            attendanceStore,
+          })
+        }
+      />
 
-          {/* Section Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center justify-between gap-2.5 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs sm:text-sm font-semibold text-ink hover:border-jade/50 hover:bg-white/[0.09] transition-all cursor-pointer outline-none shadow-sm w-full sm:w-auto">
-              <div className="flex items-center gap-2 truncate">
-                <BookOpen className="size-3.5 text-jade shrink-0" />
-                <span className="font-bold text-jade">{currentSection?.code || "Course"}</span>
-                <span className="text-ink-muted">· Sec {currentSection?.section}</span>
-                <span className="text-xs text-ink-faint hidden sm:inline">({currentSection?.room})</span>
-              </div>
-              <ChevronDown className="size-3.5 text-ink-muted shrink-0" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="w-[280px] rounded-lg border border-white/15 bg-night-900/95 p-1 shadow-2xl backdrop-blur-xl z-50"
-            >
-              {sections.map((s) => {
-                const isSelected = selectedSec === s.id;
-                return (
-                  <DropdownMenuItem
-                    key={s.id}
-                    onClick={() => setSelectedSec(s.id)}
-                    className={cn(
-                      "flex items-center justify-between rounded-md px-2.5 py-1.5 text-xs font-semibold cursor-pointer transition-colors",
-                      isSelected
-                        ? "bg-jade/15 text-jade"
-                        : "text-ink hover:bg-white/[0.08] hover:text-ink"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={cn("font-bold text-sm", isSelected ? "text-jade" : "text-ink")}>
-                        {s.code}
-                      </span>
-                      <span className="text-ink-muted">Section {s.section}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[0.72rem] text-ink-faint">{s.room}</span>
-                      {isSelected && <Check className="size-3.5 text-jade shrink-0" />}
-                    </div>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {viewMode === "daily" ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger className="flex items-center justify-between gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs sm:text-sm font-semibold text-ink hover:border-jade/50 hover:bg-white/[0.09] transition-all cursor-pointer outline-none shadow-sm grow sm:grow-0">
-                <div className="flex items-center gap-2 truncate">
-                  <CalendarIcon className="size-3.5 text-jade shrink-0" />
-                  <span>{selectedDate ? formatDateDMY(selectedDate) : "Pick date"}</span>
-                </div>
-                <ChevronDown className="size-3 text-ink-muted shrink-0" />
-              </PopoverTrigger>
-              <PopoverContent
-                align="end"
-                className="w-auto p-2 rounded-xl border border-white/15 bg-night-900/98 shadow-2xl backdrop-blur-2xl z-50"
-              >
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(d) => {
-                    if (d) {
-                      setSelectedDate(d);
-                      setCalendarOpen(false);
-                    }
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-
-            {(() => {
-              const isCurrentDateHoliday = currentSectionOverrides[dateKey]?.type === "HOLIDAY";
-              return (
-                <>
-                  <button
-                    type="button"
-                    disabled={isCurrentDateHoliday}
-                    onClick={() => handleMarkAllDaily("P")}
-                    className={cn(
-                      buttonClass({ variant: "ghost", size: "sm" }),
-                      "text-xs rounded-lg grow sm:grow-0",
-                      isCurrentDateHoliday && "opacity-40 cursor-not-allowed pointer-events-none"
-                    )}
-                  >
-                    Mark all present
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!hasUnsavedChanges || isCurrentDateHoliday}
-                    onClick={handleSaveDailyAttendance}
-                    className={cn(
-                      "text-xs flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-1.5 font-semibold transition-all duration-200 grow sm:grow-0",
-                      hasUnsavedChanges && !isCurrentDateHoliday
-                        ? "bg-jade text-night-900 shadow-md font-bold hover:brightness-110 cursor-pointer active:scale-95 ring-1 ring-jade/50"
-                        : "bg-white/[0.05] text-ink-muted/70 border border-white/10 cursor-not-allowed opacity-65"
-                    )}
-                  >
-                    <Check
-                      className={cn(
-                        "size-3.5 shrink-0",
-                        hasUnsavedChanges && !isCurrentDateHoliday ? "text-night-900" : "text-ink-muted/70"
-                      )}
-                    />
-                    <span>{isCurrentDateHoliday ? "Holiday / No Class" : hasUnsavedChanges ? "Save attendance" : "Saved ✓"}</span>
-                  </button>
-                </>
-              );
-            })()}
-          </div>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center justify-between gap-1 rounded-lg border border-white/15 bg-white/[0.05] p-1 shadow-sm grow sm:grow-0">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                aria-label="Previous Month"
-                className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-white/10 transition-colors"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <span className="px-2 text-xs sm:text-sm font-bold text-ink min-w-[100px] text-center">
-                {MONTH_NAMES[activeMonth]} {activeYear}
-              </span>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                aria-label="Next Month"
-                className="p-1 rounded-md text-ink-muted hover:text-ink hover:bg-white/10 transition-colors"
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleExportMonthlyMatrix}
-              className={cn(
-                buttonClass({ variant: "ghost", size: "sm" }),
-                "text-xs flex items-center justify-center gap-1.5 border border-white/15 hover:border-jade/40 rounded-lg grow sm:grow-0"
-              )}
-            >
-              <Download className="size-3.5 text-jade shrink-0" />
-              <span>Export Month (.csv)</span>
-            </button>
-          </div>
-        )}
-      </GlassCard>
-
-      {/* MODE 1: Daily View */}
+      {/* MODE 1: Daily Session View */}
       {viewMode === "daily" && (
         <DailyRosterView
           roster={roster}
@@ -478,47 +256,30 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         />
       )}
 
-      {/* Student Monthly Modal */}
-      {selectedStudentForModal && (
-        <Dialog
-          open={!!selectedStudentForModal}
-          onOpenChange={(open) => {
-            if (!open) setSelectedStudentForModal(null);
-          }}
-        >
-          <DialogContent className="max-w-3xl sm:max-w-4xl w-[96vw] p-0 overflow-hidden rounded-md sm:rounded-lg border border-white/15 bg-night-900/98 shadow-2xl backdrop-blur-2xl text-ink max-h-[92vh] sm:max-h-[88vh] flex flex-col">
-            {(() => {
-              const modalStats =
-                studentStatsMap[selectedStudentForModal.id] ||
-                calculateStudentAttendanceStats(
-                  selectedStudentForModal,
-                  currentSection,
-                  monthDays,
-                  attendanceStore
-                );
-
-              return (
-                <StudentMonthlyModalBody
-                  student={selectedStudentForModal}
-                  section={currentSection}
-                  monthDays={monthDays}
-                  modalStats={modalStats}
-                  activeYear={activeYear}
-                  activeMonth={activeMonth}
-                  attendanceStore={attendanceStore}
-                  onPrevMonth={handlePrevMonth}
-                  onNextMonth={handleNextMonth}
-                  onToggleMark={(dateKey, mark) =>
-                    handleToggleDayMark(selectedStudentForModal.id, dateKey, mark)
-                  }
-                  onExport={() => handleExportStudentMonthly(selectedStudentForModal)}
-                  onClose={() => setSelectedStudentForModal(null)}
-                />
-              );
-            })()}
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Student Monthly Modal Dialog */}
+      <StudentMonthlyDialog
+        selectedStudent={selectedStudentForModal}
+        onClose={() => setSelectedStudentForModal(null)}
+        currentSection={currentSection}
+        monthDays={monthDays}
+        studentStatsMap={studentStatsMap}
+        activeYear={activeYear}
+        activeMonth={activeMonth}
+        attendanceStore={attendanceStore}
+        onPrevMonth={handlePrevMonth}
+        onNextMonth={handleNextMonth}
+        onToggleDayMark={handleToggleDayMark}
+        onExportStudentMonthly={(student) =>
+          exportStudentMonthlyCsv({
+            student,
+            currentSection,
+            monthDays,
+            activeMonth,
+            activeYear,
+            attendanceStore,
+          })
+        }
+      />
     </div>
   );
 }
