@@ -165,7 +165,7 @@ export interface NoticeItem {
   id?: string;
   t: string;
   m: string;
-  tone?: "gold" | "rose" | "orchid" | "";
+  tone?: "gold" | "rose" | "orchid" | "jade" | "";
   time?: string;
   link?: string;
   read?: boolean;
@@ -232,7 +232,7 @@ export interface AuditRecord {
   action: string;
   target: string;
   detail: string;
-  tone?: "gold" | "rose" | "orchid" | "";
+  tone?: "gold" | "rose" | "orchid" | "jade" | "";
 }
 
 export interface AdminSection {

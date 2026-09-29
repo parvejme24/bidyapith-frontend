@@ -11,10 +11,12 @@ import type { StudentGradeRecord } from "./results-types";
 
 interface GetResultsColumnsOptions {
   onInspectTranscript: (studentId: string, studentName: string) => void;
+  onApprovePublish?: (record: StudentGradeRecord) => void;
 }
 
 export function getResultsColumns({
   onInspectTranscript,
+  onApprovePublish,
 }: GetResultsColumnsOptions): ColumnDef<StudentGradeRecord>[] {
   return [
     {
@@ -97,13 +99,13 @@ export function getResultsColumns({
       render: (r) => (
         <span
           className={cn(
-            "text-[0.68rem] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider",
+            "text-[0.68rem] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider inline-flex items-center gap-1",
             r.status === "published"
               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
               : "bg-amber-500/10 text-amber-400 border-amber-500/30"
           )}
         >
-          {r.status}
+          {r.status === "published" ? "Published ✓" : "Submitted"}
         </span>
       ),
     },
@@ -112,18 +114,33 @@ export function getResultsColumns({
       label: "",
       className: "text-right",
       render: (r) => (
-        <button
-          type="button"
-          onClick={() => onInspectTranscript(r.studentId, r.studentName)}
-          className={cn(
-            buttonClass({ variant: "ghost", size: "sm" }),
-            "h-7 px-2.5 text-xs text-jade hover:border-jade/40 cursor-pointer inline-flex items-center gap-1"
+        <div className="flex items-center justify-end gap-1.5">
+          {r.status !== "published" && onApprovePublish && (
+            <button
+              type="button"
+              onClick={() => onApprovePublish(r)}
+              className={cn(
+                buttonClass({ variant: "primary", size: "sm" }),
+                "h-7 px-2 text-xs cursor-pointer inline-flex items-center gap-1 shadow-xs"
+              )}
+              title="Approve & Publish to Student Dashboard"
+            >
+              <span>Publish</span>
+            </button>
           )}
-          title="Inspect full academic transcript"
-        >
-          <Award className="size-3.5" />
-          <span className="hidden sm:inline">Transcript</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => onInspectTranscript(r.studentId, r.studentName)}
+            className={cn(
+              buttonClass({ variant: "ghost", size: "sm" }),
+              "h-7 px-2.5 text-xs text-jade hover:border-jade/40 cursor-pointer inline-flex items-center gap-1"
+            )}
+            title="Inspect full academic transcript"
+          >
+            <Award className="size-3.5" />
+            <span className="hidden sm:inline">Transcript</span>
+          </button>
+        </div>
       ),
     },
   ];

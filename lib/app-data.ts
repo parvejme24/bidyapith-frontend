@@ -856,10 +856,12 @@ export const APP_DATA = {
     ] as PaymentTransaction[],
 
     audit: [
-      { at: "2026-09-28 03:10:00", actor: "System Seed", role: "system", action: "db.seed", target: "University DB", detail: "Seeded 100 students, 25 instructors, 10 departments, 6 admins", tone: "orchid" },
-      { at: "2026-09-28 02:45:12", actor: "Parvej Admin", role: "admin", action: "semester.status", target: "Fall 2026", detail: "Status updated to REGISTRATION", tone: "gold" },
-      { at: "2026-09-28 01:12:00", actor: "Prof. Dr. Ayesha Rahman", role: "instructor", action: "grade.submit", target: "CSE-4210 Sec A", detail: "Grade sheet submitted to exam controller", tone: "" },
-      { at: "2026-09-27 18:20:44", actor: "System Gateway", role: "system", action: "payment.webhook", target: "INV-2026-0982", detail: "bKash payment IPN verified ৳5,000", tone: "orchid" },
+      { at: "2026-09-30 08:30:00", actor: "Prof. Dr. Ayesha Rahman", role: "instructor", action: "attendance.record", target: "CSE-2201 Sec A (2026-09-30)", detail: "Recorded daily attendance for 42 students", tone: "jade" },
+      { at: "2026-09-29 16:45:00", actor: "Dr. Tanvir Ahmed", role: "instructor", action: "marks.assign", target: "CSE-2303 Sec A", detail: "Assigned Midterm and continuous assessment marks for 41 students", tone: "gold" },
+      { at: "2026-09-29 14:15:00", actor: "Dr. Sabbir Rahman", role: "instructor", action: "grades.submit", target: "CSE-3101 Sec A", detail: "Submitted completed section grade sheet for Registrar and Admin approval", tone: "orchid" },
+      { at: "2026-09-29 11:20:00", actor: "Prof. Dr. Mahmud Hasan", role: "instructor", action: "attendance.record", target: "CSE-2201 Sec B (2026-09-29)", detail: "Recorded daily attendance for 40 students", tone: "jade" },
+      { at: "2026-09-28 17:30:00", actor: "Sabina Yeasmin (Registrar)", role: "admin", action: "results.publish", target: "Spring 2026 Marksheet", detail: "Officially approved and published term results to student portal", tone: "jade" },
+      { at: "2026-09-28 10:15:00", actor: "Dr. Nafisa Haque", role: "instructor", action: "marks.assign", target: "CSE-4108 Sec A", detail: "Updated assignment and lab project marks for 45 students", tone: "gold" },
     ] as AuditRecord[],
   },
 };

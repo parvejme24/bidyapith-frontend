@@ -9,14 +9,17 @@ import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 import { BookOpen, CheckCircle2, GraduationCap, Sparkles } from "lucide-react";
 
+import { useApp } from "@/lib/app-context";
 import { UNIVERSITY_GRADES_DATASET } from "@/components/dashboard/admin/results/results-dataset";
 import { ResultsMetricCards } from "@/components/dashboard/admin/results/results-metric-cards";
 import { getResultsColumns } from "@/components/dashboard/admin/results/results-columns";
 import { ResultsStudentTranscriptModal } from "@/components/dashboard/admin/results/results-student-transcript-modal";
 import { ResultsHistoricalTab } from "@/components/dashboard/admin/results/results-historical-tab";
 import { ResultsAnalyticsTab } from "@/components/dashboard/admin/results/results-analytics-tab";
+import type { StudentGradeRecord } from "@/components/dashboard/admin/results/results-types";
 
 export default function AdminResultsPage() {
+  const { publishedGradeSections, approveAndPublishGrades } = useApp();
   const [activeTab, setActiveTab] = useState<"monitor" | "transcripts" | "analytics">("monitor");
   const [selectedDept, setSelectedDept] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -26,29 +29,48 @@ export default function AdminResultsPage() {
   const [inspectStudentModalOpen, setInspectStudentModalOpen] = useState(false);
   const [inspectedStudent, setInspectedStudent] = useState<{ id: string; name: string } | null>(null);
 
+  // Dynamic live grade dataset reflecting published states
+  const liveGradeRecords: StudentGradeRecord[] = useMemo(() => {
+    return UNIVERSITY_GRADES_DATASET.map((r) => {
+      const isPublished =
+        r.status === "published" ||
+        publishedGradeSections.includes(r.courseCode) ||
+        publishedGradeSections.includes(`${r.courseCode}-${r.section}`) ||
+        publishedGradeSections.includes("all-sections");
+      return {
+        ...r,
+        status: isPublished ? "published" : r.status,
+      };
+    });
+  }, [publishedGradeSections]);
+
   // Filtered Grade Records
   const filteredRecords = useMemo(() => {
-    return UNIVERSITY_GRADES_DATASET.filter((record) => {
+    return liveGradeRecords.filter((record) => {
       const matchDept = selectedDept === "all" || record.department.toLowerCase() === selectedDept.toLowerCase();
       const matchStatus = selectedStatus === "all" || record.status === selectedStatus;
       const matchTerm = selectedTerm === "all" || record.term === selectedTerm;
       return matchDept && matchStatus && matchTerm;
     });
-  }, [selectedDept, selectedStatus, selectedTerm]);
+  }, [liveGradeRecords, selectedDept, selectedStatus, selectedTerm]);
 
   // Overall Statistics
-  const totalSubmissions = UNIVERSITY_GRADES_DATASET.length;
-  const publishedCount = UNIVERSITY_GRADES_DATASET.filter((r) => r.status === "published").length;
+  const totalSubmissions = liveGradeRecords.length;
+  const publishedCount = liveGradeRecords.filter((r) => r.status === "published").length;
   const avgGpa = (
-    UNIVERSITY_GRADES_DATASET.reduce((acc, r) => acc + r.gradePoint, 0) / totalSubmissions
+    liveGradeRecords.reduce((acc, r) => acc + r.gradePoint, 0) / totalSubmissions
   ).toFixed(2);
   const passRate = (
-    (UNIVERSITY_GRADES_DATASET.filter((r) => r.gradePoint >= 2.0).length / totalSubmissions) *
+    (liveGradeRecords.filter((r) => r.gradePoint >= 2.0).length / totalSubmissions) *
     100
   ).toFixed(1);
 
-  const handlePublishAll = () => {
-    toast.success("All submitted grade sheets approved and published to student portals!");
+  const handlePublishAll = async () => {
+    await approveAndPublishGrades("all-sections");
+  };
+
+  const handleApproveSingle = async (record: StudentGradeRecord) => {
+    await approveAndPublishGrades(record.courseCode);
   };
 
   const handleInspectTranscript = (studentId: string, studentName: string) => {
@@ -57,7 +79,10 @@ export default function AdminResultsPage() {
   };
 
   const columns = useMemo(() => {
-    return getResultsColumns({ onInspectTranscript: handleInspectTranscript });
+    return getResultsColumns({
+      onInspectTranscript: handleInspectTranscript,
+      onApprovePublish: handleApproveSingle,
+    });
   }, []);
 
   return (

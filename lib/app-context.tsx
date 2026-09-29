@@ -83,6 +83,8 @@ interface AppContextType {
   refundPayment: (id: string) => Promise<void>;
   auditLogs: AuditRecord[];
   addAuditLog: (record: Omit<AuditRecord, "at">) => void;
+  publishedGradeSections: string[];
+  approveAndPublishGrades: (sectionId?: string) => Promise<void>;
 
   /* Notification drawer */
   notifications: NoticeItem[];
@@ -194,7 +196,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(APP_DATA.admin.users);
   const [adminSections, setAdminSections] = useState<AdminSection[]>(APP_DATA.admin.sections);
   const [adminPayments, setAdminPayments] = useState<PaymentTransaction[]>(APP_DATA.admin.payments);
-  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(APP_DATA.admin.audit);
+  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("bidyapith_audit_logs");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return APP_DATA.admin.audit;
+  });
+
+  const [publishedGradeSections, setPublishedGradeSections] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("bidyapith_published_grade_sections");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return ["sec-cse-4210"];
+  });
 
   /* Degree Programs & Admissions */
   const [programs, setPrograms] = useState<DegreeProgram[]>(() => {
@@ -648,6 +668,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setRoster((prev) =>
       prev.map((s) => (s.id === id ? { ...s, final: finals } : s))
     );
+    const targetStudent = roster.find((s) => s.id === id);
+    const studentName = targetStudent?.name || id;
+    const currentSec = instructorSections[0];
+    const courseCode = currentSec?.code || "Course";
+
+    addAuditLog({
+      actor: user.name || "Instructor",
+      role: "instructor",
+      action: "marks.assign",
+      target: `${studentName} (${id})`,
+      detail: `Assigned final examination marks: ${finals}/50 for ${courseCode}`,
+      tone: "gold",
+    });
   };
 
   const submitGradeSheet = async (sectionId: string) => {
@@ -665,7 +698,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setInstructorSections((prev) =>
       prev.map((s) => (s.id === sectionId ? { ...s, gradesSubmitted: true } : s))
     );
-    toast.success("Grade sheet successfully submitted to the registrar");
+
+    const targetSec = instructorSections.find((s) => s.id === sectionId);
+    const secName = targetSec ? `${targetSec.code} Sec ${targetSec.section}` : sectionId;
+
+    addAuditLog({
+      actor: user.name || "Instructor",
+      role: "instructor",
+      action: "grades.submit",
+      target: secName,
+      detail: `Submitted completed section grade sheet (${roster.length} students) for Registrar & Admin approval`,
+      tone: "orchid",
+    });
+
+    toast.success("Grade sheet successfully submitted to the registrar for approval");
   };
 
   const saveAttendance = async (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => {
@@ -691,17 +737,66 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
 
     const count = Object.keys(records).length;
+    const targetSec = instructorSections.find((s) => s.id === sectionId);
+    const secName = targetSec ? `${targetSec.code} Sec ${targetSec.section}` : sectionId;
+
+    addAuditLog({
+      actor: user.name || "Instructor",
+      role: "instructor",
+      action: "attendance.record",
+      target: `${secName} (${dateKey})`,
+      detail: `Recorded daily attendance for ${count} students on ${dateKey}`,
+      tone: "jade",
+    });
+
     toast.success(`Attendance updated for ${count} student${count === 1 ? "" : "s"} (${dateKey})`, {
       id: "attendance-save-toast",
     });
   };
 
   const addAuditLog = (record: Omit<AuditRecord, "at">) => {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
     const newLog: AuditRecord = {
       ...record,
-      at: new Date().toISOString(),
+      at: timeStr,
     };
-    setAuditLogs((prev) => [newLog, ...prev]);
+    setAuditLogs((prev) => {
+      const next = [newLog, ...prev];
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("bidyapith_audit_logs", JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  const approveAndPublishGrades = async (sectionId?: string) => {
+    const targets = sectionId ? [sectionId] : instructorSections.map((s) => s.id);
+    const updated = Array.from(new Set([...publishedGradeSections, ...targets]));
+    setPublishedGradeSections(updated);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("bidyapith_published_grade_sections", JSON.stringify(updated));
+      } catch {}
+    }
+
+    const targetDesc = sectionId
+      ? (instructorSections.find((s) => s.id === sectionId)?.code || sectionId)
+      : "All Submitted Marksheets";
+
+    addAuditLog({
+      actor: user.name || "Administrator",
+      role: "admin",
+      action: "results.publish",
+      target: targetDesc,
+      detail: `Officially approved section grades and published marksheet to student dashboards`,
+      tone: "jade",
+    });
+
+    toast.success(`Student marksheet approved and officially published!`);
   };
 
   const updateUserRole = async (id: string, newRole: Role, status: AdminUser["status"]) => {
@@ -1178,6 +1273,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refundPayment,
         auditLogs,
         addAuditLog,
+        publishedGradeSections,
+        approveAndPublishGrades,
         notifications,
         unreadCount,
         isNotificationsLiveSynced,
