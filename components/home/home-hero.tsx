@@ -61,34 +61,34 @@ export function HomeHero({
           </Rise>
           <Rise delay={4}>
             <div className="flex flex-wrap gap-3 mt-8">
-              <Link href="/register" className={buttonClass({ variant: "primary" })}>
+              <Link href="/register" className={cn(buttonClass({ variant: "primary" }), "w-full sm:w-auto text-center justify-center")}>
                 Start your application
               </Link>
-              <Link href="/programs" className={buttonClass({ variant: "ghost" })}>
+              <Link href="/programs" className={cn(buttonClass({ variant: "ghost" }), "w-full sm:w-auto text-center justify-center")}>
                 Explore 34 programmes
               </Link>
             </div>
           </Rise>
           <Rise delay={5}>
-            <dl className="grid grid-cols-3 gap-4 mt-10 max-w-lg">
+            <dl className="grid grid-cols-3 gap-2 sm:gap-4 mt-8 sm:mt-10 max-w-lg">
               <div>
                 <dt className="text-xs text-ink-faint mb-1">Established</dt>
-                <dd className="font-display text-xl">{founded}</dd>
+                <dd className="font-display text-lg sm:text-xl">{founded}</dd>
               </div>
               <div>
                 <dt className="text-xs text-ink-faint mb-1">Schools</dt>
-                <dd className="font-display text-xl">Six</dd>
+                <dd className="font-display text-lg sm:text-xl">Six</dd>
               </div>
               <div>
                 <dt className="text-xs text-ink-faint mb-1">Campus</dt>
-                <dd className="font-display text-xl">Purbachal</dd>
+                <dd className="font-display text-lg sm:text-xl">Purbachal</dd>
               </div>
             </dl>
           </Rise>
         </div>
 
         <Rise delay={3}>
-          <GlassCard strong className="p-5 sm:p-7" aria-label="Live campus figures">
+          <GlassCard strong className="p-4 sm:p-7" aria-label="Live campus figures">
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
                 <p className="text-xs text-ink-faint">Current term</p>
@@ -99,22 +99,22 @@ export function HomeHero({
               </Chip>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <GlassCard quiet className="p-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <GlassCard quiet className="p-3.5 sm:p-4">
                 <p className="text-xs text-ink-faint mb-1">Seats still open</p>
-                <CountUp value={412} className="font-display text-2xl" />
+                <CountUp value={412} className="font-display text-xl sm:text-2xl" />
               </GlassCard>
-              <GlassCard quiet className="p-4">
+              <GlassCard quiet className="p-3.5 sm:p-4">
                 <p className="text-xs text-ink-faint mb-1">Applications today</p>
-                <CountUp value={187} className="font-display text-2xl" />
+                <CountUp value={187} className="font-display text-xl sm:text-2xl" />
               </GlassCard>
             </div>
 
-            <GlassCard quiet className="p-4 mt-3">
-              <div className="flex items-end justify-between gap-4 mb-2">
+            <GlassCard quiet className="p-3.5 sm:p-4 mt-3">
+              <div className="flex flex-wrap sm:flex-nowrap items-end justify-between gap-3 sm:gap-4 mb-2">
                 <div>
                   <p className="text-xs text-ink-faint">Applications, last 14 days</p>
-                  <p className="font-display text-lg">Up 34% on last cycle</p>
+                  <p className="font-display text-base sm:text-lg">Up 34% on last cycle</p>
                 </div>
                 <ApplicationSparkline values={SPARKLINE} />
               </div>

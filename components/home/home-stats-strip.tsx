@@ -17,13 +17,13 @@ export function HomeStatsStrip({ stats }: HomeStatsStripProps) {
           {stats?.map((stat, index) => (
             <li key={stat.label}>
               <Reveal delay={index * 60}>
-                <GlassCard className="p-5">
+                <GlassCard className="p-3.5 sm:p-5">
                   <CountUp
                     value={stat.value}
                     suffix={stat.suffix}
-                    className="font-display text-3xl"
+                    className="font-display text-2xl sm:text-3xl"
                   />
-                  <p className="text-xs text-ink-faint mt-1.5">{stat.label}</p>
+                  <p className="text-[0.7rem] sm:text-xs text-ink-faint mt-1.5">{stat.label}</p>
                 </GlassCard>
               </Reveal>
             </li>

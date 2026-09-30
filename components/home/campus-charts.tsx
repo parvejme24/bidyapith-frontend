@@ -197,8 +197,8 @@ export function RegistrationAreaChart({
               tick={AXIS}
               axisLine={false}
               tickLine={false}
-              interval={0}
-              minTickGap={8}
+              interval="preserveStartEnd"
+              minTickGap={16}
             />
             <YAxis
               tick={AXIS}

@@ -10,8 +10,8 @@ export function NoticeTicker({ notices }: { notices: Notice[] }) {
   const loop = [...items, ...items];
 
   return (
-    <GlassCard className="flex items-center gap-5 px-5 py-3.5">
-      <Chip tone="gold" className="shrink-0">
+    <GlassCard className="flex items-center gap-3 sm:gap-5 px-3.5 sm:px-5 py-2.5 sm:py-3.5">
+      <Chip tone="gold" className="shrink-0 text-xs sm:text-sm">
         Notice board
       </Chip>
       <div className="flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]">

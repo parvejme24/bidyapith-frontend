@@ -23,7 +23,7 @@ export function HomeAdmissionsSteps({ steps }: HomeAdmissionsStepsProps) {
             </p>
           </div>
         </Reveal>
-        <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5 items-stretch">
+        <ol className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 items-stretch">
           {steps ? (
             steps.map((step, index) => (
               <li key={step.title} className="flex flex-col h-full">

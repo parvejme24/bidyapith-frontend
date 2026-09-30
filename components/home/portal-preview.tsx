@@ -170,7 +170,7 @@ export function PortalPreview() {
         </Reveal>
 
         {/* Tab Selection */}
-        <div className="flex flex-wrap gap-2.5 mb-8">
+        <div className="flex overflow-x-auto no-scrollbar sm:flex-wrap gap-2 sm:gap-2.5 mb-8 pb-2 sm:pb-0">
           {SHOWCASE_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = item.id === activeId;
@@ -180,7 +180,7 @@ export function PortalPreview() {
                 type="button"
                 onClick={() => setActiveId(item.id)}
                 className={cn(
-                  "flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 border cursor-pointer",
+                  "flex shrink-0 sm:shrink items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 border cursor-pointer whitespace-nowrap",
                   isActive
                     ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-950/40"
                     : "bg-white/[0.03] border-white/10 text-ink-muted hover:bg-white/[0.07] hover:text-ink hover:border-white/20"
@@ -194,23 +194,23 @@ export function PortalPreview() {
         </div>
 
         {/* Showcase Display Card */}
-        <GlassCard strong className="overflow-hidden p-6 sm:p-8 lg:p-10 border border-white/10 shadow-2xl">
+        <GlassCard strong className="overflow-hidden p-4 sm:p-8 lg:p-10 border border-white/10 shadow-2xl">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-center">
             {/* Screenshot Frame */}
             <div className="relative group">
               <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 opacity-50 blur-xl transition-all duration-500 group-hover:opacity-75" />
               <div className="relative overflow-hidden rounded-xl border border-white/15 bg-neutral-950/80 shadow-2xl">
                 {/* Browser-like window header */}
-                <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-900/90 border-b border-white/10">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-neutral-900/90 border-b border-white/10">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
                   </div>
-                  <span className="text-[11px] font-mono text-ink-faint truncate max-w-[200px] sm:max-w-xs">
+                  <span className="text-[10px] sm:text-[11px] font-mono text-ink-faint truncate max-w-[130px] xs:max-w-[200px] sm:max-w-xs px-2">
                     https://bidyapith.edu/{activeItem.id.replace("-", "/")}
                   </span>
-                  <div className="w-8" />
+                  <div className="w-6 sm:w-8 shrink-0" />
                 </div>
 
                 {/* Screenshot Image */}
@@ -254,14 +254,14 @@ export function PortalPreview() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   href={activeItem.link}
-                  className={cn(buttonClass({ variant: "primary", size: "sm" }), "gap-2")}
+                  className={cn(buttonClass({ variant: "primary", size: "sm" }), "gap-2 w-full sm:w-auto text-center justify-center")}
                 >
                   <span>Launch Live Demo</span>
                   <ChevronRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/admissions"
-                  className={cn(buttonClass({ variant: "ghost", size: "sm" }), "gap-1.5")}
+                  className={cn(buttonClass({ variant: "ghost", size: "sm" }), "gap-1.5 w-full sm:w-auto text-center justify-center")}
                 >
                   <span>Admissions Info</span>
                   <ExternalLink className="w-3.5 h-3.5" />

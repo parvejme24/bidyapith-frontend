@@ -40,12 +40,12 @@ export function HomeNoticesEvents({ notices, events }: HomeNoticesEventsProps) {
                 <li key={event.title} className="flex gap-4">
                   <GlassCard
                     quiet
-                    className="grid place-items-center w-14 h-14 rounded-2xl shrink-0 leading-none"
+                    className="grid place-items-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl shrink-0 leading-none"
                   >
-                    <span className={cn("font-display text-xl", numClass)}>
+                    <span className={cn("font-display text-lg sm:text-xl", numClass)}>
                       {formatEventDay(event.date)}
                     </span>
-                    <span className="text-[0.6rem] text-ink-faint mt-0.5">
+                    <span className="text-[0.55rem] sm:text-[0.6rem] text-ink-faint mt-0.5">
                       {formatEventMonth(event.date)}
                     </span>
                   </GlassCard>
