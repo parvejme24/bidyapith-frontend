@@ -36,7 +36,7 @@ export function GlassDialogContent({
       overlayClassName="fixed inset-0 z-50 bg-[rgba(6,9,28,0.75)] supports-backdrop-filter:backdrop-blur-[12px]"
       className={cn(
         glassClass({ tone: "strong" }),
-        "fixed top-1/2 left-1/2 z-50 w-[min(640px,calc(100%-2.5rem))] max-h-[min(86vh,860px)] max-w-[640px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto bg-transparent p-7 text-ink ring-0 sm:max-w-[640px]",
+        "fixed top-1/2 left-1/2 z-50 w-[min(640px,calc(100%-1.25rem))] max-h-[min(90dvh,860px)] max-w-[640px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto bg-transparent p-4 sm:p-7 text-ink ring-0 sm:max-w-[640px]",
         className,
       )}
     >

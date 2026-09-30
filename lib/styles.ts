@@ -1,15 +1,15 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-export const shellClass = "mx-auto w-[min(1200px,calc(100%-2.5rem))]";
+export const shellClass = "mx-auto w-[min(1200px,calc(100%-1.5rem))] sm:w-[min(1200px,calc(100%-2.5rem))]";
 
-export const sectionClass = "relative py-[clamp(3.75rem,8vw,6.75rem)]";
-export const sectionTightClass = "relative py-[clamp(2.5rem,5vw,4rem)]";
+export const sectionClass = "relative py-[clamp(3rem,6vw,6.75rem)]";
+export const sectionTightClass = "relative py-[clamp(2rem,4vw,4rem)]";
 
 export const displayClass = {
-  d1: "font-display text-[clamp(2.6rem,6.2vw,4.6rem)] font-semibold leading-[1.08] tracking-[-0.02em]",
-  d2: "font-display text-[clamp(2rem,4.2vw,3.1rem)] font-semibold leading-[1.08] tracking-[-0.02em]",
-  d3: "font-display text-[clamp(1.45rem,2.6vw,2rem)] font-semibold leading-[1.08] tracking-[-0.02em]",
+  d1: "font-display text-[clamp(1.95rem,5.2vw,4.5rem)] font-semibold leading-[1.1] tracking-[-0.02em] break-words",
+  d2: "font-display text-[clamp(1.6rem,3.8vw,3.1rem)] font-semibold leading-[1.12] tracking-[-0.02em] break-words",
+  d3: "font-display text-[clamp(1.2rem,2.4vw,1.9rem)] font-semibold leading-[1.15] tracking-[-0.02em] break-words",
 } as const;
 
 export const leadClass =
@@ -147,7 +147,7 @@ export const meterFillClass = cva(
   },
 );
 
-export const tableScrollClass = "overflow-x-auto";
+export const tableScrollClass = "overflow-x-auto touch-pan-x [-webkit-overflow-scrolling:touch]";
 export const tableClass = "w-full border-collapse text-[0.9rem]";
 export const thClass =
   "whitespace-nowrap border-b border-white/13 px-4 py-[0.85rem] text-left text-xs font-bold tracking-[0.04em] text-ink-faint";

@@ -27,11 +27,11 @@ function split(closesAt: Date): Units | null {
 
 function UnitBox({ value, label }: { value: number; label: string }) {
   return (
-    <div className="grid size-[4.75rem] shrink-0 place-content-center rounded-2xl border border-white/10 bg-white/5 text-center sm:size-[5.25rem]">
-      <div className={cn("font-display text-2xl leading-none sm:text-3xl", numClass)}>
+    <div className="grid size-[3.85rem] xs:size-[4.5rem] sm:size-[5.25rem] shrink-0 place-content-center rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-center">
+      <div className={cn("font-display text-xl xs:text-2xl sm:text-3xl leading-none", numClass)}>
         {String(value).padStart(2, "0")}
       </div>
-      <div className="mt-1 text-[0.62rem] tracking-[0.14em] text-ink-faint">{label}</div>
+      <div className="mt-1 text-[0.55rem] sm:text-[0.62rem] tracking-[0.14em] text-ink-faint">{label}</div>
     </div>
   );
 }
@@ -60,7 +60,7 @@ export function AdmissionCountdown({
   }
 
   return (
-    <div className={`flex flex-wrap gap-2.5 ${className ?? ""}`}>
+    <div className={`flex flex-wrap gap-2 sm:gap-2.5 ${className ?? ""}`}>
       <UnitBox value={units.days} label="DAYS" />
       <UnitBox value={units.hours} label="HRS" />
       <UnitBox value={units.minutes} label="MIN" />
