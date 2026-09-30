@@ -2,6 +2,7 @@
 
 import React from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { InstructorAttendanceSkeleton } from "@/components/dashboard/instructor/attendance/attendance-skeleton";
 import { AttendanceRoster } from "@/components/dashboard/instructor/attendance-roster";
 import { useApp } from "@/lib/app-context";
 
@@ -16,9 +17,12 @@ export default function InstructorAttendancePage() {
       crumb="Instructor / Teaching"
     >
       {isInstructorDataLoading ? (
-        <p className="text-sm text-ink-muted">Loading assigned sections from the academic database...</p>
+        <InstructorAttendanceSkeleton />
       ) : instructorSections.length === 0 ? (
-        <p className="text-sm text-ink-muted">No teaching sections are assigned to this instructor.</p>
+        <div className="py-12 text-center border border-dashed border-white/10 rounded-xl space-y-2">
+          <p className="text-sm font-semibold text-ink">No Teaching Sections Found</p>
+          <p className="text-xs text-ink-muted">There are currently no active teaching sections assigned to your faculty profile.</p>
+        </div>
       ) : (
         <AttendanceRoster sections={instructorSections} roster={roster} />
       )}

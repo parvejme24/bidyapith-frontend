@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { DashboardIcon } from "@/components/dashboard/icons";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { GradeSheet } from "@/components/dashboard/instructor/grade-sheet";
+import { InstructorGradesSkeleton } from "@/components/dashboard/instructor/grading/grades-skeleton";
 import { useApp } from "@/lib/app-context";
 import { downloadCsv } from "@/lib/csv-export";
 import { buttonClass } from "@/lib/styles";
@@ -71,9 +72,12 @@ export default function InstructorGradesPage() {
       }
     >
       {isInstructorDataLoading ? (
-        <p className="text-sm text-ink-muted">Loading assigned sections from the academic database...</p>
+        <InstructorGradesSkeleton />
       ) : instructorSections.length === 0 ? (
-        <p className="text-sm text-ink-muted">No teaching sections are assigned to this instructor.</p>
+        <div className="py-12 text-center border border-dashed border-white/10 rounded-xl space-y-2">
+          <p className="text-sm font-semibold text-ink">No Teaching Sections Found</p>
+          <p className="text-xs text-ink-muted">There are currently no active teaching sections assigned to your faculty profile.</p>
+        </div>
       ) : (
         <GradeSheet
           sections={instructorSections}

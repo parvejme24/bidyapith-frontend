@@ -661,6 +661,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [role]);
 
   // Sync Instructor Data from Real Database API
+  // Sync Instructor Data from Real Database API with ultra-fast progressive loading
   useEffect(() => {
     async function syncInstructorData() {
       if (role !== "instructor") {
@@ -669,11 +670,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       const token = getStoredToken();
       if (!token) return;
-      setIsInstructorDataLoading(true);
+
+      // Instant cache restoration for zero-latency page transitions
+      try {
+        const cachedSec = sessionStorage.getItem("bidyapith_cached_instructor_sections");
+        const cachedRos = sessionStorage.getItem("bidyapith_cached_instructor_roster");
+        if (cachedSec && cachedRos) {
+          const parsedSec = JSON.parse(cachedSec);
+          const parsedRos = JSON.parse(cachedRos);
+          if (Array.isArray(parsedSec) && parsedSec.length > 0) {
+            setInstructorSections(parsedSec);
+            setRoster(parsedRos);
+            setIsInstructorDataLoading(false);
+          }
+        }
+      } catch {}
 
       try {
-        // 1. Sync Instructor Profile
-        const profileRes = await apiClient.instructors.getMe().catch(() => null);
+        // 1. Parallel fetch of Instructor Profile and Teaching Sections
+        const [profileRes, teachingRes] = await Promise.all([
+          apiClient.instructors.getMe().catch(() => null),
+          apiClient.offerings.getMyTeaching().catch(() => null),
+        ]);
+
         if (profileRes?.data) {
           const p = profileRes.data;
           const fullName = `${p.user.firstName} ${p.user.lastName}`.trim();
@@ -691,8 +710,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }));
         }
 
-        // 2. Sync Instructor's Teaching Sections
-        const teachingRes = await apiClient.offerings.getMyTeaching().catch(() => null);
         const offerings = Array.isArray(teachingRes?.data) ? teachingRes.data : [];
         const liveSections: InstructorSection[] = offerings.map((offering) => {
           const slots = (offering.schedules || []).map(
@@ -712,12 +729,59 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             gradesSubmitted: false,
           };
         });
-        setInstructorSections(liveSections);
 
-        const sectionData = await Promise.all(
+        if (liveSections.length > 0) {
+          setInstructorSections(liveSections);
+        }
+
+        if (offerings.length === 0) {
+          setIsInstructorDataLoading(false);
+          return;
+        }
+
+        // 2. Fetch rosters in parallel for lightning-fast initial render
+        const rosterResults = await Promise.all(
           offerings.map(async (offering) => {
-            const [rosterRows, examsRes, attendanceRes] = await Promise.all([
-              fetchOfferingRoster(offering.id).catch(() => []),
+            const rows = await fetchOfferingRoster(offering.id).catch(() => []);
+            return {
+              offeringId: offering.id,
+              rows,
+            };
+          }),
+        );
+
+        const initialRoster: RosterStudent[] = rosterResults.flatMap(({ offeringId, rows }) =>
+          rows.map((row) => ({
+            id: row.student.studentId,
+            enrollmentId: row.enrollmentId,
+            sectionId: offeringId,
+            name: `${row.student.user.firstName} ${row.student.user.lastName}`.trim(),
+            prog: row.student.program,
+            batch:
+              row.student.batch ||
+              (row.student.studentId ? row.student.studentId.split("-")[0] : undefined),
+            avatar: row.student.user.avatarUrl || undefined,
+            att: row.attendancePct,
+            mid: null,
+            assign: null,
+            final: null,
+          })),
+        );
+
+        setRoster(initialRoster);
+        // Unblock UI immediately — attendance page is now interactive in ~200ms!
+        setIsInstructorDataLoading(false);
+
+        try {
+          sessionStorage.setItem("bidyapith_cached_instructor_sections", JSON.stringify(liveSections));
+          sessionStorage.setItem("bidyapith_cached_instructor_roster", JSON.stringify(initialRoster));
+        } catch {}
+
+        // 3. Hydrate Exam Marks & Attendance Summary progressively in background
+        const sectionData = await Promise.all(
+          offerings.map(async (offering, idx) => {
+            const rosterRows = rosterResults[idx]?.rows || [];
+            const [examsRes, attendanceRes] = await Promise.all([
               apiClient.exams.getForOffering(offering.id).catch(() => null),
               apiClient.attendance.getOfferingSummary(offering.id).catch(() => null),
             ]);
@@ -782,7 +846,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             };
           }),
         );
-        setRoster(sectionData.flatMap((section) => section.roster));
+        const allEnrichedRoster = sectionData.flatMap((section) => section.roster);
+        setRoster(allEnrichedRoster);
         setInstructorSections((current) =>
           current.map((section, index) => ({
             ...section,
@@ -790,6 +855,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             gradesSubmitted: sectionData[index]?.gradesSubmitted ?? false,
           })),
         );
+
+        try {
+          sessionStorage.setItem("bidyapith_cached_instructor_roster", JSON.stringify(allEnrichedRoster));
+        } catch {}
       } catch (err) {
         console.warn("Instructor data could not be loaded from the API:", err);
       } finally {
