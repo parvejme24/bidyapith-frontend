@@ -1,10 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { formatTimeAgo } from "./format";
-import { apiClient, getStoredToken } from "./api-client";
+import { apiClient, getStoredToken, removeStoredToken, setStoredToken } from "./api-client";
+import type { ExamResultRecord } from "./api-client/exams";
+import type { OfferingRosterEntry } from "./api-client/offerings";
 import type {
   AcademicTermInfo,
   AdminSection,
@@ -128,10 +130,18 @@ interface AppContextType {
   isLiveSynced: boolean;
 
   /* Instructor state */
+  isInstructorDataLoading: boolean;
   instructorSections: InstructorSection[];
   roster: RosterStudent[];
   updateRosterMarks: (id: string, finals: number) => void;
-  submitGradeSheet: (sectionId: string) => Promise<void>;
+  saveGradeDraft: (
+    sectionId: string,
+    marks: Record<string, { mid: number | null; assign: number | null; final: number | null }>,
+  ) => Promise<void>;
+  submitGradeSheet: (
+    sectionId: string,
+    marks: Record<string, { mid: number | null; assign: number | null; final: number | null }>,
+  ) => Promise<boolean>;
   attendanceStore: Record<string, Record<string, "P" | "L" | "A">>;
   saveAttendance: (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => Promise<void>;
 
@@ -168,6 +178,57 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+async function fetchOfferingRoster(offeringId: string): Promise<OfferingRosterEntry[]> {
+  const firstPage = await apiClient.offerings.getRoster(offeringId, {
+    page: "1",
+    limit: "100",
+  });
+  const totalPages =
+    firstPage?.meta?.totalPage ??
+    (firstPage?.data as any)?.meta?.totalPage ??
+    1;
+  const pageCount = Math.max(totalPages, 1);
+  const remainingPages = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      apiClient.offerings.getRoster(offeringId, {
+        page: String(index + 2),
+        limit: "100",
+      }),
+    ),
+  );
+  return [firstPage, ...remainingPages].flatMap((page) => {
+    const d = page?.data as any;
+    if (Array.isArray(d)) return d;
+    if (Array.isArray(d?.students)) return d.students;
+    if (Array.isArray(d?.data)) return d.data;
+    return [];
+  });
+}
+
+async function fetchExamResults(examId: string): Promise<ExamResultRecord[]> {
+  const firstPage = await apiClient.exams.getResults(examId, { page: "1", limit: "100" });
+  const totalPages =
+    firstPage?.meta?.totalPage ??
+    (firstPage?.data as any)?.meta?.totalPage ??
+    1;
+  const pageCount = Math.max(totalPages, 1);
+  const remainingPages = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      apiClient.exams.getResults(examId, {
+        page: String(index + 2),
+        limit: "100",
+      }),
+    ),
+  );
+  return [firstPage, ...remainingPages].flatMap((page) => {
+    const d = page?.data as any;
+    if (Array.isArray(d)) return d;
+    if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(d?.results)) return d.results;
+    return [];
+  });
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -186,6 +247,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [overrideRole, setOverrideRole] = useState<Role | null>(null);
   const role = overrideRole || derivedRole;
+  const [authRevision, setAuthRevision] = useState(0);
+  const loginRequests = useRef<Partial<Record<Role, Promise<void>>>>({});
 
   const [userOverrides, setUserOverrides] = useState<Record<Role, Partial<UserSession>>>(() => {
     if (typeof window !== "undefined") {
@@ -235,6 +298,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isLiveSynced, setIsLiveSynced] = useState(false);
 
   /* Instructor */
+  const [isInstructorDataLoading, setIsInstructorDataLoading] = useState(role === "instructor");
   const [instructorSections, setInstructorSections] = useState<InstructorSection[]>([]);
   const [roster, setRoster] = useState<RosterStudent[]>([]);
   const [attendanceStore, setAttendanceStore] = useState<Record<string, Record<string, "P" | "L" | "A">>>(() => {
@@ -294,15 +358,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const DEMO_CREDENTIALS: Record<Role, { email: string; pass: string }> = {
     student: { email: "student001@bidyapith.edu", pass: "Student1234" },
-    instructor: { email: "ayesha.rahman@bidyapith.edu", pass: "Teach1234" },
+    instructor: { email: "faculty@bidyapith.edu.bd", pass: "Teach1234" },
     admin: { email: "devparvejme@gmail.com", pass: "12345678" },
   };
 
   const setRole = (newRole: Role) => {
     setOverrideRole(newRole);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("bidyapith_access_token");
-    }
+    removeStoredToken();
     const targetMap: Record<Role, string> = {
       student: "/student",
       instructor: "/instructor",
@@ -311,19 +373,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     router.push(`${targetMap[newRole]}?role=${newRole}`);
   };
 
+  useEffect(() => {
+    const handleAuthChange = () => setAuthRevision((revision) => revision + 1);
+    window.addEventListener("bidyapith-auth-change", handleAuthChange);
+    return () => window.removeEventListener("bidyapith-auth-change", handleAuthChange);
+  }, []);
+
   // Ensure role authentication token in the background
   useEffect(() => {
-    async function ensureRoleAuth() {
-      const token = getStoredToken();
-      const creds = DEMO_CREDENTIALS[role];
-      if (!token && creds) {
-        try {
-          await apiClient.auth.login({ email: creds.email, password: creds.pass });
-        } catch {}
-      }
-    }
-    ensureRoleAuth();
-  }, [role]);
+    const credentials = DEMO_CREDENTIALS[role];
+    if (getStoredToken() || !credentials || loginRequests.current[role]) return;
+
+    const request = apiClient.auth
+      .login({ email: credentials.email, password: credentials.pass })
+      .then((response) => {
+        const token = response.data?.accessToken;
+        if (!token) throw new Error("The login response did not include an access token");
+        setStoredToken(token, true);
+      })
+      .catch((error: unknown) => {
+        console.warn("Background sign-in failed:", error);
+        if (role === "instructor") {
+          setIsInstructorDataLoading(false);
+          toast.error(error instanceof Error ? error.message : "Instructor sign-in failed");
+        }
+      });
+    loginRequests.current[role] = request;
+    void request.finally(() => {
+      if (loginRequests.current[role] === request) delete loginRequests.current[role];
+    });
+  }, [role, authRevision]);
 
   // Sync Current Semester Info from Live API
   useEffect(() => {
@@ -416,15 +495,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                           code: `${deptCode}-${semNum}101`,
                           title: `Core Principles of ${p.name || "Engineering"} ${semNum}`,
                           credits: 3,
-                          type: "Core" as const,
-                          instructor: "Prof. Dr. Ayesha Rahman",
-                          room: "AB2-401",
-                        },
-                        {
-                          code: `${deptCode}-${semNum}102`,
-                          title: `Applied Laboratory Practice ${semNum}`,
-                          credits: 1.5,
-                          type: "Lab" as const,
+                          type: "Core",
                           instructor: "Prof. Dr. Ayesha Rahman",
                           room: "LAB-301",
                         },
@@ -592,14 +663,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Sync Instructor Data from Real Database API
   useEffect(() => {
     async function syncInstructorData() {
-      let token = getStoredToken();
-      if (!token && role === "instructor") {
-        try {
-          await apiClient.auth.login({ email: "ayesha.rahman@bidyapith.edu", password: "Teach1234" });
-          token = getStoredToken();
-        } catch {}
+      if (role !== "instructor") {
+        setIsInstructorDataLoading(false);
+        return;
       }
-      if (!token || role !== "instructor") return;
+      const token = getStoredToken();
+      if (!token) return;
+      setIsInstructorDataLoading(true);
 
       try {
         // 1. Sync Instructor Profile
@@ -622,89 +692,113 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 2. Sync Instructor's Teaching Sections
-        let liveSections: InstructorSection[] = [];
         const teachingRes = await apiClient.offerings.getMyTeaching().catch(() => null);
-        if (teachingRes?.data && Array.isArray(teachingRes.data) && teachingRes.data.length > 0) {
-          liveSections = teachingRes.data.map((o) => {
-            const schedules = o.schedules || [];
-            const slots = schedules.map((s) => `${s.dayOfWeek.slice(0, 3)} ${s.startTime}`);
-            return {
-              id: o.id,
-              code: o.course.code,
-              title: o.course.title,
-              section: o.section,
-              enrolled: o.enrolledCount || 0,
-              capacity: o.capacity || 40,
-              room: o.room || "AB2-401",
-              slots: slots.length > 0 ? slots : ["Sun 09:00", "Tue 09:00"],
-              avgAttendance: 92,
-              gradesSubmitted: false,
-            };
-          });
-        } else {
-          // Fallback to all offerings
-          const allOfferingsRes = await apiClient.offerings.getAll().catch(() => null);
-          if (allOfferingsRes?.data && Array.isArray(allOfferingsRes.data)) {
-            liveSections = (allOfferingsRes.data as any[]).slice(0, 5).map((o) => {
-              const schedules = o.schedules || [];
-              const slots = schedules.map((s: any) => `${s.dayOfWeek?.slice(0, 3) || "Sun"} ${s.startTime || "09:00"}`);
+        const offerings = Array.isArray(teachingRes?.data) ? teachingRes.data : [];
+        const liveSections: InstructorSection[] = offerings.map((offering) => {
+          const slots = (offering.schedules || []).map(
+            (schedule) =>
+              `${schedule.dayOfWeek.slice(0, 1)}${schedule.dayOfWeek.slice(1, 3).toLowerCase()} ${schedule.startTime}-${schedule.endTime}`,
+          );
+          return {
+            id: offering.id,
+            code: offering.course.code,
+            title: offering.course.title,
+            section: offering.section,
+            enrolled: offering.enrolledCount,
+            capacity: offering.capacity,
+            room: offering.room || "—",
+            slots,
+            avgAttendance: 0,
+            gradesSubmitted: false,
+          };
+        });
+        setInstructorSections(liveSections);
+
+        const sectionData = await Promise.all(
+          offerings.map(async (offering) => {
+            const [rosterRows, examsRes, attendanceRes] = await Promise.all([
+              fetchOfferingRoster(offering.id).catch(() => []),
+              apiClient.exams.getForOffering(offering.id).catch(() => null),
+              apiClient.attendance.getOfferingSummary(offering.id).catch(() => null),
+            ]);
+            const exams = examsRes?.data?.exams || [];
+            const examResults = await Promise.all(
+              exams.map((exam) => fetchExamResults(exam.id).catch(() => [])),
+            );
+            const marksByEnrollment = new Map<
+              string,
+              { mid: number | null; assign: number | null; final: number | null }
+            >();
+
+            exams.forEach((exam, examIndex) => {
+              const resultRows = examResults[examIndex] || [];
+              resultRows.forEach((result) => {
+                const marks = marksByEnrollment.get(result.enrollmentId) || {
+                  mid: null,
+                  assign: null,
+                  final: null,
+                };
+                const value = Number(result.marksObtained);
+                if (exam.type === "MIDTERM") marks.mid = value;
+                if (exam.type === "ASSIGNMENT") marks.assign = value;
+                if (exam.type === "FINAL") marks.final = value;
+                marksByEnrollment.set(result.enrollmentId, marks);
+              });
+            });
+
+            const liveRoster: RosterStudent[] = rosterRows.map((row) => {
+              const marks = marksByEnrollment.get(row.enrollmentId);
+              const derivedBatch =
+                row.student.batch ||
+                (row.student.studentId ? row.student.studentId.split("-")[0] : undefined);
               return {
-                id: o.id,
-                code: o.course?.code || "CSE-1101",
-                title: o.course?.title || "Course Offering",
-                section: o.section || "A",
-                enrolled: o.enrolledCount || 30,
-                capacity: o.capacity || 45,
-                room: o.room || "AB2-401",
-                slots: slots.length > 0 ? slots : ["Sun 09:00", "Tue 09:00"],
-                avgAttendance: 92,
-                gradesSubmitted: false,
+                id: row.student.studentId,
+                enrollmentId: row.enrollmentId,
+                sectionId: offering.id,
+                name: `${row.student.user.firstName} ${row.student.user.lastName}`.trim(),
+                prog: row.student.program,
+                batch: derivedBatch,
+                avatar: row.student.user.avatarUrl || undefined,
+                att: row.attendancePct,
+                mid: marks?.mid ?? null,
+                assign: marks?.assign ?? null,
+                final: marks?.final ?? null,
               };
             });
-          }
-        }
+            const attendanceSummary = attendanceRes?.data || [];
+            const avgAttendance = attendanceSummary.length
+              ? Math.round(
+                  (attendanceSummary.reduce((sum, row) => sum + row.rate, 0) /
+                    attendanceSummary.length) *
+                    100,
+                )
+              : 0;
 
-        if (liveSections.length > 0) {
-          setInstructorSections(liveSections);
-
-          // Fetch roster for first section
-          const firstSection = liveSections[0];
-          if (firstSection) {
-            const rosterRes = await apiClient.offerings.getRoster(firstSection.id).catch(() => null);
-            // The roster API returns { data: [], offering: {}, meta: {} }
-            const rosterRows: any[] = Array.isArray((rosterRes as any)?.data)
-              ? (rosterRes as any).data
-              : Array.isArray(rosterRes?.data)
-              ? rosterRes.data as any[]
-              : [];
-            if (rosterRows.length > 0) {
-              const liveRoster: RosterStudent[] = rosterRows.map((r: any) => {
-                const student = r.student || {};
-                const userInfo = student.user || {};
-                const fullName = `${userInfo.firstName || ""} ${userInfo.lastName || ""}`.trim();
-                return {
-                  id: student.studentId || r.studentId || student.id || r.enrollmentId,
-                  name: fullName || r.firstName ? `${r.firstName} ${r.lastName}`.trim() : "Student",
-                  prog: student.program || "B.Sc. in CSE",
-                  avatar: userInfo.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
-                  att: r.attendancePct ?? 95,
-                  mid: r.grade?.midtermMarks ?? Math.round(18 + Math.random() * 7),
-                  final: r.grade?.finalMarks ?? Math.round(35 + Math.random() * 14),
-                  assign: r.grade?.assignmentMarks ?? Math.round(15 + Math.random() * 5),
-                };
-              });
-              setRoster(liveRoster);
-            }
-          }
-
-        }
+            return {
+              roster: liveRoster,
+              avgAttendance,
+              gradesSubmitted:
+                rosterRows.length > 0 && rosterRows.every((row) => row.letterGrade !== null),
+            };
+          }),
+        );
+        setRoster(sectionData.flatMap((section) => section.roster));
+        setInstructorSections((current) =>
+          current.map((section, index) => ({
+            ...section,
+            avgAttendance: sectionData[index]?.avgAttendance ?? 0,
+            gradesSubmitted: sectionData[index]?.gradesSubmitted ?? false,
+          })),
+        );
       } catch (err) {
-        // silent fallback
+        console.warn("Instructor data could not be loaded from the API:", err);
+      } finally {
+        setIsInstructorDataLoading(false);
       }
     }
 
     syncInstructorData();
-  }, [role]);
+  }, [role, authRevision]);
 
   // Sync Admin collections from live database API
   useEffect(() => {
@@ -897,38 +991,137 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const submitGradeSheet = async (sectionId: string) => {
+  const persistExamMarks = async (
+    sectionId: string,
+    marks: Record<string, { mid: number | null; assign: number | null; final: number | null }>,
+  ) => {
+    const sectionRoster = roster.filter((student) => student.sectionId === sectionId);
+    if (sectionRoster.length === 0) {
+      throw new Error("This section has no enrolled students");
+    }
+    if (sectionRoster.some((student) => !student.enrollmentId)) {
+      throw new Error("The roster is missing enrollment identifiers; refresh the page and retry");
+    }
+
+    const examsResponse = await apiClient.exams.getForOffering(sectionId);
+    const exams = examsResponse.data?.exams || [];
+    const examByType = new Map(exams.map((exam) => [exam.type, exam]));
+    const categories = [
+      { type: "MIDTERM", field: "mid" },
+      { type: "ASSIGNMENT", field: "assign" },
+      { type: "FINAL", field: "final" },
+    ] as const;
+
+    for (const category of categories) {
+      const exam = examByType.get(category.type);
+      if (!exam) {
+        throw new Error(`The ${category.type.toLowerCase()} assessment is not configured for this section`);
+      }
+      const results = sectionRoster.flatMap((student) => {
+        const enrollmentId = student.enrollmentId;
+        const value = marks[student.id]?.[category.field];
+        return enrollmentId === undefined || value === null || value === undefined
+          ? []
+          : [{ enrollmentId, marksObtained: value }];
+      });
+      if (results.length > 0) {
+        await apiClient.exams.enterResults(exam.id, results);
+      }
+    }
+  };
+
+  const saveGradeDraft = async (
+    sectionId: string,
+    marks: Record<string, { mid: number | null; assign: number | null; final: number | null }>,
+  ) => {
     try {
-      await apiClient.offerings.submitGrades(sectionId, {
-        grades: roster.map((r) => ({
-          studentId: r.id,
-          finalMarks: r.final,
-          midtermMarks: r.mid,
-          assignmentMarks: r.assign,
-        })),
-      }).catch(() => null);
-    } catch {}
+      await persistExamMarks(sectionId, marks);
+      toast.success("Grade draft saved to the database");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save grade draft");
+    }
+  };
 
-    setInstructorSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, gradesSubmitted: true } : s))
-    );
+  const submitGradeSheet = async (
+    sectionId: string,
+    marks: Record<string, { mid: number | null; assign: number | null; final: number | null }>,
+  ) => {
+    const sectionRoster = roster.filter((student) => student.sectionId === sectionId);
+    if (
+      sectionRoster.some((student) => {
+        const entry = marks[student.id];
+        return entry?.mid == null || entry.assign == null || entry.final == null;
+      })
+    ) {
+      toast.error("Enter midterm, assignment, and final marks for every enrolled student");
+      return false;
+    }
 
-    const targetSec = instructorSections.find((s) => s.id === sectionId);
-    const secName = targetSec ? `${targetSec.code} Sec ${targetSec.section}` : sectionId;
+    try {
+      await persistExamMarks(sectionId, marks);
+      const gradeRows = sectionRoster.flatMap((student) =>
+        student.enrollmentId ? [{ enrollmentId: student.enrollmentId }] : [],
+      );
+      if (gradeRows.length !== sectionRoster.length) {
+        throw new Error("The roster is missing enrollment identifiers; refresh the page and retry");
+      }
+      await apiClient.results.submitOfferingGrades(sectionId, gradeRows);
+      setInstructorSections((prev) =>
+        prev.map((section) =>
+          section.id === sectionId ? { ...section, gradesSubmitted: true } : section,
+        ),
+      );
 
-    addAuditLog({
-      actor: user.name || "Instructor",
-      role: "instructor",
-      action: "grades.submit",
-      target: secName,
-      detail: `Submitted completed section grade sheet (${roster.length} students) for Registrar & Admin approval`,
-      tone: "orchid",
-    });
-
-    toast.success("Grade sheet successfully submitted to the registrar for approval");
+      const targetSection = instructorSections.find((section) => section.id === sectionId);
+      const sectionName = targetSection
+        ? `${targetSection.code} Sec ${targetSection.section}`
+        : sectionId;
+      addAuditLog({
+        actor: user.name || "Instructor",
+        role: "instructor",
+        action: "grades.submit",
+        target: sectionName,
+        detail: `Submitted final grades for ${sectionRoster.length} enrolled students`,
+        tone: "orchid",
+      });
+      toast.success("Grade sheet submitted successfully");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to submit grade sheet");
+      return false;
+    }
   };
 
   const saveAttendance = async (sectionId: string, dateKey: string, records: Record<string, "P" | "L" | "A">) => {
+    const sectionRoster = roster.filter((student) => student.sectionId === sectionId);
+    const enrollmentByStudentId = new Map<string, string>();
+    for (const student of sectionRoster) {
+      if (student.enrollmentId) enrollmentByStudentId.set(student.id, student.enrollmentId);
+    }
+    const attendanceRecords = Object.entries(records).flatMap(([studentId, mark]) => {
+      const enrollmentId = enrollmentByStudentId.get(studentId);
+      return enrollmentId
+        ? [{
+            enrollmentId,
+            status: mark === "P" ? "PRESENT" : mark === "L" ? "LATE" : "ABSENT",
+          }]
+        : [];
+    });
+    if (attendanceRecords.length === 0) {
+      const error = new Error("There are no enrolled students to save attendance for");
+      toast.error(error.message);
+      throw error;
+    }
+    try {
+      await apiClient.attendance.markOfferingSession(sectionId, {
+        date: dateKey,
+        records: attendanceRecords,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save attendance");
+      throw error;
+    }
+
     const compositeKey = `${sectionId}_${dateKey}`;
     setAttendanceStore((prev) => {
       const next = { ...prev, [compositeKey]: records };
@@ -939,16 +1132,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return next;
     });
-
-    try {
-      await apiClient.offerings.markAttendance(sectionId, {
-        date: dateKey,
-        records: Object.entries(records).map(([studentId, status]) => ({
-          studentId,
-          status: status === "P" ? "PRESENT" : status === "L" ? "LATE" : "ABSENT",
-        })),
-      }).catch(() => null);
-    } catch {}
 
     const count = Object.keys(records).length;
     const targetSec = instructorSections.find((s) => s.id === sectionId);
@@ -963,7 +1146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       tone: "jade",
     });
 
-    toast.success(`Attendance updated for ${count} student${count === 1 ? "" : "s"} (${dateKey})`, {
+    toast.success(`Attendance saved for ${count} student${count === 1 ? "" : "s"} (${dateKey})`, {
       id: "attendance-save-toast",
     });
   };
@@ -1467,9 +1650,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         invoices,
         payInvoice,
         isLiveSynced,
+        isInstructorDataLoading,
         instructorSections,
         roster,
         updateRosterMarks,
+        saveGradeDraft,
         submitGradeSheet,
         attendanceStore,
         saveAttendance,
