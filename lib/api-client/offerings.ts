@@ -16,27 +16,39 @@ export interface TeachingOffering {
   schedules?: Array<{ dayOfWeek: string; startTime: string; endTime: string }>;
 }
 
-export interface OfferingRosterStudent {
-  id: string;
+export interface OfferingRosterEntry {
+  enrollmentId: string;
   status: string;
+  enrolledAt: string;
+  examEligible: boolean;
+  totalMarks: string | null;
+  letterGrade: string | null;
+  gradePoint: string | null;
+  attendancePct: number;
   student: {
     id: string;
     studentId: string;
+    batch: string;
+    cgpa: string;
+    program: string;
     user: {
       firstName: string;
       lastName: string;
       email: string;
-      avatarUrl?: string;
+      avatarUrl?: string | null;
     };
   };
-  grade?: {
-    quizMarks?: number;
-    midtermMarks?: number;
-    finalMarks?: number;
-    assignmentMarks?: number;
-    letterGrade?: string;
-    gradePoint?: number;
+  recentAttendance: Array<{ date: string; status: string }>;
+}
+
+export interface OfferingRosterResponse {
+  offering: {
+    id: string;
+    section: string;
+    course: { id: string; code: string; title: string; credits: string };
   };
+  data: OfferingRosterEntry[];
+  meta: { page: number; limit: number; total: number; totalPage: number };
 }
 
 export const offeringsApi = {
@@ -66,8 +78,10 @@ export const offeringsApi = {
   remove: (id: string) => apiRequest<unknown>(`/offerings/${id}`, { method: "DELETE" }),
   getMyTeaching: () =>
     apiRequest<TeachingOffering[]>("/offerings/my-teaching"),
-  getRoster: (id: string) =>
-    apiRequest<OfferingRosterStudent[]>(`/offerings/${id}/students`),
+  getRoster: (id: string, params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+    return apiRequest<OfferingRosterResponse>(`/offerings/${id}/students${query}`);
+  },
   getGrades: (id: string) => apiRequest<unknown>(`/offerings/${id}/grades`),
   submitGrades: (id: string, body: unknown) =>
     apiRequest(`/offerings/${id}/grades`, {

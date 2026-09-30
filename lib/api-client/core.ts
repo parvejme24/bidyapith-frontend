@@ -39,11 +39,11 @@ export function notifyAuthChange(): void {
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return (
+  const token =
     localStorage.getItem("bidyapith_token") ||
     localStorage.getItem("bidyapith_access_token") ||
     sessionStorage.getItem("bidyapith_token")
-  );
+  return token?.startsWith("bidyapith-session-") ? null : token;
 }
 
 export function setStoredToken(token: string, remember = true): void {
@@ -59,11 +59,16 @@ export function setStoredToken(token: string, remember = true): void {
 
 export function removeStoredToken(): void {
   if (typeof window === "undefined") return;
+  const hadStoredToken = Boolean(
+    localStorage.getItem("bidyapith_token") ||
+      localStorage.getItem("bidyapith_access_token") ||
+      sessionStorage.getItem("bidyapith_token"),
+  );
   localStorage.removeItem("bidyapith_token");
   localStorage.removeItem("bidyapith_access_token");
   sessionStorage.removeItem("bidyapith_token");
   localStorage.removeItem("bidyapith_user");
-  notifyAuthChange();
+  if (hadStoredToken) notifyAuthChange();
 }
 
 export function getStoredUser<T = unknown>(): T | null {
@@ -124,6 +129,7 @@ export async function apiRequest<T = unknown>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401 && token) removeStoredToken();
     throw new Error(data.message || `API request failed with status ${response.status}`);
   }
 
