@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/lib/app-context";
+import { apiClient } from "@/lib/api-client";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import type { AttendanceStats, DayOverrideInfo } from "./attendance/attendance-types";
 import {
@@ -17,6 +18,12 @@ import {
   exportMonthlyMatrixCsv,
   exportStudentMonthlyCsv,
 } from "./attendance/attendance-csv-exporter";
+import {
+  AttendanceFilterBar,
+  type DailyStatusFilter,
+  type MonthlyStatusFilter,
+  type SortOption,
+} from "./attendance/attendance-filter-bar";
 
 interface AttendanceRosterProps {
   sections: InstructorSection[];
@@ -25,22 +32,25 @@ interface AttendanceRosterProps {
 }
 
 const DEFAULT_FALLBACK_SECTION: InstructorSection = {
-  id: "S1",
-  code: "CSE-3101",
-  title: "Operating Systems Principles",
-  section: "1",
-  room: "AB2-401",
-  slots: ["Sun 09:00", "Tue 09:00"],
+  id: "",
+  code: "",
+  title: "No assigned sections",
+  section: "—",
+  room: "—",
+  slots: [],
   enrolled: 0,
-  capacity: 40,
-  avgAttendance: 92,
+  capacity: 0,
+  avgAttendance: 0,
   gradesSubmitted: false,
 };
+
+const EMPTY_SCHEDULE_OVERRIDES: Record<string, DayOverrideInfo> = {};
 
 export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterProps) {
   const { attendanceStore, saveAttendance } = useApp();
   const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily");
   const [selectedSec, setSelectedSec] = useState<string>(sections[0]?.id || "S1");
+  const [apiAttendanceStore, setApiAttendanceStore] = useState<Record<string, Record<string, "P" | "L" | "A">>>({});
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
@@ -63,7 +73,47 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     return {};
   });
 
-  const currentSectionOverrides = scheduleOverrides[selectedSec] || {};
+  const currentSectionOverrides = scheduleOverrides[selectedSec] || EMPTY_SCHEDULE_OVERRIDES;
+  const currentRoster = useMemo(
+    () => roster.filter((student) => !student.sectionId || student.sectionId === selectedSec),
+    [roster, selectedSec],
+  );
+
+  // Batch & Filter states
+  const [selectedBatch, setSelectedBatch] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [dailyStatusFilter, setDailyStatusFilter] = useState<DailyStatusFilter>("all");
+  const [monthlyStatusFilter, setMonthlyStatusFilter] = useState<MonthlyStatusFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("id_asc");
+
+  // Available batches in current section (e.g. 2023, 2024, 2025, 2026)
+  const availableBatches = useMemo(() => {
+    const set = new Set<string>();
+    currentRoster.forEach((student) => {
+      const batch = student.batch || student.id.split("-")[0];
+      if (batch && /^\d{4}$/.test(batch)) {
+        set.add(batch);
+      }
+    });
+    return Array.from(set).sort();
+  }, [currentRoster]);
+
+  // Batch counts map
+  const batchCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    currentRoster.forEach((student) => {
+      const batch = student.batch || student.id.split("-")[0];
+      if (batch) {
+        counts[batch] = (counts[batch] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [currentRoster]);
+
+  const effectiveAttendanceStore = useMemo(
+    () => ({ ...attendanceStore, ...apiAttendanceStore }),
+    [attendanceStore, apiAttendanceStore],
+  );
 
   const handleSetDaySchedule = (
     dateKey: string,
@@ -92,10 +142,16 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
   }, [selectedDate]);
 
+  useEffect(() => {
+    if (!sections.some((section) => section.id === selectedSec) && sections[0]) {
+      setSelectedSec(sections[0].id);
+    }
+  }, [sections, selectedSec]);
+
   const currentSection =
     sections.find((s) => s.id === selectedSec) ||
     sections[0] ||
-    { ...DEFAULT_FALLBACK_SECTION, enrolled: roster.length };
+    { ...DEFAULT_FALLBACK_SECTION, enrolled: currentRoster.length };
 
   const [dailyAttendance, setDailyAttendance] = useState<Record<string, "P" | "L" | "A">>(() => {
     const initialKey = `${sections[0]?.id || "S1"}_${dateKey}`;
@@ -105,21 +161,199 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   // Keep daily attendance in sync when section or date changes and reset unsaved flag
   useEffect(() => {
     const compositeKey = `${selectedSec}_${dateKey}`;
-    setDailyAttendance(attendanceStore?.[compositeKey] || {});
+    if (hasUnsavedChanges) return;
+    setDailyAttendance(
+      apiAttendanceStore[compositeKey] ?? attendanceStore?.[compositeKey] ?? {},
+    );
     setHasUnsavedChanges(false);
-  }, [selectedSec, dateKey, attendanceStore]);
+  }, [selectedSec, dateKey, attendanceStore, apiAttendanceStore, hasUnsavedChanges]);
 
   const monthDays = useMemo(() => {
     return getDaysInMonth(activeYear, activeMonth, selectedDate || new Date(), currentSectionOverrides);
   }, [activeYear, activeMonth, selectedDate, currentSectionOverrides]);
 
+  useEffect(() => {
+    if (!sections.some((section) => section.id === selectedSec)) return;
+    let cancelled = false;
+    const scheduledWeekdays = new Set(currentSection.slots.map((slot) => slot.slice(0, 3)));
+    const dates = monthDays.filter(
+      (day) =>
+        day.dateKey === dateKey ||
+        (day.isClassDay &&
+          !day.isFuture &&
+          (scheduledWeekdays.size === 0 ||
+            scheduledWeekdays.has(day.weekday) ||
+            day.isSpecialClass)),
+    );
+
+    const loadAttendanceSessions = async () => {
+      const sessions = await Promise.all(
+        dates.map(async (day) => {
+          const response = await apiClient.attendance
+            .getOfferingSession(selectedSec, day.dateKey)
+            .catch(() => null);
+          if (!response) return null;
+
+          const marks: Record<string, "P" | "L" | "A"> = {};
+          const studentByEnrollment = new Map(
+            currentRoster
+              .filter(
+                (student): student is RosterStudent & { enrollmentId: string } =>
+                  Boolean(student.enrollmentId),
+              )
+              .map((student) => [student.enrollmentId, student.id]),
+          );
+          for (const record of response.data.records) {
+            const studentId = studentByEnrollment.get(record.enrollmentId);
+            if (!studentId) continue;
+            marks[studentId] =
+              record.status === "PRESENT" ? "P" : record.status === "LATE" ? "L" : "A";
+          }
+          return [`${selectedSec}_${day.dateKey}`, marks] as const;
+        }),
+      );
+
+      if (cancelled) return;
+      setApiAttendanceStore((previous) => ({
+        ...previous,
+        ...Object.fromEntries(sessions.filter((session) => session !== null)),
+      }));
+    };
+
+    void loadAttendanceSessions();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    selectedSec,
+    dateKey,
+    activeYear,
+    activeMonth,
+    currentSection,
+    currentRoster,
+    monthDays,
+    sections,
+  ]);
+
   const studentStatsMap = useMemo(() => {
     const map: Record<string, AttendanceStats> = {};
-    roster.forEach((st) => {
-      map[st.id] = calculateStudentAttendanceStats(st, currentSection, monthDays, attendanceStore);
+    currentRoster.forEach((st) => {
+      map[st.id] = calculateStudentAttendanceStats(st, currentSection, monthDays, effectiveAttendanceStore);
     });
     return map;
-  }, [roster, currentSection, monthDays, attendanceStore]);
+  }, [currentRoster, currentSection, monthDays, effectiveAttendanceStore]);
+
+  // Daily status counts for dropdown badges
+  const dailyStatusCounts = useMemo(() => {
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+    let atRisk = 0;
+    currentRoster.forEach((st) => {
+      const mark = dailyAttendance[st.id];
+      if (mark === "P") present++;
+      else if (mark === "L") late++;
+      else if (mark === "A") absent++;
+      const stats = studentStatsMap[st.id];
+      const rate = stats ? stats.ratePct : st.att;
+      if (rate < 75) atRisk++;
+    });
+    const unmarked = currentRoster.length - (present + late + absent);
+    return {
+      total: currentRoster.length,
+      present,
+      late,
+      absent,
+      unmarked,
+      atRisk,
+    };
+  }, [currentRoster, dailyAttendance, studentStatsMap]);
+
+  // Filtered & Sorted student roster
+  const filteredRoster = useMemo(() => {
+    let list = currentRoster.filter((st) => {
+      // 1. Batch filter
+      if (selectedBatch !== "all") {
+        const studentBatch = st.batch || st.id.split("-")[0];
+        if (studentBatch !== selectedBatch) return false;
+      }
+
+      // 2. Search query (name or student ID)
+      if (searchQuery.trim().length > 0) {
+        const query = searchQuery.trim().toLowerCase();
+        const matchesName = st.name.toLowerCase().includes(query);
+        const matchesId = st.id.toLowerCase().includes(query);
+        if (!matchesName && !matchesId) return false;
+      }
+
+      // 3. Status filter
+      if (viewMode === "daily") {
+        const mark = dailyAttendance[st.id];
+        const stats = studentStatsMap[st.id];
+        const rate = stats ? stats.ratePct : st.att;
+
+        if (dailyStatusFilter === "P" && mark !== "P") return false;
+        if (dailyStatusFilter === "L" && mark !== "L") return false;
+        if (dailyStatusFilter === "A" && mark !== "A") return false;
+        if (dailyStatusFilter === "unmarked" && mark !== undefined) return false;
+        if (dailyStatusFilter === "atRisk" && rate >= 75) return false;
+      } else {
+        const stats = studentStatsMap[st.id];
+        const rate = stats ? stats.ratePct : st.att;
+        if (monthlyStatusFilter === "good" && rate < 75) return false;
+        if (monthlyStatusFilter === "atRisk" && rate >= 75) return false;
+      }
+
+      return true;
+    });
+
+    // 4. Sorting
+    list = [...list].sort((a, b) => {
+      if (sortBy === "id_asc") return a.id.localeCompare(b.id);
+      if (sortBy === "id_desc") return b.id.localeCompare(a.id);
+      if (sortBy === "name_asc") return a.name.localeCompare(b.name);
+      if (sortBy === "att_desc") {
+        const rateA = studentStatsMap[a.id]?.ratePct ?? a.att;
+        const rateB = studentStatsMap[b.id]?.ratePct ?? b.att;
+        return rateB - rateA;
+      }
+      if (sortBy === "att_asc") {
+        const rateA = studentStatsMap[a.id]?.ratePct ?? a.att;
+        const rateB = studentStatsMap[b.id]?.ratePct ?? b.att;
+        return rateA - rateB;
+      }
+      return 0;
+    });
+
+    return list;
+  }, [
+    currentRoster,
+    selectedBatch,
+    searchQuery,
+    viewMode,
+    dailyStatusFilter,
+    dailyAttendance,
+    studentStatsMap,
+    monthlyStatusFilter,
+    sortBy,
+  ]);
+
+  const handleClearFilters = () => {
+    setSelectedBatch("all");
+    setSearchQuery("");
+    setDailyStatusFilter("all");
+    setMonthlyStatusFilter("all");
+    setSortBy("id_asc");
+  };
+
+  const handleMarkFilteredPresent = () => {
+    const next = { ...dailyAttendance };
+    filteredRoster.forEach((st) => {
+      next[st.id] = "P";
+    });
+    setDailyAttendance(next);
+    setHasUnsavedChanges(true);
+  };
 
   const handleMarkDaily = (studentId: string, status: "P" | "L" | "A") => {
     const updated = { ...dailyAttendance, [studentId]: status };
@@ -129,44 +363,71 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
 
   const handleMarkAllDaily = (status: "P" | "L" | "A") => {
     const next: Record<string, "P" | "L" | "A"> = {};
-    roster.forEach((st) => {
+    currentRoster.forEach((st) => {
       next[st.id] = status;
     });
     setDailyAttendance(next);
     setHasUnsavedChanges(true);
   };
 
-  const handleSaveDailyAttendance = () => {
-    saveAttendance(selectedSec, dateKey, dailyAttendance);
+  const handleSectionChange = (sectionId: string) => {
+    setSelectedSec(sectionId);
+    setDailyAttendance({});
     setHasUnsavedChanges(false);
-    if (onSave) {
-      onSave(Object.keys(dailyAttendance).length);
+    handleClearFilters();
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setDailyAttendance({});
+    setHasUnsavedChanges(false);
+  };
+
+  const persistAttendance = async (targetDateKey: string, records: Record<string, "P" | "L" | "A">) => {
+    await saveAttendance(selectedSec, targetDateKey, records);
+    setApiAttendanceStore((previous) => ({
+      ...previous,
+      [`${selectedSec}_${targetDateKey}`]: records,
+    }));
+  };
+
+  const handleSaveDailyAttendance = async () => {
+    try {
+      await persistAttendance(dateKey, dailyAttendance);
+      setHasUnsavedChanges(false);
+      onSave?.(Object.keys(dailyAttendance).length);
+    } catch {
+      // Keep the draft editable when the API rejects the save.
     }
   };
 
-  const handleToggleDayMark = (
+  const handleToggleDayMark = async (
     studentId: string,
     targetDateKey: string,
     newMark: "P" | "L" | "A"
   ) => {
     const compositeKey = `${selectedSec}_${targetDateKey}`;
-    const existingDayRecords = attendanceStore[compositeKey] || {};
+    const existingDayRecords = effectiveAttendanceStore[compositeKey] || {};
     const targetDay = monthDays.find((d) => d.dateKey === targetDateKey);
 
     const updatedRecords: Record<string, "P" | "L" | "A"> = { ...existingDayRecords };
 
-    roster.forEach((st) => {
+    currentRoster.forEach((st) => {
       if (st.id === studentId) {
         updatedRecords[st.id] = newMark;
       } else if (!updatedRecords[st.id] && targetDay) {
-        const currentMark = resolveStudentMark(st, currentSection, targetDay, attendanceStore);
+        const currentMark = resolveStudentMark(st, currentSection, targetDay, effectiveAttendanceStore);
         if (currentMark === "P" || currentMark === "L" || currentMark === "A") {
           updatedRecords[st.id] = currentMark;
         }
       }
     });
 
-    saveAttendance(selectedSec, targetDateKey, updatedRecords);
+    try {
+      await persistAttendance(targetDateKey, updatedRecords);
+    } catch {
+      // Keep the existing server-backed mark when the update fails.
+    }
   };
 
   const handlePrevMonth = () => {
@@ -197,10 +458,10 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         onViewModeChange={setViewMode}
         sections={sections}
         selectedSec={selectedSec}
-        onSelectSection={setSelectedSec}
+        onSelectSection={handleSectionChange}
         currentSection={currentSection}
         selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
+        onSelectDate={handleDateChange}
         calendarOpen={calendarOpen}
         onCalendarOpenChange={setCalendarOpen}
         isHoliday={isCurrentDateHoliday}
@@ -213,21 +474,44 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         onNextMonth={handleNextMonth}
         onExportMonth={() =>
           exportMonthlyMatrixCsv({
-            roster,
+            roster: currentRoster,
             currentSection,
             monthDays,
             activeMonth,
             activeYear,
             studentStatsMap,
-            attendanceStore,
+            attendanceStore: effectiveAttendanceStore,
           })
         }
+      />
+
+      {/* Teacher Filter Toolbar: Batch, Search, Attendance Status, and Sort */}
+      <AttendanceFilterBar
+        viewMode={viewMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        batches={availableBatches}
+        batchCounts={batchCounts}
+        selectedBatch={selectedBatch}
+        onSelectBatch={setSelectedBatch}
+        dailyStatusFilter={dailyStatusFilter}
+        onSelectDailyStatusFilter={setDailyStatusFilter}
+        dailyStatusCounts={dailyStatusCounts}
+        monthlyStatusFilter={monthlyStatusFilter}
+        onSelectMonthlyStatusFilter={setMonthlyStatusFilter}
+        sortBy={sortBy}
+        onSelectSortBy={setSortBy}
+        totalStudents={currentRoster.length}
+        filteredCount={filteredRoster.length}
+        onClearFilters={handleClearFilters}
+        onMarkFilteredPresent={handleMarkFilteredPresent}
+        isHoliday={isCurrentDateHoliday}
       />
 
       {/* MODE 1: Daily Session View */}
       {viewMode === "daily" && (
         <DailyRosterView
-          roster={roster}
+          roster={filteredRoster}
           currentSection={currentSection}
           selectedDate={selectedDate}
           dailyAttendance={dailyAttendance}
@@ -242,13 +526,13 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
       {/* MODE 2: Monthly Matrix View */}
       {viewMode === "monthly" && (
         <MonthlyMatrixView
-          roster={roster}
+          roster={filteredRoster}
           currentSection={currentSection}
           monthDays={monthDays}
           activeMonth={activeMonth}
           activeYear={activeYear}
           studentStatsMap={studentStatsMap}
-          attendanceStore={attendanceStore}
+          attendanceStore={effectiveAttendanceStore}
           scheduleOverrides={currentSectionOverrides}
           onToggleDayMark={handleToggleDayMark}
           onSetDaySchedule={handleSetDaySchedule}
@@ -265,7 +549,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         studentStatsMap={studentStatsMap}
         activeYear={activeYear}
         activeMonth={activeMonth}
-        attendanceStore={attendanceStore}
+        attendanceStore={effectiveAttendanceStore}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
         onToggleDayMark={handleToggleDayMark}
@@ -276,7 +560,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
             monthDays,
             activeMonth,
             activeYear,
-            attendanceStore,
+            attendanceStore: effectiveAttendanceStore,
           })
         }
       />
