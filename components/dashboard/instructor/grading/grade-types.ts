@@ -13,5 +13,12 @@ export interface SectionStudent extends RosterStudent {
 export interface GradeSheetProps {
   sections: InstructorSection[];
   roster: RosterStudent[];
-  onSubmit: (sectionId: string) => void;
+  onSaveDraft: (
+    sectionId: string,
+    marks: Record<string, GradeRecord>,
+  ) => Promise<void>;
+  onSubmit: (
+    sectionId: string,
+    marks: Record<string, GradeRecord>,
+  ) => Promise<boolean>;
 }

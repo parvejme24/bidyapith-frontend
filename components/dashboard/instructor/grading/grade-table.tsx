@@ -165,7 +165,7 @@ export function GradeTable({
         <span>
           {isLocked
             ? "Grade sheet is locked and submitted to the registrar"
-            : "Draft marks auto-sync locally; submit when grades are final."}
+            : "Use Save Draft to store marks in the academic database."}
         </span>
       </div>
     </GlassCard>

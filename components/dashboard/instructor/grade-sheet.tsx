@@ -2,61 +2,59 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import type { InstructorSection, RosterStudent } from "@/lib/app-types";
+import type { InstructorSection } from "@/lib/app-types";
 import type { GradeRecord, GradeSheetProps, SectionStudent } from "./grading/grade-types";
 import { GradeControlBar } from "./grading/grade-control-bar";
 import { GradeTable } from "./grading/grade-table";
 import { GradeSubmitConfirmDialog } from "./grading/grade-submit-confirm-dialog";
 
-export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
+const EMPTY_SECTION: InstructorSection = {
+  id: "",
+  code: "",
+  title: "No assigned course sections",
+  section: "—",
+  room: "—",
+  slots: [],
+  enrolled: 0,
+  capacity: 0,
+  avgAttendance: 0,
+  gradesSubmitted: false,
+};
+
+export function GradeSheet({ sections, roster, onSaveDraft, onSubmit }: GradeSheetProps) {
   const [selectedSec, setSelectedSec] = useState<string>(sections[0]?.id || "S1");
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Load persistent marks store from localStorage
-  const [marksStore, setMarksStore] = useState<Record<string, Record<string, GradeRecord>>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("bidyapith_grade_marks_store");
-        if (stored) return JSON.parse(stored);
-      } catch {}
-    }
-    return {};
-  });
-
-  // Current section marks
   const [currentMarks, setCurrentMarks] = useState<Record<string, GradeRecord>>({});
 
-  const currentSection = sections.find((s) => s.id === selectedSec) || sections[0];
+  useEffect(() => {
+    if (!sections.some((section) => section.id === selectedSec) && sections[0]) {
+      setSelectedSec(sections[0].id);
+    }
+  }, [sections, selectedSec]);
+
+  const currentSection = sections.find((s) => s.id === selectedSec) || sections[0] || EMPTY_SECTION;
 
   // Active students in current section
   const currentStudents: SectionStudent[] = useMemo(() => {
-    return roster.map((st, idx) => ({
+    return roster.filter((student) => !student.sectionId || student.sectionId === selectedSec).map((st) => ({
       ...st,
       sectionId: selectedSec,
-      mid: st.mid ?? (20 + (idx % 10)),
-      assign: st.assign ?? (15 + (idx % 5)),
     }));
   }, [selectedSec, roster]);
 
-  // Sync marks when section changes or store updates
   useEffect(() => {
-    const saved = marksStore[selectedSec];
-    if (saved && Object.keys(saved).length > 0) {
-      setCurrentMarks(saved);
-    } else {
-      const initial: Record<string, GradeRecord> = {};
-      currentStudents.forEach((st) => {
-        initial[st.id] = {
-          mid: st.mid ?? 24,
-          assign: st.assign ?? 18,
-          final: st.id.endsWith("1") ? 42 : st.id.endsWith("4") ? 46 : st.id.endsWith("8") ? 38 : null,
-        };
-      });
-      setCurrentMarks(initial);
-    }
-  }, [selectedSec, marksStore, currentStudents]);
+    const initial: Record<string, GradeRecord> = {};
+    currentStudents.forEach((student) => {
+      initial[student.id] = {
+        mid: student.mid,
+        assign: student.assign,
+        final: student.final,
+      };
+    });
+    setCurrentMarks(initial);
+  }, [selectedSec, currentStudents]);
 
   const handleMarkChange = (
     studentId: string,
@@ -80,23 +78,15 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
     }
   };
 
-  const handleSaveDraft = () => {
-    const updated = { ...marksStore, [selectedSec]: currentMarks };
-    setMarksStore(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem("bidyapith_grade_marks_store", JSON.stringify(updated));
-      } catch {}
-    }
-    toast.success(`Grades saved as draft for ${currentSection?.code || "Course"} (${currentSection?.section || "A"})`);
+  const handleSaveDraft = async () => {
+    await onSaveDraft(selectedSec, currentMarks);
   };
 
-  const handleConfirmSubmit = () => {
-    handleSaveDraft();
+  const handleConfirmSubmit = async () => {
+    const submitted = await onSubmit(selectedSec, currentMarks);
+    if (!submitted) return;
     setIsLocked(true);
     setConfirmModalOpen(false);
-    onSubmit(selectedSec);
-    toast.success(`Grade sheet officially submitted to Registrar for ${currentSection?.code}`);
   };
 
   // Autofill full assignments
@@ -135,7 +125,7 @@ export function GradeSheet({ sections, roster, onSubmit }: GradeSheetProps) {
         onSelectSection={setSelectedSec}
         currentSection={currentSection}
         currentStudents={currentStudents}
-        roster={roster}
+        roster={currentStudents}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         isLocked={isLocked}
