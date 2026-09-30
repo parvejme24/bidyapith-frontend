@@ -11,19 +11,9 @@ import { MonthlyMatrixPanControls } from "./monthly-matrix-pan-controls";
 import { MonthlyMatrixDayHeader } from "./monthly-matrix-day-header";
 import { MonthlyMatrixRow } from "./monthly-matrix-row";
 
-interface MonthlyMatrixViewProps {
-  roster: RosterStudent[];
-  currentSection: InstructorSection;
-  monthDays: MonthDayInfo[];
-  activeMonth: number;
-  activeYear: number;
-  studentStatsMap: Record<string, AttendanceStats>;
-  attendanceStore: Record<string, Record<string, "P" | "L" | "A">>;
-  scheduleOverrides?: Record<string, DayOverrideInfo>;
-  onToggleDayMark: (studentId: string, dateKey: string, mark: "P" | "L" | "A") => void;
-  onSetDaySchedule?: (dateKey: string, type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY", reason?: string) => void;
-  onSelectStudentForModal: (student: RosterStudent) => void;
-}
+import type { MonthlyMatrixViewProps } from "./types";
+
+export type { MonthlyMatrixViewProps };
 
 export function MonthlyMatrixView({
   roster,

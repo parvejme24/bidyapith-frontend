@@ -6,20 +6,10 @@ import { UserAvatar } from "@/components/dashboard/shared/user-avatar";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
 import { cn } from "@/lib/utils";
 import { AlertCircle, Check, Eye, Sparkles, Sun, Umbrella, X } from "lucide-react";
-import type { AttendanceStats, DayOverrideInfo } from "./attendance-types";
-import { formatDateDMY } from "./attendance-utils";
+import type { DailyRosterViewProps } from "./types";
+import { formatDateDMY } from "./utils";
 
-interface DailyRosterViewProps {
-  roster: RosterStudent[];
-  currentSection: InstructorSection;
-  selectedDate?: Date;
-  dailyAttendance: Record<string, "P" | "L" | "A">;
-  studentStatsMap: Record<string, AttendanceStats>;
-  scheduleOverrides?: Record<string, DayOverrideInfo>;
-  onMarkDaily: (studentId: string, status: "P" | "L" | "A") => void;
-  onSetDaySchedule?: (dateKey: string, type: "REGULAR" | "SPECIAL_CLASS" | "HOLIDAY", reason?: string) => void;
-  onSelectStudentForModal: (student: RosterStudent) => void;
-}
+export type { DailyRosterViewProps };
 
 export function DailyRosterView({
   roster,

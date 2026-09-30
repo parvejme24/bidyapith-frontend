@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/lib/app-context";
 import { apiClient } from "@/lib/api-client";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
-import type { AttendanceStats, MonthDayInfo } from "./attendance-types";
+import type { AttendanceStats, MonthDayInfo } from "./types";
 import {
   calculateStudentAttendanceStats,
   resolveStudentMark,
-} from "./attendance-utils";
+} from "./utils";
 
-interface UseAttendanceSessionProps {
+export interface UseAttendanceSessionProps {
   sections: InstructorSection[];
   currentSection: InstructorSection;
   selectedSec: string;

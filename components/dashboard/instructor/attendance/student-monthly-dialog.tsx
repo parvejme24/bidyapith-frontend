@@ -3,24 +3,11 @@
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { InstructorSection, RosterStudent } from "@/lib/app-types";
-import type { AttendanceStats, MonthDayInfo } from "./attendance-types";
-import { calculateStudentAttendanceStats } from "./attendance-utils";
+import type { StudentMonthlyDialogProps } from "./types";
+import { calculateStudentAttendanceStats } from "./utils";
 import { StudentMonthlyModalBody } from "./student-monthly-modal";
 
-interface StudentMonthlyDialogProps {
-  selectedStudent: RosterStudent | null;
-  onClose: () => void;
-  currentSection: InstructorSection;
-  monthDays: MonthDayInfo[];
-  studentStatsMap: Record<string, AttendanceStats>;
-  activeYear: number;
-  activeMonth: number;
-  attendanceStore: Record<string, Record<string, "P" | "L" | "A">>;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  onToggleDayMark: (studentId: string, dateKey: string, mark: "P" | "L" | "A") => void;
-  onExportStudentMonthly: (student: RosterStudent) => void;
-}
+export type { StudentMonthlyDialogProps };
 
 export function StudentMonthlyDialog({
   selectedStudent,
@@ -61,7 +48,7 @@ export function StudentMonthlyDialog({
           onPrevMonth={onPrevMonth}
           onNextMonth={onNextMonth}
           onToggleMark={(dateKey, mark) => onToggleDayMark(selectedStudent.id, dateKey, mark)}
-          onExport={() => onExportStudentMonthly(selectedStudent)}
+          onExport={() => onExportStudentMonthly?.(selectedStudent)}
           onClose={onClose}
         />
       </DialogContent>

@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { RosterStudent } from "@/lib/app-types";
-import type { AttendanceStats } from "./attendance-types";
 import type {
+  AttendanceStats,
   DailyStatusFilter,
   MonthlyStatusFilter,
   SortOption,
-} from "./attendance-filter-bar";
+} from "./types";
 
-interface UseAttendanceFilterProps {
+export interface UseAttendanceFilterProps {
   currentRoster: RosterStudent[];
   viewMode: "daily" | "monthly";
   dailyAttendance: Record<string, "P" | "L" | "A">;

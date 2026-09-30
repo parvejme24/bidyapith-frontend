@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { DayOverrideInfo, MonthDayInfo } from "./attendance-types";
-import { getDaysInMonth } from "./attendance-utils";
+import type { DayOverrideInfo, MonthDayInfo } from "./types";
+import { getDaysInMonth } from "./utils";
 
 const EMPTY_SCHEDULE_OVERRIDES: Record<string, DayOverrideInfo> = {};
 

@@ -23,32 +23,10 @@ import {
   Download,
   Table as TableIcon,
 } from "lucide-react";
-import { formatDateDMY, MONTH_NAMES } from "./attendance-utils";
+import { formatDateDMY, MONTH_NAMES } from "./utils";
+import type { AttendanceRosterHeaderProps } from "./types";
 
-interface AttendanceRosterHeaderProps {
-  viewMode: "daily" | "monthly";
-  onViewModeChange: (mode: "daily" | "monthly") => void;
-  sections: InstructorSection[];
-  selectedSec: string;
-  onSelectSection: (secId: string) => void;
-  currentSection: InstructorSection;
-  // Daily props
-  selectedDate?: Date;
-  onSelectDate: (date: Date) => void;
-  calendarOpen: boolean;
-  onCalendarOpenChange: (open: boolean) => void;
-  isHoliday: boolean;
-  hasUnsavedChanges: boolean;
-  batchLabel?: string;
-  onMarkAllPresent: () => void;
-  onSaveDaily: () => void;
-  // Monthly props
-  activeMonth: number;
-  activeYear: number;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  onExportMonth: () => void;
-}
+export type { AttendanceRosterHeaderProps };
 
 export function AttendanceRosterHeader({
   viewMode,

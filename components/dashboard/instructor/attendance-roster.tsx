@@ -10,16 +10,13 @@ import { StudentMonthlyDialog } from "./attendance/student-monthly-dialog";
 import {
   exportMonthlyMatrixCsv,
   exportStudentMonthlyCsv,
-} from "./attendance/attendance-csv-exporter";
+} from "./attendance/utils";
+import type { AttendanceRosterProps } from "./attendance/types";
 import { useAttendanceSchedule } from "./attendance/use-attendance-schedule";
 import { useAttendanceSession } from "./attendance/use-attendance-session";
 import { useAttendanceFilter } from "./attendance/use-attendance-filter";
 
-interface AttendanceRosterProps {
-  sections: InstructorSection[];
-  roster: RosterStudent[];
-  onSave?: (marksCount: number) => void;
-}
+export type { AttendanceRosterProps };
 
 const DEFAULT_FALLBACK_SECTION: InstructorSection = {
   id: "",
