@@ -209,10 +209,13 @@ export interface InstructorSection {
 
 export interface RosterStudent {
   id: string;
+  enrollmentId?: string;
+  sectionId?: string;
   name: string;
   prog: string;
-  mid: number;
-  assign: number;
+  batch?: string;
+  mid: number | null;
+  assign: number | null;
   final: number | null;
   att: number;
   avatar?: string;
