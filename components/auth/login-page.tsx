@@ -49,8 +49,8 @@ const PRIMARY_ROLES = [
   {
     role: "instructor" as const,
     title: "Instructor",
-    name: "Prof. Dr. Ayesha Rahman",
-    email: "ayesha.rahman@bidyapith.edu",
+    name: "Faculty Instructor",
+    email: "faculty@bidyapith.edu.bd",
     password: "Teach1234",
     blurb: "25+ Instructors seeded · Sections, grading & attendance",
     href: "/instructor?role=instructor",
@@ -121,6 +121,10 @@ export function LoginPage() {
 
       const lower = email.toLowerCase();
       const matchedRole = PRIMARY_ROLES.find((r) => r.email.toLowerCase() === lower);
+      if (matchedRole?.role === "instructor") {
+        toast.error(err instanceof Error ? err.message : "Instructor sign-in failed");
+        return;
+      }
 
       let detectedRole = "student";
       if (lower.includes("admin") || lower.includes("devparvejme") || lower.includes("registrar")) {
