@@ -75,7 +75,7 @@ export function ForgotPasswordPage() {
           </div>
 
           <Rise delay={3}>
-            <GlassCard strong className="p-7 md:p-9">
+            <GlassCard strong className="p-5 sm:p-7 md:p-9">
               <BrandLogo variant="mark" className="mb-5" imgClassName="size-11" />
               <h2 className={cn(displayClass.d3, "mb-1")}>Reset password</h2>
               <p className="text-sm text-ink-muted mb-7">

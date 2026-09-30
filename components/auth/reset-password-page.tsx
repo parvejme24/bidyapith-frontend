@@ -102,7 +102,7 @@ export function ResetPasswordPage() {
           </div>
 
           <Rise delay={3}>
-            <GlassCard strong className="p-7 md:p-9">
+            <GlassCard strong className="p-5 sm:p-7 md:p-9">
               <BrandLogo variant="mark" className="mb-5" imgClassName="size-11" />
               <h2 className={cn(displayClass.d3, "mb-1")}>New password</h2>
               <p className="text-sm text-ink-muted mb-7">
@@ -143,7 +143,7 @@ export function ResetPasswordPage() {
                       style={{ width: `${(score / 4) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-ink-faint w-24 text-right">{meterLabel}</span>
+                  <span className="text-xs text-ink-faint w-20 sm:w-24 text-right truncate">{meterLabel}</span>
                 </div>
 
                 <label className={fieldClass}>

@@ -225,31 +225,31 @@ export function LoginPage() {
                     >
                       <GlassCard
                         quiet
-                        className="p-4 transition-all group-hover:border-jade/60 group-hover:bg-white/[0.08] relative overflow-hidden"
+                        className="p-3.5 sm:p-4 transition-all group-hover:border-jade/60 group-hover:bg-white/[0.08] relative overflow-hidden"
                       >
-                        <div className="flex items-center gap-3.5">
+                        <div className="flex items-center gap-3 sm:gap-3.5">
                           {/* Avatar */}
                           <img
                             src={r.avatar}
                             alt={r.name}
-                            className="size-12 rounded-full object-cover border border-white/20 shrink-0 shadow-md group-hover:scale-105 transition-transform"
+                            className="size-10 sm:size-12 rounded-full object-cover border border-white/20 shrink-0 shadow-md group-hover:scale-105 transition-transform"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <p className="font-display font-bold text-base group-hover:text-jade transition-colors">
+                            <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                <p className="font-display font-bold text-sm sm:text-base group-hover:text-jade transition-colors truncate">
                                   {r.title}
                                 </p>
-                                <span className="text-[0.65rem] px-2 py-0.5 rounded-full bg-jade/15 text-jade font-semibold">
+                                <span className="text-[0.6rem] sm:text-[0.65rem] px-1.5 sm:px-2 py-0.5 rounded-full bg-jade/15 text-jade font-semibold truncate shrink-0">
                                   {r.badge}
                                 </span>
                               </div>
-                              <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-jade/20 text-jade group-hover:bg-jade group-hover:text-[#0b1030] font-bold transition-all flex items-center gap-1 shrink-0 shadow-sm">
+                              <span className="text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-1 rounded-md bg-jade/20 text-jade group-hover:bg-jade group-hover:text-[#0b1030] font-bold transition-all flex items-center gap-1 shrink-0 shadow-sm">
                                 Sign in <ArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" />
                               </span>
                             </div>
                             <p className="text-xs text-ink font-medium mt-0.5 truncate">{r.name}</p>
-                            <p className="text-[0.72rem] text-ink-muted mt-0.5 truncate">{r.email}</p>
+                            <p className="text-[0.7rem] sm:text-[0.72rem] text-ink-muted mt-0.5 truncate">{r.email}</p>
                           </div>
                         </div>
                       </GlassCard>
@@ -262,7 +262,7 @@ export function LoginPage() {
 
           {/* Sign In Form */}
           <Rise delay={3}>
-            <GlassCard strong className="p-7 md:p-9 shadow-2xl">
+            <GlassCard strong className="p-5 sm:p-7 md:p-9 shadow-2xl">
               <BrandLogo variant="mark" className="mb-5" imgClassName="size-11" />
               <h2 className={cn(displayClass.d3, "mb-1")}>Portal Sign in</h2>
               <p className="text-sm text-ink-muted mb-6">
