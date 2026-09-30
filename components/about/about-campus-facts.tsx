@@ -29,17 +29,17 @@ export function AboutCampusFacts() {
                 needed, just come to the main gate.
               </p>
               <div className="flex flex-wrap gap-3 mt-7">
-                <Link href="/contact" className={buttonClass({ variant: "primary" })}>
+                <Link href="/contact" className={cn(buttonClass({ variant: "primary" }), "w-full sm:w-auto text-center justify-center")}>
                   Plan a visit
                 </Link>
-                <Link href="/admissions" className={buttonClass({ variant: "ghost" })}>
+                <Link href="/admissions" className={cn(buttonClass({ variant: "ghost" }), "w-full sm:w-auto text-center justify-center")}>
                   Admission details
                 </Link>
               </div>
             </div>
-            <dl className="grid grid-cols-2 gap-3">
+            <dl className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {CAMPUS_FACTS.map((fact) => (
-                <GlassCard key={fact.label} quiet className="p-4">
+                <GlassCard key={fact.label} quiet className="p-3.5 sm:p-4">
                   <dt className="text-xs text-ink-faint">{fact.label}</dt>
                   <dd className={cn("font-display text-xl mt-1", fact.numeric && numClass)}>
                     {fact.value}

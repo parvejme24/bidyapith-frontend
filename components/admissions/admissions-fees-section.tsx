@@ -60,7 +60,7 @@ export function AdmissionsFeesSection({
           <Reveal>
             <GlassCard className="p-2 sm:p-4">
               <div className={tableScrollClass}>
-                <table className={tableClass}>
+                <table className={cn(tableClass, "min-w-[540px]")}>
                   <thead>
                     <tr>
                       <th className={thClass}>Programme</th>
@@ -95,8 +95,8 @@ export function AdmissionsFeesSection({
           </Reveal>
 
           <Reveal delay={90}>
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between gap-4 mb-4">
+            <GlassCard className="p-4 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className={displayClass.d3}>Visual breakdown</h3>
                   <p className="text-xs text-ink-muted mt-0.5">

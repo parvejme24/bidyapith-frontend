@@ -34,12 +34,12 @@ export function AdmissionsScholarshipsFaq({
           <div className="grid gap-4 md:grid-cols-3">
             {(scholarships ?? []).map((s) => (
               <Reveal key={s.name}>
-                <GlassCard className="p-7 h-full flex flex-col justify-between">
+                <GlassCard className="p-5 sm:p-7 h-full flex flex-col justify-between">
                   <div>
-                    <span className={cn("font-display text-3xl text-jade", numClass)}>
+                    <span className={cn("font-display text-2xl sm:text-3xl text-jade", numClass)}>
                       {s.cover}
                     </span>
-                    <h3 className="font-display text-lg font-semibold mt-3 text-ink">{s.name}</h3>
+                    <h3 className="font-display text-base sm:text-lg font-semibold mt-3 text-ink">{s.name}</h3>
                     <p className="text-sm text-ink-muted mt-2">{s.who}</p>
                   </div>
                 </GlassCard>
@@ -65,16 +65,16 @@ export function AdmissionsScholarshipsFaq({
       <section className={cn(sectionClass, "pt-0")}>
         <div className={shellClass}>
           <Reveal>
-            <GlassCard strong className="p-8 md:p-12 text-center max-w-3xl mx-auto">
+            <GlassCard strong className="p-6 sm:p-8 md:p-12 text-center max-w-3xl mx-auto">
               <h2 className={displayClass.d2}>Ready to begin?</h2>
               <p className={cn(leadClass, "mt-4")}>
                 Create your applicant account and fill out your information at your own pace.
               </p>
               <div className="flex flex-wrap justify-center gap-3 mt-8">
-                <Link href="/register" className={buttonClass({ variant: "primary" })}>
+                <Link href="/register" className={cn(buttonClass({ variant: "primary" }), "w-full sm:w-auto text-center justify-center")}>
                   Start application
                 </Link>
-                <Link href="/contact" className={buttonClass({ variant: "ghost" })}>
+                <Link href="/contact" className={cn(buttonClass({ variant: "ghost" }), "w-full sm:w-auto text-center justify-center")}>
                   Ask an advisor
                 </Link>
               </div>

@@ -37,7 +37,7 @@ export function AboutDepartmentsTable({ departments }: AboutDepartmentsTableProp
         <Reveal>
           <GlassCard className="p-2 sm:p-4">
             <div className={tableScrollClass}>
-              <table className={tableClass}>
+              <table className={cn(tableClass, "min-w-[620px]")}>
                 <thead>
                   <tr>
                     <th className={thClass}>Department</th>

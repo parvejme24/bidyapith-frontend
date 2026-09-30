@@ -49,10 +49,10 @@ export function AdmissionsHero({ closesAt }: AdmissionsHeroProps) {
           </Rise>
           <Rise delay={4}>
             <div className="flex flex-wrap gap-3 mt-8">
-              <Link href="/register" className={buttonClass({ variant: "primary" })}>
+              <Link href="/register" className={cn(buttonClass({ variant: "primary" }), "w-full sm:w-auto text-center justify-center")}>
                 Start your application
               </Link>
-              <a href="#fees" className={buttonClass({ variant: "ghost" })}>
+              <a href="#fees" className={cn(buttonClass({ variant: "ghost" }), "w-full sm:w-auto text-center justify-center")}>
                 Jump to fees
               </a>
             </div>
@@ -60,9 +60,9 @@ export function AdmissionsHero({ closesAt }: AdmissionsHeroProps) {
         </div>
 
         <Rise delay={3}>
-          <GlassCard strong className="p-7">
+          <GlassCard strong className="p-5 sm:p-7">
             <p className="text-sm text-ink-muted mb-1">Applications close</p>
-            <p className="font-display text-2xl mb-5">{formatClosesAt(closesAt)}</p>
+            <p className="font-display text-xl sm:text-2xl mb-5">{formatClosesAt(closesAt)}</p>
             <AdmissionCountdown closesAt={closesAt} />
             <hr className={cn(ruleClass, "my-6")} />
             <h2 className="text-sm font-bold mb-3">You are eligible if</h2>

@@ -25,7 +25,7 @@ export function AdmissionsStepsOverview({ steps, isLoading }: AdmissionsStepsOve
             </p>
           </div>
         </Reveal>
-        <ol className="grid gap-4 md:grid-cols-3 lg:grid-cols-5 items-stretch">
+        <ol className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 items-stretch">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <li key={i} className="h-full flex flex-col">
