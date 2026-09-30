@@ -79,8 +79,8 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     [roster, selectedSec],
   );
 
-  // Batch & Filter states
-  const [selectedBatch, setSelectedBatch] = useState<string>("all");
+  // Batch & Filter states (defaults to teacher's assigned batch)
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [dailyStatusFilter, setDailyStatusFilter] = useState<DailyStatusFilter>("all");
   const [monthlyStatusFilter, setMonthlyStatusFilter] = useState<MonthlyStatusFilter>("all");
@@ -97,6 +97,13 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     });
     return Array.from(set).sort();
   }, [currentRoster]);
+
+  // Keep selectedBatch synced to the first available batch of the assigned section
+  useEffect(() => {
+    if (availableBatches.length > 0 && (!selectedBatch || !availableBatches.includes(selectedBatch))) {
+      setSelectedBatch(availableBatches[0]);
+    }
+  }, [availableBatches, selectedBatch]);
 
   // Batch counts map
   const batchCounts = useMemo(() => {
@@ -269,13 +276,14 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     };
   }, [currentRoster, dailyAttendance, studentStatsMap]);
 
-  // Filtered & Sorted student roster
+  // Filtered & Sorted student roster (strictly scoped to teacher's assigned batch)
   const filteredRoster = useMemo(() => {
+    const activeBatch = selectedBatch || availableBatches[0] || "";
     let list = currentRoster.filter((st) => {
-      // 1. Batch filter
-      if (selectedBatch !== "all") {
+      // 1. Batch filter: strictly show teacher's selected assigned batch
+      if (activeBatch) {
         const studentBatch = st.batch || st.id.split("-")[0];
-        if (studentBatch !== selectedBatch) return false;
+        if (studentBatch !== activeBatch) return false;
       }
 
       // 2. Search query (name or student ID)
@@ -329,6 +337,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   }, [
     currentRoster,
     selectedBatch,
+    availableBatches,
     searchQuery,
     viewMode,
     dailyStatusFilter,
@@ -339,7 +348,6 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   ]);
 
   const handleClearFilters = () => {
-    setSelectedBatch("all");
     setSearchQuery("");
     setDailyStatusFilter("all");
     setMonthlyStatusFilter("all");
@@ -362,8 +370,8 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
   };
 
   const handleMarkAllDaily = (status: "P" | "L" | "A") => {
-    const next: Record<string, "P" | "L" | "A"> = {};
-    currentRoster.forEach((st) => {
+    const next: Record<string, "P" | "L" | "A"> = { ...dailyAttendance };
+    filteredRoster.forEach((st) => {
       next[st.id] = status;
     });
     setDailyAttendance(next);
@@ -374,6 +382,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
     setSelectedSec(sectionId);
     setDailyAttendance({});
     setHasUnsavedChanges(false);
+    setSelectedBatch("");
     handleClearFilters();
   };
 
@@ -466,6 +475,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         onCalendarOpenChange={setCalendarOpen}
         isHoliday={isCurrentDateHoliday}
         hasUnsavedChanges={hasUnsavedChanges}
+        batchLabel={selectedBatch ? `Batch ${selectedBatch}` : availableBatches[0] ? `Batch ${availableBatches[0]}` : undefined}
         onMarkAllPresent={() => handleMarkAllDaily("P")}
         onSaveDaily={handleSaveDailyAttendance}
         activeMonth={activeMonth}
@@ -474,7 +484,7 @@ export function AttendanceRoster({ sections, roster, onSave }: AttendanceRosterP
         onNextMonth={handleNextMonth}
         onExportMonth={() =>
           exportMonthlyMatrixCsv({
-            roster: currentRoster,
+            roster: filteredRoster,
             currentSection,
             monthDays,
             activeMonth,

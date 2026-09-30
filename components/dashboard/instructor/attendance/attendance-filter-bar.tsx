@@ -86,7 +86,6 @@ export function AttendanceFilterBar({
   isHoliday = false,
 }: AttendanceFilterBarProps) {
   const isFiltered =
-    selectedBatch !== "all" ||
     searchQuery.trim().length > 0 ||
     (viewMode === "daily" ? dailyStatusFilter !== "all" : monthlyStatusFilter !== "all");
 
@@ -131,41 +130,25 @@ export function AttendanceFilterBar({
             <DropdownMenuTrigger
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer",
-                selectedBatch !== "all"
+                selectedBatch
                   ? "bg-jade/15 border-jade/40 text-jade font-semibold shadow-xs"
                   : "bg-white/[0.04] border-white/10 text-ink-muted hover:text-ink hover:bg-white/[0.08]"
               )}
             >
               <GraduationCap className="size-3.5 text-jade shrink-0" />
               <span>
-                {selectedBatch === "all" ? "All Batches" : `Batch ${selectedBatch}`}
+                {selectedBatch ? `Batch ${selectedBatch}` : "Select Batch"}
               </span>
               <span className="text-[0.68rem] px-1.5 py-0.2 rounded bg-white/10 font-mono text-ink-muted">
-                {selectedBatch === "all"
-                  ? totalStudents
-                  : batchCounts[selectedBatch] || 0}
+                {batchCounts[selectedBatch] || totalStudents}
               </span>
               <ChevronDown className="size-3 text-ink-faint shrink-0" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 bg-night-800/95 backdrop-blur-xl border-white/15">
               <DropdownMenuLabel className="text-[0.7rem] uppercase tracking-wider text-ink-muted">
-                Filter by Student Batch
+                Assigned Student Batches
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-white/10" />
-              <DropdownMenuItem
-                onClick={() => onSelectBatch("all")}
-                className="text-xs cursor-pointer flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="size-3.5 text-ink-muted" />
-                  <span>All Batches</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[0.7rem] font-mono text-ink-muted">({totalStudents})</span>
-                  {selectedBatch === "all" && <Check className="size-3.5 text-jade" />}
-                </div>
-              </DropdownMenuItem>
-
               {batches.map((b) => (
                 <DropdownMenuItem
                   key={b}
@@ -373,28 +356,13 @@ export function AttendanceFilterBar({
         </div>
       </div>
 
-      {/* Batch Quick Filter Pills (Horizontal Bar for easy 1-click access) */}
-      {batches.length > 1 && (
+      {/* Batch Selector Pills */}
+      {batches.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/5">
           <span className="text-[0.7rem] font-semibold text-ink-faint mr-1 flex items-center gap-1">
             <GraduationCap className="size-3 text-jade" />
-            <span>Batches:</span>
+            <span>Assigned Batch:</span>
           </span>
-          <button
-            type="button"
-            onClick={() => onSelectBatch("all")}
-            className={cn(
-              "px-2.5 py-1 rounded-md text-[0.7rem] font-semibold transition-all cursor-pointer flex items-center gap-1",
-              selectedBatch === "all"
-                ? "bg-jade text-night-900 shadow-xs font-bold"
-                : "bg-white/[0.04] text-ink-muted hover:bg-white/[0.08] hover:text-ink border border-white/8"
-            )}
-          >
-            <span>All</span>
-            <span className={cn("text-[0.65rem] font-mono", selectedBatch === "all" ? "text-night-900/80" : "text-ink-faint")}>
-              ({totalStudents})
-            </span>
-          </button>
           {batches.map((b) => {
             const count = batchCounts[b] || 0;
             const isSelected = selectedBatch === b;
@@ -404,15 +372,20 @@ export function AttendanceFilterBar({
                 type="button"
                 onClick={() => onSelectBatch(b)}
                 className={cn(
-                  "px-2.5 py-1 rounded-md text-[0.7rem] font-semibold transition-all cursor-pointer flex items-center gap-1",
+                  "px-3 py-1 rounded-md text-[0.7rem] font-semibold transition-all cursor-pointer flex items-center gap-1.5",
                   isSelected
-                    ? "bg-jade text-night-900 shadow-xs font-bold"
+                    ? "bg-jade text-night-900 shadow-xs font-bold ring-1 ring-jade/50"
                     : "bg-white/[0.04] text-ink-muted hover:bg-white/[0.08] hover:text-ink border border-white/8"
                 )}
               >
                 <span>Batch {b}</span>
-                <span className={cn("text-[0.65rem] font-mono", isSelected ? "text-night-900/80" : "text-ink-faint")}>
-                  ({count})
+                <span
+                  className={cn(
+                    "text-[0.65rem] font-mono px-1 rounded",
+                    isSelected ? "bg-night-900/20 text-night-900" : "bg-white/5 text-ink-faint"
+                  )}
+                >
+                  {count}
                 </span>
               </button>
             );
@@ -424,13 +397,15 @@ export function AttendanceFilterBar({
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
         <div className="flex flex-wrap items-center gap-2 text-ink-muted">
           <span className="text-[0.72rem]">
-            Showing <strong className="text-ink">{filteredCount}</strong> of{" "}
-            <strong className="text-ink">{totalStudents}</strong> students
-            {selectedBatch !== "all" && (
-              <span className="text-jade font-semibold ml-1">
-                (Batch {selectedBatch})
+            {selectedBatch && (
+              <span className="text-jade font-semibold mr-1.5">
+                Batch {selectedBatch} ·
               </span>
             )}
+            Showing <strong className="text-ink">{filteredCount}</strong> of{" "}
+            <strong className="text-ink">
+              {selectedBatch ? (batchCounts[selectedBatch] || totalStudents) : totalStudents}
+            </strong> students
             {searchQuery && (
               <span className="text-ink-faint ml-1">
                 matching &ldquo;{searchQuery}&rdquo;
@@ -456,11 +431,11 @@ export function AttendanceFilterBar({
             type="button"
             onClick={onMarkFilteredPresent}
             className="text-[0.7rem] px-2.5 py-1 rounded-md bg-jade/15 text-jade border border-jade/30 hover:bg-jade/25 transition-all font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Mark only currently visible/filtered students as Present"
+            title="Mark students in this batch as Present"
           >
             <CheckCircle2 className="size-3" />
             <span>
-              Mark {selectedBatch !== "all" ? `Batch ${selectedBatch}` : "Visible"} as Present ({filteredCount})
+              Mark {selectedBatch ? `Batch ${selectedBatch}` : "Batch"} as Present ({filteredCount})
             </span>
           </button>
         )}

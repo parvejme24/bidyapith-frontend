@@ -42,10 +42,10 @@ export function DailyRosterView({
   const isSpecialClass = currentOverride?.type === "SPECIAL_CLASS";
   const isHoliday = currentOverride?.type === "HOLIDAY";
 
-  const presentCount = Object.values(dailyAttendance).filter((v) => v === "P").length;
-  const lateCount = Object.values(dailyAttendance).filter((v) => v === "L").length;
-  const absentCount = Object.values(dailyAttendance).filter((v) => v === "A").length;
-  const unmarkedCount = roster.length - Object.keys(dailyAttendance).length;
+  const presentCount = roster.filter((st) => dailyAttendance[st.id] === "P").length;
+  const lateCount = roster.filter((st) => dailyAttendance[st.id] === "L").length;
+  const absentCount = roster.filter((st) => dailyAttendance[st.id] === "A").length;
+  const unmarkedCount = roster.length - (presentCount + lateCount + absentCount);
 
   return (
     <GlassCard className="p-3.5 sm:p-5 rounded-xl space-y-3.5">

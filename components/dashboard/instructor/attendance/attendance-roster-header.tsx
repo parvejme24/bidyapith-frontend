@@ -39,6 +39,7 @@ interface AttendanceRosterHeaderProps {
   onCalendarOpenChange: (open: boolean) => void;
   isHoliday: boolean;
   hasUnsavedChanges: boolean;
+  batchLabel?: string;
   onMarkAllPresent: () => void;
   onSaveDaily: () => void;
   // Monthly props
@@ -62,6 +63,7 @@ export function AttendanceRosterHeader({
   onCalendarOpenChange,
   isHoliday,
   hasUnsavedChanges,
+  batchLabel,
   onMarkAllPresent,
   onSaveDaily,
   activeMonth,
@@ -177,7 +179,7 @@ export function AttendanceRosterHeader({
             </PopoverContent>
           </Popover>
 
-          {/* Mark all present button */}
+          {/* Mark batch present button */}
           <button
             type="button"
             disabled={isHoliday}
@@ -188,7 +190,7 @@ export function AttendanceRosterHeader({
               isHoliday && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
           >
-            Mark all present
+            {batchLabel ? `Mark ${batchLabel} present` : "Mark batch present"}
           </button>
 
           {/* Save button */}
