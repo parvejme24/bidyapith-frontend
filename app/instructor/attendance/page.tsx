@@ -6,7 +6,7 @@ import { AttendanceRoster } from "@/components/dashboard/instructor/attendance-r
 import { useApp } from "@/lib/app-context";
 
 export default function InstructorAttendancePage() {
-  const { instructorSections, roster, saveAttendance } = useApp();
+  const { isInstructorDataLoading, instructorSections, roster } = useApp();
 
   return (
     <DashboardLayout
@@ -15,10 +15,13 @@ export default function InstructorAttendancePage() {
       requiredRole="instructor"
       crumb="Instructor / Teaching"
     >
-      <AttendanceRoster
-        sections={instructorSections}
-        roster={roster}
-      />
+      {isInstructorDataLoading ? (
+        <p className="text-sm text-ink-muted">Loading assigned sections from the academic database...</p>
+      ) : instructorSections.length === 0 ? (
+        <p className="text-sm text-ink-muted">No teaching sections are assigned to this instructor.</p>
+      ) : (
+        <AttendanceRoster sections={instructorSections} roster={roster} />
+      )}
     </DashboardLayout>
   );
 }

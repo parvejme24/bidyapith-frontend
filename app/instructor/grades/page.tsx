@@ -11,11 +11,17 @@ import { buttonClass } from "@/lib/styles";
 import { cn } from "@/lib/utils";
 
 export default function InstructorGradesPage() {
-  const { instructorSections, roster, submitGradeSheet } = useApp();
+  const {
+    isInstructorDataLoading,
+    instructorSections,
+    roster,
+    saveGradeDraft,
+    submitGradeSheet,
+  } = useApp();
 
   const handleDownloadTemplate = () => {
     const currentSection = instructorSections[0];
-    const sectionCode = currentSection ? `${currentSection.code}-Sec${currentSection.section}` : "CSE-2201-SecA";
+    const sectionCode = currentSection ? `${currentSection.code}-Sec${currentSection.section}` : "No_Assigned_Section";
 
     const headers = [
       "StudentID",
@@ -29,17 +35,19 @@ export default function InstructorGradesPage() {
       "LetterGrade",
     ];
 
-    const rows = roster.map((st) => [
+    const rows = roster
+      .filter((student) => !student.sectionId || student.sectionId === currentSection?.id)
+      .map((st) => [
       st.id,
       st.name,
-      currentSection?.code || "CSE-2201",
-      currentSection?.section || "A",
-      st.mid,
-      st.assign,
+      currentSection?.code || "",
+      currentSection?.section || "",
+      st.mid ?? "",
+      st.assign ?? "",
       "", // Placeholder for final exam input
       "", // Placeholder for total
       "", // Placeholder for letter grade
-    ]);
+      ]);
 
     downloadCsv(`Grade_Template_${sectionCode}.csv`, [headers, ...rows]);
     toast.success(`Downloaded CSV grade template for ${sectionCode}`);
@@ -62,11 +70,18 @@ export default function InstructorGradesPage() {
         </button>
       }
     >
-      <GradeSheet
-        sections={instructorSections}
-        roster={roster}
-        onSubmit={submitGradeSheet}
-      />
+      {isInstructorDataLoading ? (
+        <p className="text-sm text-ink-muted">Loading assigned sections from the academic database...</p>
+      ) : instructorSections.length === 0 ? (
+        <p className="text-sm text-ink-muted">No teaching sections are assigned to this instructor.</p>
+      ) : (
+        <GradeSheet
+          sections={instructorSections}
+          roster={roster}
+          onSaveDraft={saveGradeDraft}
+          onSubmit={submitGradeSheet}
+        />
+      )}
     </DashboardLayout>
   );
 }

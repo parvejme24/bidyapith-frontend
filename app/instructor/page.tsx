@@ -18,18 +18,43 @@ export default function InstructorDashboardPage() {
   const pendingGrades = instructorSections.filter((s) => !s.gradesSubmitted).length;
   const avgAtt = instructorSections.length
     ? Math.round(
-        instructorSections.reduce((s, x) => s + (x.avgAttendance || 90), 0) / instructorSections.length
+        instructorSections.reduce((s, x) => s + x.avgAttendance, 0) / instructorSections.length
       )
-    : 90;
+    : 0;
 
-  // Derive today's classes from live instructor sections
-  const todayClasses = instructorSections.map((s, idx) => ({
-    time: idx === 0 ? "09:00 AM - 10:30 AM" : idx === 1 ? "11:00 AM - 12:30 PM" : "02:00 PM - 03:30 PM",
-    code: s.code,
-    section: s.section,
-    room: s.room || "AB2-401",
-    state: idx === 0 ? "now" : idx === 1 ? "next" : "done",
-  }));
+  const today = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date());
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayClasses = instructorSections.flatMap((section) =>
+    section.slots.flatMap((slot) => {
+      const [weekday, timeRange] = slot.split(" ");
+      if (weekday !== today || !timeRange) return [];
+      const [startTime, endTime] = timeRange.split("-");
+      if (!startTime || !endTime) return [];
+      const toMinutes = (time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        return hours * 60 + minutes;
+      };
+      const startMinutes = toMinutes(startTime);
+      const endMinutes = toMinutes(endTime);
+      const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        const suffix = hours >= 12 ? "PM" : "AM";
+        return `${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${suffix}`;
+      };
+      return [{
+        time: `${formatTime(startTime)} - ${formatTime(endTime)}`,
+        code: section.code,
+        section: section.section,
+        room: section.room || "Room not set",
+        state: currentMinutes >= startMinutes && currentMinutes <= endMinutes
+          ? "now" as const
+          : currentMinutes < startMinutes
+          ? "next" as const
+          : "done" as const,
+      }];
+    }),
+  );
 
   return (
     <DashboardLayout
@@ -68,8 +93,8 @@ export default function InstructorDashboardPage() {
         <StatTile
           label="Average Attendance"
           value={`${avgAtt}%`}
-          detail="Healthy department rate"
-          tone="up"
+          detail={avgAtt > 0 ? "Across assigned sections" : "No attendance recorded"}
+          tone={avgAtt > 0 ? (avgAtt >= 75 ? "up" : "down") : ""}
         />
         <StatTile
           label="Pending Grade Sheets"
@@ -146,7 +171,7 @@ export default function InstructorDashboardPage() {
                     {s.title}
                   </h4>
                   <p className="text-xs text-ink-faint">
-                    {s.room} · {(s.slots && s.slots.length > 0 ? s.slots.join(", ") : "Sun 09:00, Tue 09:00")} · {s.enrolled}/{s.capacity} enrolled
+                    {s.room} · {s.slots.length > 0 ? s.slots.join(", ") : "Schedule not set"} · {s.enrolled}/{s.capacity} enrolled
                   </p>
                   <div className="max-w-[220px] pt-1">
                     <Meter value={s.enrolled} max={s.capacity} className="h-1.5" />
