@@ -150,7 +150,7 @@ export function SiteHeader() {
         <div className={shellClass}>
           <nav
             className={cn(
-              "relative flex items-center gap-4 rounded-2xl sm:rounded-full border border-white/13 bg-white/[0.055] p-[0.6rem] pl-[1.15rem] shadow-[0_24px_60px_-24px_rgba(4,8,30,0.85)] backdrop-blur-[20px] backdrop-saturate-150 transition-[background,box-shadow] duration-300",
+              "relative flex items-center justify-between gap-3 sm:gap-4 rounded-2xl sm:rounded-full border border-white/13 bg-white/[0.055] p-2 pl-3 sm:p-[0.6rem] sm:pl-[1.15rem] shadow-[0_24px_60px_-24px_rgba(4,8,30,0.85)] backdrop-blur-[20px] backdrop-saturate-150 transition-[background,box-shadow] duration-300",
               stuck && "bg-[rgba(12,16,46,0.72)] shadow-[0_18px_44px_-22px_rgba(0,0,0,0.95)]"
             )}
             aria-label="Primary"
@@ -160,7 +160,7 @@ export function SiteHeader() {
               className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-[inherit] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] opacity-55"
             />
             <Link href="/" className="flex shrink-0 items-center" aria-label="Bidyapith University home">
-              <BrandLogo variant="horizontal" priority imgClassName="h-9 w-auto sm:h-10" decorative />
+              <BrandLogo variant="horizontal" priority imgClassName="h-8 xs:h-9 w-auto sm:h-10" decorative />
             </Link>
 
             <div className="ml-auto hidden items-center gap-1 lg:flex">

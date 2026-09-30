@@ -50,17 +50,17 @@ export function SiteFooter() {
   return (
     <footer className={cn(sectionTightClass, "mt-8")}>
       <div className={shellClass}>
-        <GlassCard className="p-7 md:p-10">
-          <div className="grid gap-9 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+        <GlassCard className="p-5 sm:p-7 md:p-10">
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
             <div>
               <Link href="/" className="mb-4 inline-flex" aria-label="Bidyapith University home">
-                <BrandLogo variant="horizontal" imgClassName="h-11 w-auto" decorative />
+                <BrandLogo variant="horizontal" imgClassName="h-9 sm:h-11 w-auto" decorative />
               </Link>
               <p className="max-w-[34ch] text-sm text-ink-muted">
                 One campus, one system. Admission, registration, results and fees for{" "}
                 {SITE.students.toLocaleString()} students in a single place.
               </p>
-              <p className="mt-4 text-lg text-ink-faint">{SITE.name}</p>
+              <p className="mt-4 text-base sm:text-lg text-ink-faint">{SITE.name}</p>
             </div>
 
             <div>
@@ -128,7 +128,7 @@ export function SiteFooter() {
                   <span className="text-jade">
                     <PhoneIcon />
                   </span>
-                  <a href={`tel:${phoneHref}`} className="hover:text-ink">
+                  <a href={`tel:${phoneHref}`} className="hover:text-ink break-all">
                     {SITE.phone}
                   </a>
                 </li>
@@ -136,7 +136,7 @@ export function SiteFooter() {
                   <span className="text-jade">
                     <MailIcon />
                   </span>
-                  <a href={`mailto:${SITE.email}`} className="hover:text-ink">
+                  <a href={`mailto:${SITE.email}`} className="hover:text-ink break-all">
                     {SITE.email}
                   </a>
                 </li>

@@ -41,7 +41,7 @@ export function SiteHeaderMobileDrawer({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[80] grid place-items-start justify-center bg-[rgba(6,9,28,0.72)] p-[1.1rem] backdrop-blur-[14px] transition-opacity duration-300",
+        "fixed inset-0 z-[80] grid place-items-start justify-center overflow-y-auto bg-[rgba(6,9,28,0.72)] p-3 sm:p-[1.1rem] backdrop-blur-[14px] transition-opacity duration-300",
         open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
       )}
       role="dialog"
@@ -54,7 +54,7 @@ export function SiteHeaderMobileDrawer({
       <GlassCard
         className={cn(
           shellClass,
-          "w-full p-[1.1rem] transition-transform duration-[350ms] ease-[cubic-bezier(0.2,0.8,0.3,1)]",
+          "w-full max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.2rem)] overflow-y-auto p-4 sm:p-[1.1rem] transition-transform duration-[350ms] ease-[cubic-bezier(0.2,0.8,0.3,1)]",
           open ? "translate-y-0" : "-translate-y-3.5"
         )}
       >
