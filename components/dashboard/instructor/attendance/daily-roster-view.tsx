@@ -181,64 +181,78 @@ export function DailyRosterView({
       </div>
 
       {/* Roster Student List */}
-      <div className="grid gap-2">
-        {roster.map((st) => {
-          const currentMark = dailyAttendance[st.id];
-          const stats = studentStatsMap[st.id];
-          const calculatedRate = stats ? stats.ratePct : st.att;
+      {roster.length === 0 ? (
+        <div className="text-center py-10 px-4 rounded-xl border border-dashed border-white/10 space-y-2 bg-white/[0.01]">
+          <AlertCircle className="size-7 text-ink-muted mx-auto" />
+          <p className="text-sm font-semibold text-ink">No students match the current filters</p>
+          <p className="text-xs text-ink-muted">
+            Try adjusting or resetting your search, batch, or attendance status filter.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-2">
+          {roster.map((st) => {
+            const currentMark = dailyAttendance[st.id];
+            const stats = studentStatsMap[st.id];
+            const calculatedRate = stats ? stats.ratePct : st.att;
 
-          return (
-            <div
-              key={st.id}
-              className="group flex items-center justify-between gap-2.5 p-2 sm:p-3 rounded-lg border border-white/8 bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.045] transition-all"
-            >
-              {/* Clickable student info opening monthly modal */}
-              <button
-                type="button"
-                onClick={() => onSelectStudentForModal(st)}
-                className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer group-hover:translate-x-0.5 transition-transform grow"
-                title="Click to view full monthly attendance breakdown"
+            return (
+              <div
+                key={st.id}
+                className="group flex items-center justify-between gap-2.5 p-2 sm:p-3 rounded-lg border border-white/8 bg-white/[0.025] hover:border-white/20 hover:bg-white/[0.045] transition-all"
               >
-                <UserAvatar
-                  name={st.name}
-                  avatar={st.avatar}
-                  size="md"
-                  colorScheme="jade"
-                />
+                {/* Clickable student info opening monthly modal */}
+                <button
+                  type="button"
+                  onClick={() => onSelectStudentForModal(st)}
+                  className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer group-hover:translate-x-0.5 transition-transform grow"
+                  title="Click to view full monthly attendance breakdown"
+                >
+                  <UserAvatar
+                    name={st.name}
+                    avatar={st.avatar}
+                    size="md"
+                    colorScheme="jade"
+                  />
 
-                <div className="min-w-0 grow">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs sm:text-sm font-semibold text-ink truncate group-hover:text-jade transition-colors">
-                      {st.name}
-                    </p>
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[0.68rem] text-jade hidden sm:inline-flex items-center gap-1 font-sans shrink-0">
-                      <Eye className="size-3" />
-                      <span>Month</span>
-                    </span>
-                  </div>
-                  <p className="text-[0.68rem] sm:text-[0.72rem] font-mono text-ink-faint truncate">
-                    {st.id} ·{" "}
-                    <span
-                      className={cn(
-                        "font-bold",
-                        calculatedRate < 75 ? "text-rose" : "text-jade"
+                  <div className="min-w-0 grow">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs sm:text-sm font-semibold text-ink truncate group-hover:text-jade transition-colors">
+                        {st.name}
+                      </p>
+                      {st.batch && (
+                        <span className="text-[0.62rem] px-1.5 py-0.2 rounded bg-white/[0.08] text-jade font-sans font-medium shrink-0">
+                          Batch {st.batch}
+                        </span>
                       )}
-                    >
-                      {calculatedRate}% att
-                    </span>
-                    {stats && (
-                      <span className="text-[0.65rem] text-ink-muted ml-1 font-sans hidden sm:inline">
-                        ({stats.p}P · {stats.l}L · {stats.a}A)
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[0.68rem] text-jade hidden sm:inline-flex items-center gap-1 font-sans shrink-0">
+                        <Eye className="size-3" />
+                        <span>Month</span>
                       </span>
-                    )}
-                    {calculatedRate < 75 && (
-                      <span className="ml-1 text-[0.62rem] px-1 py-0.2 rounded bg-rose/15 text-rose font-sans font-medium">
-                        Low
+                    </div>
+                    <p className="text-[0.68rem] sm:text-[0.72rem] font-mono text-ink-faint truncate">
+                      {st.id} ·{" "}
+                      <span
+                        className={cn(
+                          "font-bold",
+                          calculatedRate < 75 ? "text-rose" : "text-jade"
+                        )}
+                      >
+                        {calculatedRate}% att
                       </span>
-                    )}
-                  </p>
-                </div>
-              </button>
+                      {stats && (
+                        <span className="text-[0.65rem] text-ink-muted ml-1 font-sans hidden sm:inline">
+                          ({stats.p}P · {stats.l}L · {stats.a}A)
+                        </span>
+                      )}
+                      {calculatedRate < 75 && (
+                        <span className="ml-1 text-[0.62rem] px-1 py-0.2 rounded bg-rose/15 text-rose font-sans font-medium">
+                          Low
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </button>
 
               {/* Mark Toggle Buttons (P / L / A) or Holiday Status Badge */}
               {isHoliday ? (
@@ -293,6 +307,7 @@ export function DailyRosterView({
           );
         })}
       </div>
+      )}
     </GlassCard>
   );
 }
