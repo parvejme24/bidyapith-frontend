@@ -34,7 +34,7 @@ export function ProgramsFilters({
   return (
     <section className={sectionTightClass}>
       <div className={shellClass}>
-        <GlassCard className="p-5 md:p-6">
+        <GlassCard className="p-4 sm:p-5 md:p-6">
           <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
             <label className={cn(fieldClass, "mb-0")}>
               <span className={fieldLabelClass}>Search programmes</span>
@@ -62,7 +62,7 @@ export function ProgramsFilters({
             </label>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-5">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-5">
             {schools.map((item) => (
               <button
                 key={item}
@@ -75,13 +75,13 @@ export function ProgramsFilters({
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-4 mt-5 pt-5 border-t border-white/8">
-            <p className="text-sm text-ink-faint">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mt-5 pt-5 border-t border-white/8 text-xs sm:text-sm">
+            <p className="text-ink-faint">
               {isLoading
                 ? "Loading programmes…"
                 : `${filteredCount} programme${filteredCount === 1 ? "" : "s"}`}
             </p>
-            <p className="text-sm text-ink-faint">Seat counts refresh each night</p>
+            <p className="text-ink-faint">Seat counts refresh each night</p>
           </div>
         </GlassCard>
       </div>

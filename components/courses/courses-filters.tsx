@@ -37,8 +37,8 @@ export function CoursesFilters({
   isLoading,
 }: CoursesFiltersProps) {
   return (
-    <GlassCard className="p-5 md:p-6 mb-4">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 md:items-end">
+    <GlassCard className="p-4 sm:p-5 md:p-6 mb-4">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4 md:items-end">
         <label className={cn(fieldClass, "mb-0 lg:col-span-1")}>
           <span className={fieldLabelClass}>Search</span>
           <input

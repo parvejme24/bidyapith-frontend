@@ -28,7 +28,7 @@ export function ProgramCard({ program, reveal = true }: ProgramCardProps) {
       role="button"
       tabIndex={0}
       aria-label={`Course outline for ${program.name}`}
-      className="p-6 flex flex-col h-full cursor-pointer"
+      className="p-5 sm:p-6 flex flex-col h-full cursor-pointer"
       onClick={() => setOpen(true)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -42,21 +42,21 @@ export function ProgramCard({ program, reveal = true }: ProgramCardProps) {
         {program.tag ? <Chip tone={programTagTone(program.tag)}>{program.tag}</Chip> : null}
       </div>
 
-      <h3 className="font-display text-[1.22rem] leading-snug">{program.name}</h3>
+      <h3 className="font-display text-[1.12rem] sm:text-[1.22rem] leading-snug">{program.name}</h3>
       <p className="text-sm text-ink-muted mt-2.5 flex-1">{program.about}</p>
 
-      <dl className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-white/8">
+      <dl className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-white/8">
         <div>
           <dt className="text-[0.68rem] text-ink-faint">Credits</dt>
-          <dd className={cn("font-display text-lg", numClass)}>{program.credits}</dd>
+          <dd className={cn("font-display text-base sm:text-lg", numClass)}>{program.credits}</dd>
         </div>
         <div>
           <dt className="text-[0.68rem] text-ink-faint">Years</dt>
-          <dd className={cn("font-display text-lg", numClass)}>{program.years}</dd>
+          <dd className={cn("font-display text-base sm:text-lg", numClass)}>{program.years}</dd>
         </div>
         <div>
           <dt className="text-[0.68rem] text-ink-faint">Per semester</dt>
-          <dd className={cn("font-display text-lg", numClass)}>{formatTaka(program.tuition)}</dd>
+          <dd className={cn("font-display text-sm sm:text-base lg:text-lg truncate", numClass)}>{formatTaka(program.tuition)}</dd>
         </div>
       </dl>
 

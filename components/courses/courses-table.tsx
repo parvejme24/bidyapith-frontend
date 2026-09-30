@@ -45,7 +45,7 @@ export function CoursesTable({
     <>
       <GlassCard className="p-2 sm:p-4">
         <div className={tableScrollClass}>
-          <table className={tableClass}>
+          <table className={cn(tableClass, "min-w-[680px]")}>
             <thead>
               <tr>
                 <th className={thClass}>Code</th>

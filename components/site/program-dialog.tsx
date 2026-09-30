@@ -34,11 +34,11 @@ export function ProgramDialog({ program }: { program: Program }) {
 
       <p className="text-ink-muted">{program.about}</p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 my-4 sm:my-6">
         {stats.map(([label, value]) => (
-          <GlassCard key={label} quiet className="p-3.5">
+          <GlassCard key={label} quiet className="p-3 sm:p-3.5">
             <p className="text-[0.68rem] text-ink-faint">{label}</p>
-            <p className={cn("font-display text-lg mt-0.5", numClass)}>{value}</p>
+            <p className={cn("font-display text-base sm:text-lg mt-0.5", numClass)}>{value}</p>
           </GlassCard>
         ))}
       </div>
@@ -55,11 +55,11 @@ export function ProgramDialog({ program }: { program: Program }) {
         ))}
       </ul>
 
-      <div className="flex flex-wrap gap-3">
-        <Link href="/register" className={buttonClass({ variant: "primary" })}>
+      <div className="flex flex-wrap gap-2.5 sm:gap-3">
+        <Link href="/register" className={cn(buttonClass({ variant: "primary" }), "w-full sm:w-auto text-center justify-center")}>
           Apply to this programme
         </Link>
-        <Link href={`/courses?dept=${program.dept}`} className={buttonClass({ variant: "ghost" })}>
+        <Link href={`/courses?dept=${program.dept}`} className={cn(buttonClass({ variant: "ghost" }), "w-full sm:w-auto text-center justify-center")}>
           See its courses
         </Link>
       </div>
