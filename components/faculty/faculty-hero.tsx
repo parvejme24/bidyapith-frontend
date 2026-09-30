@@ -44,17 +44,17 @@ export function FacultyHero({ departments }: FacultyHeroProps) {
             </p>
           </Rise>
           <Rise delay={4}>
-            <div className="flex flex-wrap gap-6 mt-8">
+            <div className="flex flex-wrap gap-4 sm:gap-6 mt-6 sm:mt-8">
               <div>
-                <CountUp value={187} className="font-display text-3xl" />
+                <CountUp value={187} className="font-display text-2xl sm:text-3xl" />
                 <p className="text-xs text-ink-faint mt-1">Hold a doctorate</p>
               </div>
               <div>
-                <CountUp value={218} className="font-display text-3xl" />
+                <CountUp value={218} className="font-display text-2xl sm:text-3xl" />
                 <p className="text-xs text-ink-faint mt-1">Papers published in 2025</p>
               </div>
               <div>
-                <CountUp value={30} className="font-display text-3xl" />
+                <CountUp value={30} className="font-display text-2xl sm:text-3xl" />
                 <p className="text-xs text-ink-faint mt-1">Students per faculty</p>
               </div>
             </div>

@@ -13,7 +13,7 @@ export function NoticesTypeTabs({ types, active, onSelect }: NoticesTypeTabsProp
   return (
     <section className={sectionTightClass}>
       <div className={shellClass}>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {types.map((type) => (
             <button
               key={type}

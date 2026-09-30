@@ -19,20 +19,20 @@ export function FacultyDialog({
 
   return (
     <GlassDialogContent title={faculty.name} description={faculty.bio}>
-      <div className="flex items-start justify-between gap-4 mb-5">
-        <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-3 sm:gap-4 mb-5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           {faculty.avatar ? (
             <img
               src={faculty.avatar}
               alt={faculty.name}
-              className="size-16 rounded-full object-cover shrink-0 ring-1 ring-white/10 shadow-md"
+              className="size-14 sm:size-16 rounded-full object-cover shrink-0 ring-1 ring-white/10 shadow-md"
             />
           ) : (
-            <span className={cn(avatarClass({ tone }), "size-16 text-xl")}>{initials(faculty.name)}</span>
+            <span className={cn(avatarClass({ tone }), "size-14 sm:size-16 text-lg sm:text-xl")}>{initials(faculty.name)}</span>
           )}
-          <div>
-            <h3 className={displayClass.d3}>{faculty.name}</h3>
-            <p className="text-sm text-ink-faint mt-1">
+          <div className="min-w-0 flex-1">
+            <h3 className={cn(displayClass.d3, "truncate")}>{faculty.name}</h3>
+            <p className="text-xs sm:text-sm text-ink-faint mt-1 truncate">
               {faculty.role} · {deptName(faculty.dept)}
             </p>
           </div>
@@ -40,17 +40,17 @@ export function FacultyDialog({
         <DialogRoundClose />
       </div>
 
-      <p className="text-ink-muted">{faculty.bio}</p>
+      <p className="text-sm sm:text-base text-ink-muted leading-relaxed">{faculty.bio}</p>
 
-      <div className="grid grid-cols-3 gap-3 my-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 my-4 sm:my-6">
         {[
-          ["At Bidyapith since", faculty.since],
+          ["Since", faculty.since],
           ["Publications", faculty.papers],
-          ["Courses this year", teaches.length || "—"],
+          ["Courses", teaches.length || "—"],
         ].map(([label, value]) => (
-          <GlassCard key={String(label)} quiet className="p-3.5">
-            <p className="text-[0.68rem] text-ink-faint">{label}</p>
-            <p className={cn("font-display text-lg mt-0.5", numClass)}>{value}</p>
+          <GlassCard key={String(label)} quiet className="p-2.5 sm:p-3.5 text-center">
+            <p className="text-[0.62rem] sm:text-[0.68rem] text-ink-faint truncate">{label}</p>
+            <p className={cn("font-display text-base sm:text-lg mt-0.5", numClass)}>{value}</p>
           </GlassCard>
         ))}
       </div>

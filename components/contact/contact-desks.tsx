@@ -34,12 +34,12 @@ export function ContactDesks() {
       <div className={cn(shellClass, "grid gap-4 sm:grid-cols-2 lg:grid-cols-4")}>
         {DESKS.map((desk, index) => (
           <Reveal key={desk.email} delay={index * 70}>
-            <GlassCard lift className="p-6 h-full">
-              <h2 className="font-display text-[1.05rem]">{desk.title}</h2>
-              <p className="text-sm text-ink-muted mt-2">{desk.blurb}</p>
+            <GlassCard lift className="p-4 sm:p-6 h-full">
+              <h2 className="font-display text-[1rem] sm:text-[1.05rem]">{desk.title}</h2>
+              <p className="text-xs sm:text-sm text-ink-muted mt-2">{desk.blurb}</p>
               <a
                 href={`mailto:${desk.email}`}
-                className="text-sm text-jade mt-3 inline-block break-all"
+                className="text-xs sm:text-sm text-jade mt-3 inline-block break-all"
               >
                 {desk.email}
               </a>

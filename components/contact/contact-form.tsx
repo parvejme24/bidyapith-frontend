@@ -66,7 +66,7 @@ export function ContactForm() {
 
   return (
     <Reveal>
-      <GlassCard className="p-7 md:p-9">
+      <GlassCard className="p-5 sm:p-7 md:p-9">
         <h2 className={cn(displayClass.d3, "mb-1")}>Send a message</h2>
         <p className="text-sm text-ink-muted mb-7">
           Everything marked required has to be filled in before this sends.

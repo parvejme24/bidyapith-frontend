@@ -93,22 +93,22 @@ export function ContactMapInfo({ faqs }: ContactMapInfoProps) {
             </text>
           </svg>
 
-          <ul className="space-y-3 mt-5 text-sm">
-            <li className="flex justify-between gap-4">
+          <ul className="space-y-2.5 sm:space-y-3 mt-5 text-xs sm:text-sm">
+            <li className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ink-faint">Main gate</span>
               <span>Purbachal Sector 9</span>
             </li>
-            <li className="flex justify-between gap-4">
+            <li className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ink-faint">From Kuril</span>
               <span>25 minutes by car</span>
             </li>
-            <li className="flex justify-between gap-4">
+            <li className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ink-faint">Shuttle</span>
               <span>Uttara, Badda, Rampura</span>
             </li>
-            <li className="flex justify-between gap-4">
+            <li className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-ink-faint">Phone</span>
-              <a href={phoneHref} className="text-jade">
+              <a href={phoneHref} className="text-jade break-all">
                 {SITE.phone}
               </a>
             </li>
@@ -117,7 +117,7 @@ export function ContactMapInfo({ faqs }: ContactMapInfoProps) {
       </Reveal>
 
       <Reveal delay={140}>
-        <GlassCard className="p-7">
+        <GlassCard className="p-5 sm:p-7">
           <h2 className={cn(displayClass.d3, "mb-3")}>Quick answers</h2>
           <FaqAccordion faqs={faqs.slice(0, 4)} />
         </GlassCard>
